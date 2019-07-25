@@ -1,0 +1,4 @@
+numpy==1.16.2
+pytest==3.5.1
+setuptools==39.1.0
+mass-ts<=1.0
