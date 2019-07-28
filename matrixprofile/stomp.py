@@ -51,15 +51,7 @@ def stomp(ts, window_size, query=None):
         If ts is not a list or np.array.
         If query is not a list or np.array.
         If ts or query is not one dimensional.
-    """
-    if window_size < 4:
-        error = "m, window size, must be at least 4."
-        raise ValueError(error)
-
-    if window_size > len(query) / 2:
-        error = "Time series is too short relative to desired window size"
-        raise ValueError(error)
-
+    """    
     is_join = core.is_similarity_join(ts, query)
     if not is_join:
         query = ts
@@ -67,12 +59,20 @@ def stomp(ts, window_size, query=None):
     # data conversion to np.array
     ts = core.to_np_array(ts)
     query = core.to_np_array(query)
+
+    if window_size < 4:
+        error = "m, window size, must be at least 4."
+        raise ValueError(error)
+
+    if window_size > len(query) / 2:
+        error = "Time series is too short relative to desired window size"
+        raise ValueError(error)
     
     # precompute some common values - profile length, query length etc.
     profile_length = core.get_profile_length(ts, query, window_size)
     data_length = len(ts)
     query_length = len(query)
-    exclusion_zone = 1 / 2
+    exclusion_zone = int(1 / 2)
     num_queries = query_length - window_size + 1
 
     # do not use exclusion zone for join
@@ -99,24 +99,15 @@ def stomp(ts, window_size, query=None):
     rnn = None
     if is_join:
         rnn = mass2(query, ts, extras=True)
-
-    first_product[:] = rnn['product']
+        first_product[:] = rnn['product']
 
     matrix_profile = np.full(profile_length, np.nan)
-    profile_index = np.full(profile_length, np.inf)
+    profile_index = np.full(profile_length, -np.inf)
 
-    # assume no joins
-    left_matrix_profile = None
-    right_matrix_profile = None
-    left_profile_index = None
-    right_profile_index = None
-
-    # otherwise left and right MP and MPI are same as MP initially
-    if is_join:
-        left_matrix_profile = np.copy(matrix_profile)
-        right_matrix_profile = np.copy(matrix_profile)
-        left_profile_index = np.copy(profile_index)
-        right_profile_index = np.copy(profile_index)
+    left_matrix_profile = np.copy(matrix_profile)
+    right_matrix_profile = np.copy(matrix_profile)
+    left_profile_index = np.copy(profile_index)
+    right_profile_index = np.copy(profile_index)
 
     distance_profile = np.zeros(profile_length)
     last_product = np.copy(distance_profile)
@@ -128,11 +119,11 @@ def stomp(ts, window_size, query=None):
 
         if i == 0:            
             distance_profile[:] = nn['distance_profile']
-            last_product[:] = nn['product'][window_size:]
+            last_product[:] = nn['product'][window_size - 1:]
         else:
-            last_product[1:(data_length - window_size)] = last_product[0:(data_length - window_size)] \
-                - ts[0:(data_length - window_size)] * drop_value \
-                + ts[(window_size):data_length] * query_window[window_size]
+            last_product[1:(data_length - window_size - 1)] = last_product[0:(data_length - window_size - 1)] \
+                - ts[0:(data_length - window_size - 1)] * drop_value \
+                + ts[(window_size - 1):data_length] * query_window[window_size - 1]
             
             last_product[0] = first_product[i]
             distance_profile = 2 * (window_size - (last_product - window_size * nn['data_mean'] * nn['query_mean']) / 
@@ -155,14 +146,22 @@ def stomp(ts, window_size, query=None):
         # update left and right matrix profile looking at element-wise minimums
         if not is_join:
             # left mp
-            indices = (distance_profile[i:profile_index] < left_matrix_profile[i:profile_index])
-            indices[i - 1] = False # pad left
+            indices = (distance_profile[i:profile_length] < left_matrix_profile[i:profile_length])
+
+            # pad to left
+            if i > 0:
+                indices = np.append(np.zeros(i - 1).astype('bool'), indices)
+
             left_matrix_profile[indices] = distance_profile[indices]
-            left_profile_index[np.argwhere(ind)] = i
+            left_profile_index[np.argwhere(indices)] = i
 
             # right mp
             indices = (distance_profile[0:i] < right_matrix_profile[0:i])
-            indices[profile_length - i] = False # pad right
+
+            # pad to right
+            if i > 0:
+                indices = np.append(np.zeros(profile_length - i).astype('bool'), indices)
+
             right_matrix_profile[indices] = distance_profile[indices]
             right_profile_index[np.argwhere(indices)] = i
         

@@ -143,6 +143,7 @@ def find_skip_locations(ts, query, window_size):
     -------
     int - the length of the matrix profile.
     """
+    profile_length = get_profile_length(ts, query, window_size)
     skip_loc = np.zeros(profile_length).astype(bool)
     for i in range(profile_length):
         segment = ts[i:i + window_size]

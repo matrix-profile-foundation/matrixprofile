@@ -1,2 +1,4 @@
 name = "matrixprofile"
-__all__ = ['utils','order','distanceProfile','matrixProfile', 'fluss', 'extract_regimes']
+
+from matrixprofile.stomp import stomp
+from matrixprofile.mass2 import mass2
