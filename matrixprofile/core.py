@@ -175,3 +175,111 @@ def self_join_or_not_preprocess(ts_a, ts_b, m):
     shape = n - m + 1
     
     return (np.full(shape, np.inf), np.full(shape, np.inf))
+
+
+def rolling_window(a, window):
+    """
+    Provides a rolling window on a numpy array given an array and window size.
+    Parameters
+    ----------
+    a : array_like
+        The array to create a rolling window on.
+    window : int
+        The window size.
+    Returns
+    -------
+    Strided array for computation.
+    """
+    shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
+    strides = a.strides + (a.strides[-1],)
+    
+    return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
+
+
+def moving_average(a, window=3):
+    """
+    Computes the moving average over an array given a window size.
+    Parameters
+    ----------
+    a : array_like
+        The array to compute the moving average on.
+    window : int
+        The window size.
+    Returns
+    -------
+    The moving average over the array.
+    """
+    return np.mean(rolling_window(a, window), -1)
+
+
+def moving_std(a, window=3):
+    """
+    Computes the moving std. over an array given a window size.
+    Parameters
+    ----------
+    a : array_like
+        The array to compute the moving std. on.
+    window : int
+        The window size.
+    Returns
+    -------
+    The moving std. over the array.
+    """
+    return np.std(rolling_window(a, window), -1)
+
+
+def moving_avg_std(a, window=3):
+    """
+    Computes the moving avg and std. over an array given a window size.
+    Parameters
+    ----------
+    a : array_like
+        The array to compute the moving std. on.
+    window : int
+        The window size.
+    Returns
+    -------
+    The moving avg and std. over the array as a tuple.
+    (avg, std)
+    """
+    windowed = rolling_window(a, window)
+    mu = np.avg(windowed, -1)
+    sig = np.std(windowed, -1)
+
+
+def precheck_series_and_query_1d(ts, query):
+    """
+    Helper function to ensure we have 1d time series and query.
+    Parameters
+    ----------
+    ts : array_like
+        The array to create a rolling window on.
+    query : array_like
+        The query.
+    Returns
+    -------
+    (np.array, np.array) - The ts and query respectively.
+    Raises
+    ------
+    ValueError
+        If ts is not a list or np.array.
+        If query is not a list or np.array.
+        If ts or query is not one dimensional.
+    """
+    try:
+        ts = to_np_array(ts)
+    except ValueError:
+        raise ValueError('Invalid ts value given. Must be array_like!')
+
+    try:
+        query = to_np_array(query)
+    except ValueError:
+        raise ValueError('Invalid query value given. Must be array_like!')
+
+    if not is_one_dimensional(ts):
+        raise ValueError('ts must be one dimensional!')
+
+    if not is_one_dimensional(query):
+        raise ValueError('query must be one dimensional!')
+
+    return (ts, query)
