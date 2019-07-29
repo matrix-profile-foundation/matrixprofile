@@ -126,7 +126,7 @@ def get_profile_length(ts_a, ts_b, m):
     return len(ts_a) - m + 1
 
 
-def find_skip_locations(ts, query, window_size):
+def find_skip_locations(ts, profile_length, window_size):
     """
     Determines which locations should be skipped based on nan or inf values.
 
@@ -143,8 +143,8 @@ def find_skip_locations(ts, query, window_size):
     -------
     int - the length of the matrix profile.
     """
-    profile_length = get_profile_length(ts, query, window_size)
     skip_loc = np.zeros(profile_length).astype(bool)
+
     for i in range(profile_length):
         segment = ts[i:i + window_size]
         search = (np.isinf(segment) | np.isnan(segment))
@@ -244,8 +244,10 @@ def moving_avg_std(a, window=3):
     (avg, std)
     """
     windowed = rolling_window(a, window)
-    mu = np.avg(windowed, -1)
+    mu = np.mean(windowed, -1)
     sig = np.std(windowed, -1)
+
+    return (mu, sig)
 
 
 def precheck_series_and_query_1d(ts, query):
