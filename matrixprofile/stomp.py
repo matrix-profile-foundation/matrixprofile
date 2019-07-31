@@ -11,34 +11,71 @@ import numpy as np
 
 from matrixprofile import core, mass2
 
-def sliding_dot_product(ts, query):
-    m = len(query)
+def mass_pre(ts, window_size):
+    """
+    Precomputes some statistics used in stomp. It is essentially reworked
+    MASS algorithm.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series to compute statistics for.
+    window_size: int
+        The size of the window to compute statistics over.
+
+    Returns
+    -------
+    Statistics used for later computations.
+    """
     n = len(ts)
+    mu, sig = core.moving_avg_std(ts, window_size)
+    data_freq = np.fft.fft(ts)
 
-    #If length is odd, zero-pad time time series
-    ts_add = 0
-    if n%2 ==1:
-        ts = np.insert(ts,0,0)
-        ts_add = 1
+    return (data_freq, n, mu, sig)
 
-    q_add = 0
-    #If length is odd, zero-pad query
-    if m%2 == 1:
-        query = np.insert(query,0,0)
-        q_add = 1
 
-    #This reverses the array
-    query = query[::-1]
-    query = np.pad(query,(0,n-m+ts_add-q_add),'constant')
+def mass_post(data_freq, query, n, m, data_mu, data_sig):
+    """
+    Compute the distance profile as later stage for stomp.
+    
+    Parameters
+    ----------
+    data_freq : array_like
+        The time series to compute statistics for.
+    query: array_like
+        The query to compute statistics for.
+    n: int
+        The length of the time series.
+    m: int
+        The size of the window to compute statistics over.
+    data_mu: array_like
+        The rolling mean for the time series.
+    data_sig: array_like
+        The rolling standard deviation for the time series..
 
-    # Determine trim length for dot product. Note that zero-padding of the 
-    # query has no effect on array length, which is solely determined by 
-    # the longest vector
-    trim = m-1+ts_add
+    Returns
+    -------
+    The distance profile for the given query and statistics that are later 
+    used for further computation.
+    """
+    # flip query and append zeros
+    query = np.append(np.flip(query), np.zeros(n - m))
 
-    dot_product = np.fft.irfft(np.fft.rfft(ts)*np.fft.rfft(query))
+    # transform query to frequency domain and compute dot product
+    query_freq = np.fft.fft(query)
+    product_freq = data_freq * query_freq
+    product = np.fft.ifft(product_freq)
 
-    return dot_product[trim:]
+    # compute query stats
+    query_sum = np.sum(query)
+    query_2sum = np.sum(query ** 2)
+    query_mu, query_sig = core.moving_avg_std(query, m)
+
+    distance_profile = 2 * (m - (product[m - 1:] - m * data_mu * query_mu) / \
+                       (data_sig * query_sig))
+    last_product = np.real(product[m - 1:])
+
+    return (distance_profile, last_product, query_sum, query_2sum, query_sig)
 
 
 def stomp(ts, window_size, query=None):
@@ -100,9 +137,7 @@ def stomp(ts, window_size, query=None):
     # precompute some common values - profile length, query length etc.
     profile_length = core.get_profile_length(ts, query, window_size)
     data_length = len(ts)
-    query_length = len(query)
     exclusion_zone = int(np.ceil(window_size / 2.0))
-    num_queries = query_length - window_size + 1
 
     # do not use exclusion zone for join
     if is_join:
@@ -123,27 +158,24 @@ def stomp(ts, window_size, query=None):
     drop_value = np.full((1, 1), 0)
 
     last_product = np.copy(distance_profile)
-    first_product = None    
 
-    # reverse
-    # required for similarity join
-    # note that we simply use sliding_dot_product in the case of a self join
-    # to save some computation
-    rnn = None
-    if is_join:
-        rnn = mass2(query, ts, extras=True)
-        first_product = rnn['product'][window_size - 1:]
-    else:
-        first_product = sliding_dot_product(ts, ts[0:window_size])
+    # compute left and right matrix profile when similarity join does not happen
+    left_matrix_profile = None
+    right_matrix_profile = None
+    left_profile_index = None
+    right_profile_index = None
 
-    # TODO: these are not being used right now
-    left_matrix_profile = np.copy(matrix_profile)
-    right_matrix_profile = np.copy(matrix_profile)
-    left_profile_index = np.copy(profile_index)
-    right_profile_index = np.copy(profile_index)
+    if not is_join:
+        left_matrix_profile = np.copy(matrix_profile)
+        right_matrix_profile = np.copy(matrix_profile)
+        left_profile_index = np.copy(profile_index)
+        right_profile_index = np.copy(profile_index)
+
+    # precompute mass_pre
+    data_freq, data_length, data_mu, data_sig = mass_pre(ts, window_size)
 
     # iteratively compute distance profile and update with element-wise mins
-    for i in range(num_queries - 1):
+    for i in range(profile_length):
 
         # check for nan or inf and skip
         segment = ts[i:i + window_size]
@@ -153,40 +185,55 @@ def stomp(ts, window_size, query=None):
             continue
 
         query_window = query[i:i + window_size]
-        nn = mass2(ts, query_window, extras=True)
-
         if i == 0:
-            distance_profile[:] = np.real(nn['distance_profile'])
-            last_product[:] = np.real(nn['product'][window_size - 1:])
+            tmp = mass_post(
+                data_freq, query_window, data_length, window_size, data_mu, data_sig
+            )
+            distance_profile, last_product, query_sum, query_2sum, query_sig = tmp
+            distance_profile = np.real(distance_profile)
+            first_product = np.copy(last_product)
         else:
-            prod = nn['product'][window_size:]
-            last_product[1:(data_length - window_size + 1)] = prod - \
-                ts[0:(data_length - window_size)] * drop_value + \
-                ts[(window_size):data_length] * query_window[window_size - 1]
-            
+            query_sum = query_sum - drop_value + query_window[-1]
+            query_2sum = query_2sum - drop_value ** 2 + query_window[-1] ** 2
+            query_mu = query_sum / window_size
+            query_sig2 = query_2sum / window_size - query_mu ** 2
+            query_sig = np.sqrt(query_sig2)
+            last_product[1:] = last_product[0:data_length - window_size] \
+                - ts[0:data_length - window_size] * drop_value \
+                + ts[window_size:] * query_window[-1]
             last_product[0] = first_product[i]
+            distance_profile = 2 * (window_size - (last_product - window_size \
+                 * data_mu * query_mu) / (data_sig * query_sig))
 
-            data_mu = nn['data_mean'][window_size - 1:]
-            data_sig = nn['data_std'][window_size - 1:]
-            q_mu = nn['query_mean']
-            q_sig = nn['query_std']
-
-            distance_profile = 2 * (window_size - (last_product - window_size * data_mu * q_mu) / \
-                               (data_sig * q_sig))
-
-        distance_profile = np.real(np.sqrt(distance_profile))
         drop_value = query_window[0]
 
         # apply the exclusion zone
-        if exclusion_zone > 0:
+        # for similarity join we do not apply exclusion zone
+        if exclusion_zone > 0 and not is_join:
             ez_start = np.max([0, i - exclusion_zone])
             ez_end = np.min([profile_length, i + exclusion_zone])
             distance_profile[ez_start:ez_end] = np.inf
+        
+        # update the left and right matrix profiles
+        if not is_join and i > 0:
+            # find differences, shift left and update
+            indices = distance_profile[i:] < left_matrix_profile[i:]
+            indices = np.append(np.zeros(i).astype('bool'), indices)
+            left_matrix_profile[indices] = distance_profile[indices]
+            left_profile_index[np.argwhere(indices)] = i
+
+            # find differences, shift right and update
+            indices = distance_profile[0:i] < right_matrix_profile[0:i]
+            indices = np.append(indices, np.zeros(profile_length -i).astype('bool'))
+            right_matrix_profile[indices] = distance_profile[indices]
+            right_profile_index[np.argwhere(indices)] = i
         
         # update the matrix profile
         indices = (distance_profile < matrix_profile)
         matrix_profile[indices] = distance_profile[indices]
         profile_index[np.argwhere(indices)] = i
+    
+    matrix_profile = np.real(np.sqrt(matrix_profile))
 
     return {
         'mp': matrix_profile,
