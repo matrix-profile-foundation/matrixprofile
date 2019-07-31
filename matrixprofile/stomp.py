@@ -9,7 +9,7 @@ range = getattr(__builtins__, 'xrange', range)
 
 import numpy as np
 
-from matrixprofile import core, mass2
+from matrixprofile import core
 
 def mass_pre(ts, window_size):
     """
@@ -107,6 +107,8 @@ def stomp(ts, window_size, query=None):
         'w': The window size used to compute the matrix profile,
         'ez': The exclusion zone used,
         'join': Flag indicating if a similarity join was computed
+        'class': "MatrixProfile"
+        'algorithm': "stomp"
     }
 
     Raises
@@ -244,5 +246,7 @@ def stomp(ts, window_size, query=None):
         'lpi': left_profile_index,
         'w': window_size,
         'ez': exclusion_zone,
-        'join': is_join
+        'join': is_join,
+        'class': "MatrixProfile",
+        'algorithm': "stomp"
     }

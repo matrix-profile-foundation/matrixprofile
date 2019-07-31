@@ -13,7 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/target/matrixprofile-ts",
     packages = ['matrixprofile'],
-    install_requires=['numpy>=1.11.3'],
+    install_requires=['numpy>=1.11.3', 'matplotlib'],
     classifiers=[
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
