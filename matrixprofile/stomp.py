@@ -11,6 +11,9 @@ import numpy as np
 
 from matrixprofile import core
 
+# Ignore numpy warning messages about divide by zero
+np.seterr(divide='ignore')
+
 def mass_pre(ts, window_size):
     """
     Precomputes some statistics used in stomp. It is essentially reworked
@@ -60,6 +63,7 @@ def mass_post(data_freq, query, n, m, data_mu, data_sig):
     """
     # flip query and append zeros
     query = np.append(np.flip(query), np.zeros(n - m))
+    pro_len = n - m
 
     # transform query to frequency domain and compute dot product
     query_freq = np.fft.fft(query)
@@ -71,7 +75,7 @@ def mass_post(data_freq, query, n, m, data_mu, data_sig):
     query_2sum = np.sum(query ** 2)
     query_mu, query_sig = core.moving_avg_std(query, m)
 
-    distance_profile = 2 * (m - (product[m - 1:] - m * data_mu * query_mu) / \
+    distance_profile = 2 * (m - (product[m - 1:] - m * data_mu * query_mu)/ \
                        (data_sig * query_sig))
     last_product = np.real(product[m - 1:])
 
@@ -189,10 +193,19 @@ def stomp(ts, window_size, query=None):
         query_window = query[i:i + window_size]
         if i == 0:
             tmp = mass_post(
-                data_freq, query_window, data_length, window_size, data_mu, data_sig
+                data_freq,
+                query_window,
+                data_length,
+                window_size,
+                data_mu,
+                data_sig
             )
-            distance_profile, last_product, query_sum, query_2sum, query_sig = tmp
-            distance_profile = np.real(distance_profile)
+            distance_profile = tmp[0]
+            last_product = tmp[1]
+            query_sum = tmp[2]
+            query_2sum = tmp[3]
+            query_sig = tmp[4]
+
             first_product = np.copy(last_product)
         else:
             query_sum = query_sum - drop_value + query_window[-1]
@@ -208,6 +221,7 @@ def stomp(ts, window_size, query=None):
                  * data_mu * query_mu) / (data_sig * query_sig))
 
         drop_value = query_window[0]
+        distance_profile = np.sqrt(np.real(distance_profile))
 
         # apply the exclusion zone
         # for similarity join we do not apply exclusion zone
@@ -220,13 +234,15 @@ def stomp(ts, window_size, query=None):
         if not is_join and i > 0:
             # find differences, shift left and update
             indices = distance_profile[i:] < left_matrix_profile[i:]
-            indices = np.append(np.zeros(i).astype('bool'), indices)
+            falses = np.zeros(i).astype('bool')
+            indices = np.append(falses, indices)
             left_matrix_profile[indices] = distance_profile[indices]
             left_profile_index[np.argwhere(indices)] = i
 
             # find differences, shift right and update
             indices = distance_profile[0:i] < right_matrix_profile[0:i]
-            indices = np.append(indices, np.zeros(profile_length -i).astype('bool'))
+            falses = np.zeros(profile_length - i).astype('bool')
+            indices = np.append(indices, falses)
             right_matrix_profile[indices] = distance_profile[indices]
             right_profile_index[np.argwhere(indices)] = i
         
@@ -235,8 +251,6 @@ def stomp(ts, window_size, query=None):
         matrix_profile[indices] = distance_profile[indices]
         profile_index[np.argwhere(indices)] = i
     
-    matrix_profile = np.real(np.sqrt(matrix_profile))
-
     return {
         'mp': matrix_profile,
         'pi': profile_index,
