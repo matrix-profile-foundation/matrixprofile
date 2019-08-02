@@ -12,7 +12,7 @@ import numpy as np
 from matrixprofile import core
 
 # Ignore numpy warning messages about divide by zero
-np.seterr(divide='ignore')
+np.seterr(divide='ignore', invalid='ignore')
 
 def mass_pre(ts, window_size):
     """
@@ -153,7 +153,7 @@ def stomp(ts, window_size, query=None):
     search = (np.isinf(ts) | np.isnan(ts))
     ts[search] = 0
 
-    search = (np.isinf(query) | np.isnan(search))
+    search = (np.isinf(query) | np.isnan(query))
     query[search] = 0
 
     # initialize matrices

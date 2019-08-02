@@ -9,6 +9,8 @@ range = getattr(__builtins__, 'xrange', range)
 
 import math
 
+from multiprocessing import cpu_count
+
 import numpy as np
 
 from matrixprofile import core
@@ -16,7 +18,121 @@ from matrixprofile import core
 import ray
 
 # Ignore numpy warning messages about divide by zero
-np.seterr(divide='ignore')
+np.seterr(divide='ignore', invalid='ignore')
+
+@ray.remote
+class StompBatchActor(object):
+    def __init__(self, ts, query, window_size, start, end, data_length, 
+                 profile_length, exclusion_zone, is_join, first_product):
+        self.ts = ts
+        self.query = query
+        self.window_size = window_size
+        self.start = start
+        self.end = end
+        self.data_length = data_length
+        self.profile_length = profile_length
+        self.exclusion_zone = exclusion_zone
+        self.is_join = is_join
+        self.first_product = first_product  
+
+    def compute(self):
+        # grab data so it is local again
+        ts = self.ts
+        window_size = self.window_size
+        query = self.query
+        data_length = self.data_length
+        profile_length = self.profile_length
+        is_join = self.is_join
+        exclusion_zone = self.exclusion_zone
+        batch_start = self.start
+        batch_end = self.end
+        first_product = self.first_product
+
+         # initialize matrices
+        matrix_profile = np.full(profile_length, np.inf)
+        profile_index = np.full(profile_length, -np.inf)
+
+        distance_profile = np.zeros(profile_length)
+        last_product = np.copy(distance_profile)
+
+        # compute left and right matrix profile when similarity join does 
+        # not happen
+        left_matrix_profile = None
+        right_matrix_profile = None
+        left_profile_index = None
+        right_profile_index = None
+
+        if not is_join:
+            left_matrix_profile = np.copy(matrix_profile)
+            right_matrix_profile = np.copy(matrix_profile)
+            left_profile_index = np.copy(profile_index)
+            right_profile_index = np.copy(profile_index)
+
+        # precompute mass_pre and post    
+        tmp = mass_pre(ts, window_size)
+        data_freq = tmp[0]
+        data_length = tmp[1]
+        data_mu = tmp[2]
+        data_sig = tmp[3]
+
+        # here we pull out the mass_post to make the loop
+        tmp = mass_post(
+            data_freq,
+            query[batch_start:batch_start + window_size],
+            data_length,
+            window_size,
+            data_mu,
+            data_sig
+        )
+        distance_profile = tmp[0]
+        matrix_profile = np.copy(distance_profile)
+        last_product = tmp[1]
+        query_sum = tmp[2]
+        query_2sum = tmp[3]
+        query_sig = tmp[4]
+
+        drop_value = query[batch_start:batch_start + window_size][0]
+
+        # iteratively compute distance profile and update with element-wise mins
+        for i in range(batch_start, batch_end):
+
+            # check for nan or inf and skip
+            segment = ts[i:i + window_size]
+            search = (np.isinf(segment) | np.isnan(segment))
+            
+            if np.any(search):
+                continue
+
+            query_window = query[i:i + window_size]
+            query_sum = query_sum - drop_value + query_window[-1]
+            query_2sum = query_2sum - drop_value ** 2 + query_window[-1] ** 2
+            query_mu = query_sum / window_size
+            query_sig2 = query_2sum / window_size - query_mu ** 2
+            query_sig = np.sqrt(query_sig2)
+            last_product[1:] = last_product[0:data_length - window_size] \
+                - ts[0:data_length - window_size] * drop_value \
+                + ts[window_size:] * query_window[-1]
+            last_product[0] = first_product[i]
+            distance_profile = 2 * (window_size - (last_product - window_size \
+                 * data_mu * query_mu) / (data_sig * query_sig))
+
+            drop_value = query_window[0]
+            distance_profile = np.sqrt(np.real(distance_profile))
+
+            # apply the exclusion zone
+            # for similarity join we do not apply exclusion zone
+            # if exclusion_zone > 0 and not is_join:
+            #     ez_start = np.max([0, i - exclusion_zone])
+            #     ez_end = np.min([len(ts) - window_size + 1, i + exclusion_zone])
+            #     distance_profile[ez_start:ez_end] = np.inf
+            
+            # update the matrix profile
+            
+            indices = (distance_profile < matrix_profile)
+            matrix_profile[indices] = distance_profile[indices]
+
+        return matrix_profile
+
 
 def mass_pre(ts, window_size):
     """
@@ -85,23 +201,21 @@ def mass_post(data_freq, query, n, m, data_mu, data_sig):
 
     return (distance_profile, last_product, query_sum, query_2sum, query_sig)
 
-@ray.remote
-def batch_compute():
-    pass
 
-def batch_process(ts, window_size, n_jobs, query=None):
-    profile_length = core.get_profile_length(ts, query, window_size)
+def get_batch_windows(profile_length, n_jobs):
     batch_size = int(math.ceil(profile_length / n_jobs))
 
-    results = []
-    for i in range(n_jobs):
-        start = i * batch_size
-        end = (i + 1) * batch_size
+    if batch_size == profile_length:
+        yield (0, profile_length)
+    else:
+        for i in range(n_jobs):
+            start = i * batch_size        
+            end = (i + 1) * batch_size
+            
+            if end > profile_length:
+                end = profile_length
 
-        results.append(stomp(ts[start:end], window_size, query=query[start:end], is_join=False))
-
-
-    return results
+            yield (start, end)
 
 
 def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
@@ -188,6 +302,20 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
     search = (np.isinf(query) | np.isnan(search))
     query[search] = 0
 
+    # precompute mass_pre and post
+    data_freq, data_length, data_mu, data_sig = mass_pre(ts, window_size)
+
+    # here we pull out the mass_post to make the loop
+    tmp = mass_post(
+        data_freq,
+        query[0:window_size],
+        data_length,
+        window_size,
+        data_mu,
+        data_sig
+    )
+    first_product = np.copy(tmp[1])
+
     # initialize matrices
     matrix_profile = np.full(profile_length, np.inf)
     profile_index = np.full(profile_length, -np.inf)
@@ -207,7 +335,6 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
         left_profile_index = np.copy(profile_index)
         right_profile_index = np.copy(profile_index)
 
-
     # start ray
     # we can optionally set the memory usage, but I don't know if I want to
     # expose this to users
@@ -223,11 +350,54 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
     # eviction of entries. This only applies to the sharded redis tables 
     # (task, object, and profile tables). By default, this is capped at 10GB 
     # but can be set higher.
-    ray.init(num_cpus=n_jobs)
-
+    ray.init(num_cpus=n_jobs, ignore_reinit_error=True)
 
     # TODO: create batch jobs and submit to ray
-    results = batch_process(ts, window_size, n_jobs, query=None)
+    batches = []
+    batch_windows = []
+    for start, end in get_batch_windows(profile_length, n_jobs):
+        batches.append(StompBatchActor.remote(
+            ts, # ts[start:end],
+            query, # query[start:end],
+            window_size,
+            start,
+            end,
+            data_length,
+            profile_length,
+            exclusion_zone,
+            is_join,
+            first_product
+        ))
+        batch_windows.append((start, end))
+
+    for index, batch in enumerate(batches):
+        result = ray.get(batch.compute.remote())
+        batch_start = batch_windows[index][0]
+        batch_end = batch_windows[index][1]
+
+        # update the left and right matrix profiles
+        # if not is_join:
+        #     # find differences, shift left and update
+        #     indices = result['mp'][i:] < left_matrix_profile[batch_start + i:]
+        #     falses = np.zeros(batch_start + i).astype('bool')
+        #     indices = np.append(falses, indices)
+        #     left_matrix_profile[indices] = distance_profile[indices]
+        #     left_profile_index[np.argwhere(indices)] = i
+
+        #     # find differences, shift right and update
+        #     indices = distance_profile[0:i] < right_matrix_profile[0:i]
+        #     falses = np.zeros(profile_length - i).astype('bool')
+        #     indices = np.append(indices, falses)
+        #     right_matrix_profile[indices] = distance_profile[indices]
+        #     right_profile_index[np.argwhere(indices)] = i
+        
+        # update the matrix profile
+        indices = (result < matrix_profile)
+        matrix_profile[indices] = distance_profile[indices]
+        profile_index[indices] = 0
+
+
+    #results = batch_process(ts, window_size, n_jobs, query=None)
 
     # TODO: re-assemble full matrix profiles
     
