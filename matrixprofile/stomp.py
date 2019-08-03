@@ -149,12 +149,9 @@ def stomp(ts, window_size, query=None):
     if is_join:
         exclusion_zone = 0
 
-    # clean up nan and inf in the ts_a and query
-    search = (np.isinf(ts) | np.isnan(ts))
-    ts[search] = 0
-
-    search = (np.isinf(query) | np.isnan(query))
-    query[search] = 0
+    # clean up nan and inf in the ts and query
+    ts = core.clean_nan_inf(ts)
+    query = core.clean_nan_inf(query)
 
     # initialize matrices
     matrix_profile = np.full(profile_length, np.inf)
