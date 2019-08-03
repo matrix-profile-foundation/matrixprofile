@@ -87,8 +87,11 @@ def to_np_array(a):
     ValueError
         If a is not a valid type.
     """
+    if isinstance(a, np.ndarray):
+        return a
+
     if not is_array_like(a):
-        raise ValueError('Unable to convert to np.ndarray!')
+        raise ValueError('Unable to convert to np.ndarray!')    
 
     return np.array(a)
 
