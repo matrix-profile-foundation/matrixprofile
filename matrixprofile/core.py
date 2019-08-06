@@ -87,8 +87,11 @@ def to_np_array(a):
     ValueError
         If a is not a valid type.
     """
+    if isinstance(a, np.ndarray):
+        return a
+
     if not is_array_like(a):
-        raise ValueError('Unable to convert to np.ndarray!')
+        raise ValueError('Unable to convert to np.ndarray!')    
 
     return np.array(a)
 
@@ -96,6 +99,9 @@ def to_np_array(a):
 def is_one_dimensional(a):
     """
     Helper function to determine if value is one dimensional.
+
+    Parameters
+    ----------
     a : array_like
         Object to test.
 
@@ -155,38 +161,42 @@ def find_skip_locations(ts, profile_length, window_size):
     return skip_loc
     
 
-def self_join_or_not_preprocess(ts_a, ts_b, m):
+def clean_nan_inf(ts):
     """
-    Determines if a self join is occuring and returns appropriate
-    profile and index numpy arrays with correct dimensions as all np.nan values.
-    
+    Replaces nan and inf values with zeros per matrix profile algorithms.
+
     Parameters
     ----------
-    ts_a : array_like
-        Time series containing the queries for which to calculate the Matrix Profile.
-    ts_b : array_line
-        Time series containing the queries for which to calculate the Matrix Profile.
-    m : int
-        Length of subsequence to compare.
+    ts: array_like
+        Time series to clean.
+    
+    Returns
+    -------
+    np.ndarray - The cleaned time series.
+
+    Raises
+    ------
+    ValueError
+        When the ts is not array like.
     """
-    n = len(ts_a)
-    if ts_b is not None:
-        n = len(ts_b)
-    
-    shape = n - m + 1
-    
-    return (np.full(shape, np.inf), np.full(shape, np.inf))
+    ts = to_np_array(ts)
+    search = (np.isinf(ts) | np.isnan(ts))
+    ts[search] = 0
+
+    return ts
 
 
 def rolling_window(a, window):
     """
     Provides a rolling window on a numpy array given an array and window size.
+
     Parameters
     ----------
     a : array_like
         The array to create a rolling window on.
     window : int
         The window size.
+
     Returns
     -------
     Strided array for computation.
@@ -200,12 +210,14 @@ def rolling_window(a, window):
 def moving_average(a, window=3):
     """
     Computes the moving average over an array given a window size.
+
     Parameters
     ----------
     a : array_like
         The array to compute the moving average on.
     window : int
         The window size.
+
     Returns
     -------
     The moving average over the array.
@@ -216,12 +228,14 @@ def moving_average(a, window=3):
 def moving_std(a, window=3):
     """
     Computes the moving std. over an array given a window size.
+
     Parameters
     ----------
     a : array_like
         The array to compute the moving std. on.
     window : int
         The window size.
+
     Returns
     -------
     The moving std. over the array.
@@ -232,12 +246,14 @@ def moving_std(a, window=3):
 def moving_avg_std(a, window=3):
     """
     Computes the moving avg and std. over an array given a window size.
+
     Parameters
     ----------
     a : array_like
         The array to compute the moving std. on.
     window : int
         The window size.
+
     Returns
     -------
     The moving avg and std. over the array as a tuple.
@@ -253,15 +269,18 @@ def moving_avg_std(a, window=3):
 def precheck_series_and_query_1d(ts, query):
     """
     Helper function to ensure we have 1d time series and query.
+
     Parameters
     ----------
     ts : array_like
         The array to create a rolling window on.
     query : array_like
         The query.
+
     Returns
     -------
     (np.array, np.array) - The ts and query respectively.
+
     Raises
     ------
     ValueError

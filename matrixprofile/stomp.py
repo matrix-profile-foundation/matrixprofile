@@ -149,12 +149,10 @@ def stomp(ts, window_size, query=None):
     if is_join:
         exclusion_zone = 0
 
-    # clean up nan and inf in the ts_a and query
-    search = (np.isinf(ts) | np.isnan(ts))
-    ts[search] = 0
-
-    search = (np.isinf(query) | np.isnan(query))
-    query[search] = 0
+    # find skip locations, clean up nan and inf in the ts and query
+    skip_locs = core.find_skip_locations(ts, profile_length, window_size)
+    ts = core.clean_nan_inf(ts)
+    query = core.clean_nan_inf(query)
 
     # initialize matrices
     matrix_profile = np.full(profile_length, np.inf)
@@ -198,12 +196,7 @@ def stomp(ts, window_size, query=None):
 
     # iteratively compute distance profile and update with element-wise mins
     for i in range(1, profile_length):
-
-        # check for nan or inf and skip
-        segment = ts[i:i + window_size]
-        search = (np.isinf(segment) | np.isnan(segment))
-        
-        if np.any(search):
+        if skip_locs[i]:
             continue
 
         query_window = query[i:i + window_size]
