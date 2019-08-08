@@ -266,6 +266,64 @@ def moving_avg_std(a, window=3):
     return (mu, sig)
 
 
+def sliding_dot_product(ts, query):
+    """
+    Computes the sliding dot product for query over the time series using
+    convolution. Note that the result is trimmed due to the computations
+    being invalid; the len(query) to len(ts) is kept.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series.
+    query : array_like
+        The query.
+
+    Returns
+    -------
+    array_like - The sliding dot product.
+    """
+    m = len(query)
+    n = len(ts)
+    dp = np.convolve(ts, np.flipud(query), mode='full')
+
+    return np.real(dp[m - 1:n])
+
+
+def distance_profile(prod, ws, data_mu, data_sig, query_mu, query_sig):
+    """
+    Computes the distance profile for the given statistics.
+
+    Parameters
+    ----------
+    prod : array_like
+        The sliding dot product between the time series and query.
+    ws : int
+        The window size.
+    data_mu : array_like
+        The time series moving average.
+    data_sig : array_like
+        The time series moving standard deviation.
+    query_mu : array_like
+        The querys moving average.
+    query_sig : array_like
+        The querys moving standard deviation.
+
+
+    Returns
+    -------
+    array_like - The distance profile.
+    """
+    distance_profile = (
+        2 * (ws - (prod - ws * data_mu * query_mu) / (data_sig * query_sig))
+    )
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        distance_profile = np.sqrt(np.real(distance_profile))
+
+    return distance_profile
+
+
 def precheck_series_and_query_1d(ts, query):
     """
     Helper function to ensure we have 1d time series and query.
