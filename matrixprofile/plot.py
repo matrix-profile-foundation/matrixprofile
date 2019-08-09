@@ -7,6 +7,8 @@ from __future__ import unicode_literals
 range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
+from collections.abc import Iterable
+
 import numpy as np
 
 from matplotlib import pyplot as plt
@@ -73,6 +75,9 @@ def plot_mp(obj, data=None):
 	current = 0
 
 	fig, axes = plt.subplots(plot_count, 1, sharex=True, figsize=(20,10))
+
+	if not isinstance(axes, Iterable):
+		axes = [axes,]
 
 	# plot the original data
 	if core.is_array_like(data):

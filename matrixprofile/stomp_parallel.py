@@ -20,27 +20,33 @@ logger = logging.getLogger(__name__)
 
 def _batch_compute(args):
     batch_start, batch_end, ts, query, window_size, data_length, \
-    profile_length, exclusion_zone, is_join, data_mu, data_sig = args
-
-    # here we pull out the mass_post to make the loop easier to read
-    # compute query stats
-    first_window = query[0:window_size]
-    last_product = core.sliding_dot_product(ts, first_window)
-
-    query_sum = np.sum(first_window)
-    query_2sum = np.sum(first_window ** 2)
-    query_mu, query_sig = core.moving_avg_std(first_window, window_size)
-
-    first_product = np.copy(last_product)
+    profile_length, exclusion_zone, is_join, data_mu, data_sig, \
+    first_product = args
 
      # initialize matrices
     matrix_profile = np.full(profile_length, np.inf)
     profile_index = np.full(profile_length, -np.inf)
 
+    left_matrix_profile = None
+    right_matrix_profile = None
+    left_profile_index = None
+    right_profile_index = None
+
+    if not is_join:
+        left_matrix_profile = np.copy(matrix_profile)
+        right_matrix_profile = np.copy(matrix_profile)
+        left_profile_index = np.copy(profile_index)
+        right_profile_index = np.copy(profile_index)
+
     # here we pull out the mass_post to make the loop easier to read
     # compute query stats
-    first_window = query[batch_start:batch_start + window_size]
-    last_product = core.sliding_dot_product(ts, first_window)
+    last_product = None
+    if batch_start is 0:
+        first_window = query[batch_start:batch_start + window_size]
+        last_product = np.copy(first_product)
+    else:
+        first_window = query[batch_start - 1:batch_start + window_size - 1]        
+        last_product = core.sliding_dot_product(ts, first_window)
 
     query_sum = np.sum(first_window)
     query_2sum = np.sum(first_window ** 2)
@@ -48,16 +54,22 @@ def _batch_compute(args):
 
     drop_value = first_window[0]
 
-    distance_profile = core.distance_profile(
-            last_product, window_size, data_mu, data_sig, query_mu, query_sig)
-       
-    # update the matrix profile
-    indices = (distance_profile < matrix_profile)
-    matrix_profile[indices] = distance_profile[indices]
-    profile_index[np.argwhere(indices)] = batch_start
+    if batch_start is 0:
+        distance_profile = core.distance_profile(last_product, window_size,
+         data_mu, data_sig, query_mu, query_sig)
+           
+        # update the matrix profile
+        index = np.argmin(distance_profile)
+        matrix_profile[0] = distance_profile[index]
+        profile_index[index] = 0
+
+        batch_start += 1
+
+    if batch_end < profile_length:
+        batch_end += 1
 
     # iteratively compute distance profile and update with element-wise mins
-    for i in range(batch_start + 1, batch_end):
+    for i in range(batch_start, batch_end):
 
         # check for nan or inf and skip
         segment = ts[i:i + window_size]
@@ -89,19 +101,44 @@ def _batch_compute(args):
             distance_profile[ez_start:ez_end] = np.inf
             
         # update the matrix profile
+        # indices = (distance_profile < matrix_profile)
         index = np.argmin(distance_profile)
         matrix_profile[i] = distance_profile[index]
-        # profile_index[index] = i
+        profile_index[index] = i
 
-    return matrix_profile
+        # update the left and right matrix profiles
+        if not is_join:
+            # find differences, shift left and update
+            indices = distance_profile[i:] < left_matrix_profile[i:]
+            falses = np.zeros(i).astype('bool')
+            indices = np.append(falses, indices)
+            left_matrix_profile[indices] = distance_profile[indices]
+            left_profile_index[np.argwhere(indices)] = i
+
+            # find differences, shift right and update
+            indices = distance_profile[0:i] < right_matrix_profile[0:i]
+            falses = np.zeros(profile_length - i).astype('bool')
+            indices = np.append(indices, falses)
+            right_matrix_profile[indices] = distance_profile[indices]
+            right_profile_index[np.argwhere(indices)] = i
+
+    return {
+        'mp': matrix_profile,
+        'pi': profile_index,
+        'rmp': right_matrix_profile,
+        'rpi': right_profile_index,
+        'lmp': left_matrix_profile,
+        'lpi': left_profile_index,
+    }
 
 
 @ray.remote
 def _batch_compute_ray(batch_start, batch_end, ts, query, window_size, 
                        data_length, profile_length, exclusion_zone, 
-                       is_join, data_mu, data_sig):
+                       is_join, data_mu, data_sig, first_product):
     args = (batch_start, batch_end, ts, query, window_size, data_length, 
-            profile_length, exclusion_zone, is_join, data_mu, data_sig)
+            profile_length, exclusion_zone, is_join, data_mu, data_sig,
+            first_product)
     return _batch_compute(args)
 
 
@@ -168,11 +205,12 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
         error = "Time series is too short relative to desired window size"
         raise ValueError(error)
 
-    n_jobs = core.valid_n_jobs(n_jobs)
-
     # use ray or multiprocessing
     if ray.is_initialized():
-        logger.warn('Ray is initialized and will be used.')
+        cpus = int(ray.available_resources()['CPU'])
+        logger.warn('Using Ray with {} cpus'.format(cpus))
+    else:
+        n_jobs = core.valid_n_jobs(n_jobs)
 
     # precompute some common values - profile length, query length etc.
     profile_length = core.get_profile_length(ts, query, window_size)
@@ -208,6 +246,8 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
 
     # precompute some statistics on ts
     data_mu, data_sig = core.moving_avg_std(ts, window_size)
+    first_window = query[0:window_size]
+    first_product = core.sliding_dot_product(ts, first_window)
 
     batch_windows = []
     if ray.is_initialized():
@@ -224,6 +264,7 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
         is_join_id = ray.put(is_join)
         data_mu_id = ray.put(data_mu)
         data_sig_id = ray.put(data_sig)
+        first_product_id = ray.put(first_product)
 
         # batch compute with ray
         batches = []        
@@ -231,7 +272,7 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
             batches.append(_batch_compute_ray.remote(
                 start, end, ts_id, query_id, window_size_id, data_length_id,
                 profile_length_id, exclusion_zone_id, is_join_id, data_mu_id,
-                data_sig_id
+                data_sig_id, first_product_id
             ))
             batch_windows.append((start, end))
         
@@ -242,7 +283,8 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
         for start, end in core.generate_batch_jobs(profile_length, n_jobs):
             args.append((
                 start, end, ts, query, window_size, data_length,
-                profile_length, exclusion_zone, is_join, data_mu, data_sig
+                profile_length, exclusion_zone, is_join, data_mu, data_sig,
+                first_product
             ))
             batch_windows.append((start, end))
 
@@ -251,30 +293,19 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
 
     # now we combine the batch results
     for index, result in enumerate(results):
-        batch_start = batch_windows[index][0]
-        batch_end = batch_windows[index][1]        
+        start = batch_windows[index][0]
+        end = batch_windows[index][1]        
         
         # update the matrix profile
-        matrix_profile[batch_start:batch_end] = result[batch_start:batch_end]
-        # indices = (result < matrix_profile)
-        # matrix_profile[indices] = result[indices]
-        # profile_index[indices] = 0
+        matrix_profile[start:end] = result['mp'][start:end]
+        profile_index[start:end] = result['pi'][start:end]
 
         # # update the left and right matrix profiles
-        # if not is_join:
-        #     # find differences, shift left and update
-        #     indices = result['mp'][i:] < left_matrix_profile[batch_start + i:]
-        #     falses = np.zeros(batch_start + i).astype('bool')
-        #     indices = np.append(falses, indices)
-        #     left_matrix_profile[indices] = distance_profile[indices]
-        #     left_profile_index[np.argwhere(indices)] = i
-
-        #     # find differences, shift right and update
-        #     indices = distance_profile[0:i] < right_matrix_profile[0:i]
-        #     falses = np.zeros(profile_length - i).astype('bool')
-        #     indices = np.append(indices, falses)
-        #     right_matrix_profile[indices] = distance_profile[indices]
-        #     right_profile_index[np.argwhere(indices)] = i
+        if not is_join:
+            left_matrix_profile[start:end] = result['lmp'][start:end]
+            left_profile_index[start:end] = result['lpi'][start:end] 
+            right_matrix_profile[start:end] = result['rmp'][start:end]
+            right_profile_index[start:end] = result['rpi'][start:end]             
 
     return {
         'mp': matrix_profile,

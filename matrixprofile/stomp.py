@@ -120,9 +120,9 @@ def stomp(ts, window_size, query=None):
             last_product, window_size, data_mu, data_sig, query_mu, query_sig)
        
     # update the matrix profile
-    indices = (distance_profile < matrix_profile)
-    matrix_profile[indices] = distance_profile[indices]
-    profile_index[np.argwhere(indices)] = 0
+    index = np.argmin(distance_profile)
+    matrix_profile[index] = distance_profile[index]
+    profile_index[index] = 0
 
     # iteratively compute distance profile and update with element-wise mins
     for i in range(1, profile_length):
@@ -168,9 +168,9 @@ def stomp(ts, window_size, query=None):
             right_profile_index[np.argwhere(indices)] = i
         
         # update the matrix profile
-        indices = (distance_profile < matrix_profile)
-        matrix_profile[indices] = distance_profile[indices]
-        profile_index[np.argwhere(indices)] = i
+        index = np.argmin(distance_profile)
+        matrix_profile[i] = distance_profile[index]
+        profile_index[index] = i
     
     return {
         'mp': matrix_profile,
