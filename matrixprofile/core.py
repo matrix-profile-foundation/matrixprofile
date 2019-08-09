@@ -7,10 +7,15 @@ from __future__ import unicode_literals
 range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
+import logging
+import math
 import multiprocessing
 import sys
 
 import numpy as np
+
+
+logger = logging.getLogger(__name__)
 
 
 def mp_pool():
@@ -363,3 +368,60 @@ def precheck_series_and_query_1d(ts, query):
         raise ValueError('query must be one dimensional!')
 
     return (ts, query)
+
+
+def valid_n_jobs(n_jobs):
+    """
+    Validates and assigns correct number of cpu cores.
+
+    Parameters
+    ----------
+    n_jobs : int
+        Number of desired cpu cores.
+    
+    Returns
+    -------
+    Valid number of cpu cores.
+    """
+    max_cpus = multiprocessing.cpu_count()
+    if n_jobs < 1:
+        n_jobs = max_cpus
+
+    if n_jobs > max_cpus:
+        n_jobs = max_cpus
+    
+    logger.warn('Multiprocessing with {} cpus.'.format(n_jobs))
+
+    return n_jobs
+
+
+def generate_batch_jobs(profile_length, n_jobs):
+    """
+    Generates start and end positions for a matrix profile length and number
+    of jobs.
+
+    Parameters
+    ----------
+    profile_length : int
+        The length of the matrix profile to compute.
+    n_jobs : int
+        The number of jobs (cpu cores).
+    
+
+    Returns
+    -------
+    Yielded start and end index for each job.
+    """
+    batch_size = int(math.ceil(profile_length / n_jobs))
+
+    if batch_size == profile_length:
+        yield (0, profile_length)
+    else:
+        for i in range(n_jobs):
+            start = i * batch_size        
+            end = (i + 1) * batch_size
+            
+            if end > profile_length:
+                end = profile_length
+
+            yield (start, end)

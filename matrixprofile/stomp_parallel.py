@@ -8,96 +8,19 @@ range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
 import math
-
 from multiprocessing import cpu_count, Pool
+import logging
 
 import numpy as np
+import ray
 
 from matrixprofile import core
 
-import ray
+logger = logging.getLogger(__name__)
 
-
-def batch_compute_local(args):
-    batch_start, batch_end, ts, query, window_size, data_length, profile_length, exclusion_zone, is_join, data_mu, data_sig, data_freq = args
-
-    # here we pull out the mass_post to make the loop easier to read
-    # compute query stats
-    first_window = query[0:window_size]
-    last_product = core.sliding_dot_product(ts, first_window)
-
-    query_sum = np.sum(first_window)
-    query_2sum = np.sum(first_window ** 2)
-    query_mu, query_sig = core.moving_avg_std(first_window, window_size)
-
-    first_product = np.copy(last_product)
-
-     # initialize matrices
-    matrix_profile = np.full(profile_length, np.inf)
-    profile_index = np.full(profile_length, -np.inf)
-
-    # here we pull out the mass_post to make the loop easier to read
-    # compute query stats
-    first_window = query[batch_start:batch_start + window_size]
-    last_product = core.sliding_dot_product(ts, first_window)
-
-    query_sum = np.sum(first_window)
-    query_2sum = np.sum(first_window ** 2)
-    query_mu, query_sig = core.moving_avg_std(first_window, window_size)
-
-    drop_value = first_window[0]
-
-    distance_profile = core.distance_profile(
-            last_product, window_size, data_mu, data_sig, query_mu, query_sig)
-       
-    # update the matrix profile
-    indices = (distance_profile < matrix_profile)
-    matrix_profile[indices] = distance_profile[indices]
-    profile_index[np.argwhere(indices)] = batch_start
-
-    # iteratively compute distance profile and update with element-wise mins
-    for i in range(batch_start + 1, batch_end):
-
-        # check for nan or inf and skip
-        segment = ts[i:i + window_size]
-        search = (np.isinf(segment) | np.isnan(segment))
-        
-        if np.any(search):
-            continue
-
-        query_window = query[i:i + window_size]
-        query_sum = query_sum - drop_value + query_window[-1]
-        query_2sum = query_2sum - drop_value ** 2 + query_window[-1] ** 2
-        query_mu = query_sum / window_size
-        query_sig2 = query_2sum / window_size - query_mu ** 2
-        query_sig = np.sqrt(query_sig2)
-        last_product[1:] = last_product[0:data_length - window_size] \
-            - ts[0:data_length - window_size] * drop_value \
-            + ts[window_size:] * query_window[-1]
-        last_product[0] = first_product[i]
-        drop_value = query_window[0]
-
-        distance_profile = core.distance_profile(
-            last_product, window_size, data_mu, data_sig, query_mu, query_sig)
-
-        # apply the exclusion zone
-        # for similarity join we do not apply exclusion zone
-        if exclusion_zone > 0 and not is_join:
-            ez_start = np.max([0, i - exclusion_zone])
-            ez_end = np.min([len(ts) - window_size + 1, i + exclusion_zone])
-            distance_profile[ez_start:ez_end] = np.inf
-            
-        # update the matrix profile
-        index = np.argmin(distance_profile)
-        matrix_profile[i] = distance_profile[index]
-        # profile_index[index] = i
-
-    return matrix_profile
-
-
-@ray.remote
-def batch_compute(batch_start, batch_end, ts, query, window_size, data_length,
-                   profile_length, exclusion_zone, is_join, data_mu, data_sig, data_freq):
+def _batch_compute(args):
+    batch_start, batch_end, ts, query, window_size, data_length, \
+    profile_length, exclusion_zone, is_join, data_mu, data_sig = args
 
     # here we pull out the mass_post to make the loop easier to read
     # compute query stats
@@ -174,66 +97,20 @@ def batch_compute(batch_start, batch_end, ts, query, window_size, data_length,
 
 
 @ray.remote
-def batch_compute2(batch_start, batch_end, ts, query, window_size, data_length,
-                   profile_length, exclusion_zone, is_join, data_mu, data_sig, data_freq):
-     # initialize matrices
-    matrix_profile = np.full(profile_length, np.inf)
-    profile_index = np.full(profile_length, -np.inf)
-
-    # iteratively compute distance profile and update with element-wise mins
-    for i in range(batch_start, batch_end):
-
-        # check for nan or inf and skip
-        segment = ts[i:i + window_size]
-        search = (np.isinf(segment) | np.isnan(segment))
-        
-        if np.any(search):
-            continue
-
-        query_window = query[i:i + window_size]
-        last_product = core.sliding_dot_product(ts, query_window)
-        query_mu, query_sig = core.moving_avg_std(query_window, window_size)
-
-        distance_profile = core.distance_profile(
-            last_product, window_size, data_mu, data_sig, query_mu, query_sig)
-
-        # apply the exclusion zone
-        # for similarity join we do not apply exclusion zone
-        if exclusion_zone > 0 and not is_join:
-            ez_start = np.max([0, i - exclusion_zone])
-            ez_end = np.min([len(ts) - window_size + 1, i + exclusion_zone])
-            distance_profile[ez_start:ez_end] = np.inf
-            
-        # update the matrix profile
-        index = np.argmin(distance_profile)
-        matrix_profile[i] = distance_profile[index]
-        # profile_index[index] = i
-
-    return matrix_profile
+def _batch_compute_ray(batch_start, batch_end, ts, query, window_size, 
+                       data_length, profile_length, exclusion_zone, 
+                       is_join, data_mu, data_sig):
+    args = (batch_start, batch_end, ts, query, window_size, data_length, 
+            profile_length, exclusion_zone, is_join, data_mu, data_sig)
+    return _batch_compute(args)
 
 
-def get_batch_windows(profile_length, n_jobs):
-    batch_size = int(math.ceil(profile_length / n_jobs))
-
-    if batch_size == profile_length:
-        yield (0, profile_length)
-    else:
-        for i in range(n_jobs):
-            start = i * batch_size        
-            end = (i + 1) * batch_size
-            
-            if end > profile_length:
-                end = profile_length
-
-            yield (start, end)
-
-
-def stomp_parallel(ts, window_size, query=None, n_jobs=-1, use_ray=True):
+def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
     """
-    Compute the matrix profile and profile index for a one dimensional time
-    series. When a query is provided, it is assumed to be a join. When one is
-    not provided, a self-join occurs. Essentially, the time series is
-    duplicated as the query.
+    Computes matrix profiles for a single dimensional time series using the 
+    parallelized STOMP algorithm. Ray or Python's multiprocessing library may
+    be used. When you have initialized Ray on your machine, it takes priority
+    over using Python's multiprocessing.
 
     Parameters
     ----------
@@ -244,8 +121,10 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1, use_ray=True):
     query : array_like
         Optionally, a query can be provided to perform a similarity join.
     n_jobs : int, default All
-        The number of cpu cores to use for processing. It defaults to all
-        available cores.
+        The number of batch jobs to compute at once. Note that when ray is
+        initialized we cannot tell how many cores are available. You must
+        explicitly state how many jobs you want. In the case of
+        multiprocessing, n_jobs is a 1:1 relationship with number of cpu cores.
 
     Returns
     -------
@@ -261,7 +140,7 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1, use_ray=True):
         'ez': The exclusion zone used,
         'join': Flag indicating if a similarity join was computed
         'class': "MatrixProfile"
-        'algorithm': "stomp"
+        'algorithm': "stomp_parallel"
     }
 
     Raises
@@ -289,13 +168,12 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1, use_ray=True):
         error = "Time series is too short relative to desired window size"
         raise ValueError(error)
 
-    # set the n_jobs appropriately
-    if n_jobs < 1:
-        n_jobs = cpu_count()
+    n_jobs = core.valid_n_jobs(n_jobs)
 
-    if n_jobs > cpu_count():
-        n_jobs = cpu_count()
-    
+    # use ray or multiprocessing
+    if ray.is_initialized():
+        logger.warn('Ray is initialized and will be used.')
+
     # precompute some common values - profile length, query length etc.
     profile_length = core.get_profile_length(ts, query, window_size)
     data_length = len(ts)
@@ -330,30 +208,13 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1, use_ray=True):
 
     # precompute some statistics on ts
     data_mu, data_sig = core.moving_avg_std(ts, window_size)
-    data_freq = np.fft.fft(ts)
 
-    if use_ray:
-        # start ray
-        # we can optionally set the memory usage, but I don't know if I want to
-        # expose this to users
-        #
-        # convert GB to bytes:
-        # int(1e+9 * memory)
-        #
-        # object_store_memory – The amount of memory (in bytes) to start the object 
-        # store with. By default, this is capped at 20GB but can be set higher.
-        #
-        # redis_max_memory – The max amount of memory (in bytes) to allow each 
-        # edis shard to use. Once the limit is exceeded, redis will start LRU 
-        # eviction of entries. This only applies to the sharded redis tables 
-        # (task, object, and profile tables). By default, this is capped at 10GB 
-        # but can be set higher.
-        if not ray.is_initialized():
-            ray.init(num_cpus=n_jobs, ignore_reinit_error=True, logging_level=40,) #local_mode=True)
+    batch_windows = []
+    if ray.is_initialized():
 
-        # TODO: create batch jobs and submit to ray
-        batches = []
-        batch_windows = []
+        # ray likes to have globally accessible data
+        # here it makes sense for these variables so we put them in the object
+        # store
         ts_id = ray.put(ts)
         query_id = ray.put(query)
         window_size_id = ray.put(window_size)
@@ -363,42 +224,32 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1, use_ray=True):
         is_join_id = ray.put(is_join)
         data_mu_id = ray.put(data_mu)
         data_sig_id = ray.put(data_sig)
-        data_freq_id = ray.put(data_freq)
-        #####################
-        # test computebatch
-        #####################
-        for start, end in get_batch_windows(profile_length, n_jobs):
-            batches.append(batch_compute.remote(
+
+        # batch compute with ray
+        batches = []        
+        for start, end in core.generate_batch_jobs(profile_length, n_jobs):
+            batches.append(_batch_compute_ray.remote(
                 start, end, ts_id, query_id, window_size_id, data_length_id,
-                profile_length_id, exclusion_zone_id, is_join_id, data_mu, data_sig, data_freq
+                profile_length_id, exclusion_zone_id, is_join_id, data_mu_id,
+                data_sig_id
             ))
             batch_windows.append((start, end))
-
-        #####################
-        # test computebatch2
-        #####################
-        # for start, end in get_batch_windows(profile_length, n_jobs):
-        #     batches.append(batch_compute2.remote(
-        #         start, end, ts_id, query_id, window_size_id, data_length_id,
-        #         profile_length_id, exclusion_zone_id, is_join_id, data_mu, data_sig, data_freq
-        #     ))
-        #     batch_windows.append((start, end))
-
+        
         results = ray.get(batches)
     else:
-        batch_windows = []
+        # batch compute with multiprocessing
         args = []
-        for start, end in get_batch_windows(profile_length, n_jobs):
+        for start, end in core.generate_batch_jobs(profile_length, n_jobs):
             args.append((
                 start, end, ts, query, window_size, data_length,
-                profile_length, exclusion_zone, is_join, data_mu, data_sig, data_freq
+                profile_length, exclusion_zone, is_join, data_mu, data_sig
             ))
             batch_windows.append((start, end))
 
         with core.mp_pool()(n_jobs) as pool:
-            results = pool.map(batch_compute_local, args)
+            results = pool.map(_batch_compute, args)
 
-
+    # now we combine the batch results
     for index, result in enumerate(results):
         batch_start = batch_windows[index][0]
         batch_end = batch_windows[index][1]        
@@ -425,14 +276,6 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1, use_ray=True):
         #     right_matrix_profile[indices] = distance_profile[indices]
         #     right_profile_index[np.argwhere(indices)] = i
 
-
-    #results = batch_process(ts, window_size, n_jobs, query=None)
-
-    # TODO: re-assemble full matrix profiles
-    
-    if use_ray:
-        ray.shutdown()
-
     return {
         'mp': matrix_profile,
         'pi': profile_index,
@@ -444,5 +287,5 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1, use_ray=True):
         'ez': exclusion_zone,
         'join': is_join,
         'class': "MatrixProfile",
-        'algorithm': "stomp"
+        'algorithm': "stomp_parallel"
     }
