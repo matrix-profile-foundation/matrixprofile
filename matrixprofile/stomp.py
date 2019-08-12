@@ -7,30 +7,62 @@ from __future__ import unicode_literals
 range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
+import logging
+
 import numpy as np
+import ray
 
 from matrixprofile import core
 
+logger = logging.getLogger(__name__)
 
-def stomp(ts, window_size, query=None):
+
+def _batch_compute(args):
     """
-    Compute the matrix profile and profile index for a one dimensional time
-    series. When a query is provided, it is assumed to be a join. When one is
-    not provided, a self-join occurs. Essentially, the time series is
-    duplicated as the query.
+    Internal function to compute a batch of the time series in parallel.
 
     Parameters
     ----------
-    ts : array_like
-        The time series to compute the matrix profile for.
-    window_size: int
-        The size of the window to compute the matrix profile over.
-    query : array_like
-        Optionally, a query can be provided to perform a similarity join.
+    args : tuple
+        Various attributes used for computing the batch.
+        (
+            batch_start : int
+                The starting index for this batch.
+            batch_end : int
+                The ending index for this batch.
+            ts : array_like
+                The time series to compute the matrix profile for.
+            query : array_like
+                The query.
+            window_size : int
+                The size of the window to compute the profile over.
+            data_length : int
+                The number of elements in the time series.
+            profile_length : int
+                The number of elements that will be in the final matrix
+                profile.
+            exclusion_zone : int
+                Used to exclude trivial matches.
+            is_join : bool
+                Flag to indicate if an AB join or self join is occuring.
+            data_mu : array_like
+                The moving average over the time series for the given window
+                size.
+            data_sig : array_like
+                The moving standard deviation over the time series for the
+                given window size.
+            first_product : array_like
+                The first sliding dot product for the time series over index
+                0 to window_size.
+            skip_locs : array_like
+                Indices that should be skipped for distance profile calculation
+                due to a nan or inf.
+        )
 
     Returns
     -------
-    A dict of key data points computed.
+    The matrix profile, left and right matrix profiles and their respective
+    profile indices.
     {
         'mp': The matrix profile,
         'pi': The matrix profile 1NN indices,
@@ -38,57 +70,16 @@ def stomp(ts, window_size, query=None):
         'rpi': The right matrix profile 1NN indices,
         'lmp': The left matrix profile,
         'lpi': The left matrix profile 1NN indices,
-        'w': The window size used to compute the matrix profile,
-        'ez': The exclusion zone used,
-        'join': Flag indicating if a similarity join was computed
-        'class': "MatrixProfile"
-        'algorithm': "stomp"
     }
+    """
+    batch_start, batch_end, ts, query, window_size, data_length, \
+    profile_length, exclusion_zone, is_join, data_mu, data_sig, \
+    first_product, skip_locs = args
 
-    Raises
-    ------
-    ValueError
-        If window_size < 4.
-        If window_size > query length / 2.
-        If ts is not a list or np.array.
-        If query is not a list or np.array.
-        If ts or query is not one dimensional.
-    """    
-    is_join = core.is_similarity_join(ts, query)
-    if not is_join:
-        query = ts
-
-    # data conversion to np.array
-    ts = core.to_np_array(ts)
-    query = core.to_np_array(query)
-
-    if window_size < 4:
-        error = "m, window size, must be at least 4."
-        raise ValueError(error)
-
-    if window_size > len(query) / 2:
-        error = "Time series is too short relative to desired window size"
-        raise ValueError(error)
-    
-    # precompute some common values - profile length, query length etc.
-    profile_length = core.get_profile_length(ts, query, window_size)
-    data_length = len(ts)
-    exclusion_zone = int(np.ceil(window_size / 2.0))
-
-    # do not use exclusion zone for join
-    if is_join:
-        exclusion_zone = 0
-
-    # find skip locations, clean up nan and inf in the ts and query
-    skip_locs = core.find_skip_locations(ts, profile_length, window_size)
-    ts = core.clean_nan_inf(ts)
-    query = core.clean_nan_inf(query)
-
-    # initialize matrices
+     # initialize matrices
     matrix_profile = np.full(profile_length, np.inf)
-    profile_index = np.full(profile_length, -np.inf)
+    profile_index = np.full(profile_length, 0)
 
-    # compute left and right matrix profile when similarity join does not happen
     left_matrix_profile = None
     right_matrix_profile = None
     left_profile_index = None
@@ -100,32 +91,48 @@ def stomp(ts, window_size, query=None):
         left_profile_index = np.copy(profile_index)
         right_profile_index = np.copy(profile_index)
 
-    # precompute some statistics on ts
-    data_mu, data_sig = core.moving_avg_std(ts, window_size)
-    data_freq = np.fft.fft(ts)
-
-    # here we pull out the mass_post to make the loop easier to read
-    # compute query stats
-    first_window = query[0:window_size]
-    last_product = core.sliding_dot_product(ts, first_window)
+    # with batch 0 we do not need to recompute the dot product
+    # however with other batch windows, we need the previous iterations sliding
+    # dot product
+    last_product = None
+    if batch_start is 0:
+        first_window = query[batch_start:batch_start + window_size]
+        last_product = np.copy(first_product)
+    else:
+        first_window = query[batch_start - 1:batch_start + window_size - 1]        
+        last_product = core.sliding_dot_product(ts, first_window)
 
     query_sum = np.sum(first_window)
     query_2sum = np.sum(first_window ** 2)
     query_mu, query_sig = core.moving_avg_std(first_window, window_size)
 
-    first_product = np.copy(last_product)
     drop_value = first_window[0]
 
-    distance_profile = core.distance_profile(
-            last_product, window_size, data_mu, data_sig, query_mu, query_sig)
-       
-    # update the matrix profile
-    index = np.argmin(distance_profile)
-    matrix_profile[index] = distance_profile[index]
-    profile_index[index] = 0
+    # only compute the distance profile for index 0 and update
+    if batch_start is 0:
+        distance_profile = core.distance_profile(last_product, window_size,
+         data_mu, data_sig, query_mu, query_sig)
+
+        # apply exclusion zone
+        distance_profile = core.apply_exclusion_zone(exclusion_zone, is_join,
+            window_size, data_length, 0, distance_profile)
+           
+        # update the matrix profile
+        indices = (distance_profile < matrix_profile)
+        matrix_profile[indices] = distance_profile[indices]
+        profile_index[indices] = 0
+
+        batch_start += 1
+
+    # make sure to compute inclusively from batch start to batch end
+    # otherwise there are gaps in the profile
+    if batch_end < profile_length:
+        batch_end += 1
 
     # iteratively compute distance profile and update with element-wise mins
-    for i in range(1, profile_length):
+    for i in range(batch_start, batch_end):
+
+        # check for nan or inf and skip
         if skip_locs[i]:
             continue
 
@@ -144,13 +151,15 @@ def stomp(ts, window_size, query=None):
         distance_profile = core.distance_profile(
             last_product, window_size, data_mu, data_sig, query_mu, query_sig)
 
-        # apply the exclusion zone
-        # for similarity join we do not apply exclusion zone
-        if exclusion_zone > 0 and not is_join:
-            ez_start = np.max([0, i - exclusion_zone])
-            ez_end = np.min([profile_length, i + exclusion_zone])
-            distance_profile[ez_start:ez_end] = np.inf
-        
+        # apply the exclusion zone        
+        distance_profile = core.apply_exclusion_zone(exclusion_zone, is_join, 
+            window_size, data_length, i, distance_profile)
+            
+        # update the matrix profile
+        indices = (distance_profile < matrix_profile)
+        matrix_profile[indices] = distance_profile[indices]
+        profile_index[indices] = i
+
         # update the left and right matrix profiles
         if not is_join:
             # find differences, shift left and update
@@ -166,12 +175,258 @@ def stomp(ts, window_size, query=None):
             indices = np.append(indices, falses)
             right_matrix_profile[indices] = distance_profile[indices]
             right_profile_index[np.argwhere(indices)] = i
+
+    return {
+        'mp': matrix_profile,
+        'pi': profile_index,
+        'rmp': right_matrix_profile,
+        'rpi': right_profile_index,
+        'lmp': left_matrix_profile,
+        'lpi': left_profile_index,
+    }
+
+
+@ray.remote
+def _batch_compute_ray(batch_start, batch_end, ts, query, window_size, 
+                       data_length, profile_length, exclusion_zone, 
+                       is_join, data_mu, data_sig, first_product, skip_locs):
+    """
+    Wrapper function around _batch_compute that utilizes Ray instead of
+    Python's multiprocessing.
+
+    Parameters
+    ----------
+    batch_start : int
+        The starting index for this batch.
+    batch_end : int
+        The ending index for this batch.
+    ts : array_like
+        The time series to compute the matrix profile for.
+    query : array_like
+        The query.
+    window_size : int
+        The size of the window to compute the profile over.
+    data_length : int
+        The number of elements in the time series.
+    profile_length : int
+        The number of elements that will be in the final matrix
+        profile.
+    exclusion_zone : int
+        Used to exclude trivial matches.
+    is_join : bool
+        Flag to indicate if an AB join or self join is occuring.
+    data_mu : array_like
+        The moving average over the time series for the given window
+        size.
+    data_sig : array_like
+        The moving standard deviation over the time series for the
+        given window size.
+    first_product : array_like
+        The first sliding dot product for the time series over index
+        0 to window_size.
+    skip_locs : array_like
+        Indices that should be skipped for distance profile calculation
+        due to a nan or inf.
+
+    Returns
+    -------
+    The matrix profile, left and right matrix profiles and their respective
+    profile indices.
+    {
+        'mp': The matrix profile,
+        'pi': The matrix profile 1NN indices,
+        'rmp': The right matrix profile,
+        'rpi': The right matrix profile 1NN indices,
+        'lmp': The left matrix profile,
+        'lpi': The left matrix profile 1NN indices,
+    }
+    """
+    args = (batch_start, batch_end, ts, query, window_size, data_length, 
+            profile_length, exclusion_zone, is_join, data_mu, data_sig,
+            first_product, skip_locs)
+    return _batch_compute(args)
+
+
+def stomp(ts, window_size, query=None, n_jobs=-1):
+    """
+    Computes matrix profiles for a single dimensional time series using the 
+    parallelized STOMP algorithm (by default). Ray or Python's multiprocessing
+    library may be used. When you have initialized Ray on your machine, 
+    it takes priority over using Python's multiprocessing.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series to compute the matrix profile for.
+    window_size: int
+        The size of the window to compute the matrix profile over.
+    query : array_like
+        Optionally, a query can be provided to perform a similarity join.
+    n_jobs : int, default All
+        The number of batch jobs to compute at once. Note that when ray is
+        initialized we cannot tell how many cores are available. You must
+        explicitly state how many jobs you want. In the case of
+        multiprocessing, n_jobs is a 1:1 relationship with number of cpu cores.
+
+    Returns
+    -------
+    A dict of key data points computed.
+    {
+        'mp': The matrix profile,
+        'pi': The matrix profile 1NN indices,
+        'rmp': The right matrix profile,
+        'rpi': The right matrix profile 1NN indices,
+        'lmp': The left matrix profile,
+        'lpi': The left matrix profile 1NN indices,
+        'w': The window size used to compute the matrix profile,
+        'ez': The exclusion zone used,
+        'join': Flag indicating if a similarity join was computed
+        'class': "MatrixProfile"
+        'algorithm': "stomp_parallel"
+    }
+
+    Raises
+    ------
+    ValueError
+        If window_size < 4.
+        If window_size > query length / 2.
+        If ts is not a list or np.array.
+        If query is not a list or np.array.
+        If ts or query is not one dimensional.
+    """
+    is_join = core.is_similarity_join(ts, query)
+    if not is_join:
+        query = ts
+
+    # data conversion to np.array
+    ts = core.to_np_array(ts)
+    query = core.to_np_array(query)
+
+    if window_size < 4:
+        error = "window size must be at least 4."
+        raise ValueError(error)
+
+    if window_size > len(query) / 2:
+        error = "Time series is too short relative to desired window size"
+        raise ValueError(error)
+
+    # use ray, multiprocessing or single threaded approach
+    if ray.is_initialized():
+        cpus = int(ray.available_resources()['CPU'])
+        n_jobs = cpus
+        logger.warning('Using Ray with {} cpus'.format(cpus))
+    elif n_jobs == 1:
+        logger.warning('Running stomp in single threaded mode.')
+    else:
+        n_jobs = core.valid_n_jobs(n_jobs)
+
+    # precompute some common values - profile length, query length etc.
+    profile_length = core.get_profile_length(ts, query, window_size)
+    data_length = len(ts)
+    exclusion_zone = int(np.ceil(window_size / 2.0))
+
+    # do not use exclusion zone for join
+    if is_join:
+        exclusion_zone = 0
+
+    # find skip locations, clean up nan and inf in the ts and query
+    skip_locs = core.find_skip_locations(ts, profile_length, window_size)
+    ts = core.clean_nan_inf(ts)
+    query = core.clean_nan_inf(query)
+
+    # initialize matrices
+    matrix_profile = np.full(profile_length, np.inf)
+    profile_index = np.full(profile_length, 0)
+
+    # compute left and right matrix profile when similarity join does not happen
+    left_matrix_profile = None
+    right_matrix_profile = None
+    left_profile_index = None
+    right_profile_index = None
+
+    if not is_join:
+        left_matrix_profile = np.copy(matrix_profile)
+        right_matrix_profile = np.copy(matrix_profile)
+        left_profile_index = np.copy(profile_index)
+        right_profile_index = np.copy(profile_index)
+
+    # precompute some statistics on ts
+    data_mu, data_sig = core.moving_avg_std(ts, window_size)
+    first_window = query[0:window_size]
+    first_product = core.sliding_dot_product(ts, first_window)
+
+    batch_windows = []
+    results = []
+    if ray.is_initialized():
+
+        # ray likes to have globally accessible data
+        # here it makes sense for these variables so we put them in the object
+        # store
+        ts_id = ray.put(ts)
+        query_id = ray.put(query)
+        window_size_id = ray.put(window_size)
+        data_length_id = ray.put(data_length)
+        profile_length_id = ray.put(profile_length)
+        exclusion_zone_id = ray.put(exclusion_zone)
+        is_join_id = ray.put(is_join)
+        data_mu_id = ray.put(data_mu)
+        data_sig_id = ray.put(data_sig)
+        first_product_id = ray.put(first_product)
+        skip_locs_id = ray.put(skip_locs)
+
+        # batch compute with ray
+        batches = []        
+        for start, end in core.generate_batch_jobs(profile_length, n_jobs):
+            batches.append(_batch_compute_ray.remote(
+                start, end, ts_id, query_id, window_size_id, data_length_id,
+                profile_length_id, exclusion_zone_id, is_join_id, data_mu_id,
+                data_sig_id, first_product_id, skip_locs_id
+            ))
+            batch_windows.append((start, end))
+        
+        results = [ray.get(batch) for batch in batches]
+    else:
+        # batch compute with multiprocessing
+        args = []
+        for start, end in core.generate_batch_jobs(profile_length, n_jobs):
+            args.append((
+                start, end, ts, query, window_size, data_length,
+                profile_length, exclusion_zone, is_join, data_mu, data_sig,
+                first_product, skip_locs
+            ))
+            batch_windows.append((start, end))
+
+        # we are running single threaded stomp - no need to initialize any
+        # parallel environments.
+        if n_jobs == 1 or len(args) == 1:
+            results.append(_batch_compute(args[0]))
+        else:
+            # parallelize
+            with core.mp_pool()(n_jobs) as pool:
+                results = pool.map(_batch_compute, args)
+
+    # now we combine the batch results
+    # TODO: we could save some operations here in single threaded mode, but
+    # I don't think that there is that much overhead.
+    for index, result in enumerate(results):
+        start = batch_windows[index][0]
+        end = batch_windows[index][1]        
         
         # update the matrix profile
-        index = np.argmin(distance_profile)
-        matrix_profile[i] = distance_profile[index]
-        profile_index[index] = i
-    
+        indices = result['mp'] < matrix_profile
+        matrix_profile[indices] = result['mp'][indices]
+        profile_index[indices] = result['pi'][indices]
+
+        # update the left and right matrix profiles
+        if not is_join:
+            indices = result['lmp'] < left_matrix_profile
+            left_matrix_profile[indices] = result['lmp'][indices]
+            left_profile_index[indices] = result['lpi'][indices]
+
+            indices = result['rmp'] < right_matrix_profile
+            right_matrix_profile[indices] = result['rmp'][indices]
+            right_profile_index[indices] = result['rpi'][indices]           
+
     return {
         'mp': matrix_profile,
         'pi': profile_index,
@@ -183,5 +438,5 @@ def stomp(ts, window_size, query=None):
         'ez': exclusion_zone,
         'join': is_join,
         'class': "MatrixProfile",
-        'algorithm': "stomp"
+        'algorithm': "stomp_parallel"
     }

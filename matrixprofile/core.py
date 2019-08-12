@@ -390,7 +390,7 @@ def valid_n_jobs(n_jobs):
     if n_jobs > max_cpus:
         n_jobs = max_cpus
     
-    logger.warn('Multiprocessing with {} cpus.'.format(n_jobs))
+    logger.warning('Multiprocessing with {} cpus.'.format(n_jobs))
 
     return n_jobs
 
@@ -425,3 +425,13 @@ def generate_batch_jobs(profile_length, n_jobs):
                 end = profile_length
 
             yield (start, end)
+
+
+def apply_exclusion_zone(exclusion_zone, is_join, window_size, data_length,
+    index, distance_profile):
+    if exclusion_zone > 0 and not is_join:
+        ez_start = np.max([0, index - exclusion_zone])
+        ez_end = np.min([data_length - window_size + 1, index + exclusion_zone])
+        distance_profile[ez_start:ez_end] = np.inf
+
+    return distance_profile
