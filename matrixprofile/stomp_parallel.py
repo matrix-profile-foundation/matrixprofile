@@ -38,8 +38,9 @@ def _batch_compute(args):
         left_profile_index = np.copy(profile_index)
         right_profile_index = np.copy(profile_index)
 
-    # here we pull out the mass_post to make the loop easier to read
-    # compute query stats
+    # with batch 0 we do not need to recompute the dot product
+    # however with other batch windows, we need the previous iterations sliding
+    # dot product
     last_product = None
     if batch_start is 0:
         first_window = query[batch_start:batch_start + window_size]
@@ -54,6 +55,7 @@ def _batch_compute(args):
 
     drop_value = first_window[0]
 
+    # only compute the distance profile for index 0 and update
     if batch_start is 0:
         distance_profile = core.distance_profile(last_product, window_size,
          data_mu, data_sig, query_mu, query_sig)
@@ -65,6 +67,8 @@ def _batch_compute(args):
 
         batch_start += 1
 
+    # make sure to compute inclusively from batch start to batch end
+    # otherwise there are gaps in the profile
     if batch_end < profile_length:
         batch_end += 1
 
@@ -300,12 +304,15 @@ def stomp_parallel(ts, window_size, query=None, n_jobs=-1):
         matrix_profile[start:end] = result['mp'][start:end]
         profile_index[start:end] = result['pi'][start:end]
 
-        # # update the left and right matrix profiles
+        # update the left and right matrix profiles
         if not is_join:
-            left_matrix_profile[start:end] = result['lmp'][start:end]
-            left_profile_index[start:end] = result['lpi'][start:end] 
-            right_matrix_profile[start:end] = result['rmp'][start:end]
-            right_profile_index[start:end] = result['rpi'][start:end]             
+            indices = result['lmp'] < left_matrix_profile
+            left_matrix_profile[indices] = result['lmp'][indices]
+            left_profile_index[indices] = result['lpi'][indices]
+
+            indices = result['rmp'] < right_matrix_profile
+            right_matrix_profile[indices] = result['rmp'][indices]
+            right_profile_index[indices] = result['rpi'][indices]           
 
     return {
         'mp': matrix_profile,
