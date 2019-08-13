@@ -42,18 +42,23 @@ def test_stomp_small_series_self_join_single_threaded():
     ts = np.array([0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0])
     w = 4
     desired = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0])
+    desired_pi = np.array([4, 5, 6, 7, 0, 1, 2, 3, 0])
+
+    desired_lmp = np.array([np.inf, np.inf, np.inf, 4, 2.82842712, 0, 0, 0, 0])
+    desired_lpi = np.array([0, 0, 0, 1, 1, 1, 2, 3, 4])
+
+    desired_rmp = np.array([0, 0, 0, 0, 0, 2.82842712, np.inf, np.inf, np.inf])
+    desired_rpi = np.array([4, 5, 6, 7, 8, 8, 0, 0, 0])
 
     profile = stomp(ts, w, n_jobs=1)
     np.testing.assert_almost_equal(profile['mp'], desired)
+    np.testing.assert_almost_equal(profile['pi'], desired_pi)
 
+    np.testing.assert_almost_equal(profile['lmp'], desired_lmp)
+    np.testing.assert_almost_equal(profile['lpi'], desired_lpi)
 
-def test_stomp_small_series_self_join_single_threaded_pi():
-    ts = np.array([0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0])
-    w = 4
-    desired = np.array([4, 5, 6, 7, 0, 1, 2, 3, 0])
-
-    profile = stomp(ts, w, n_jobs=1)
-    np.testing.assert_almost_equal(profile['pi'], desired)
+    np.testing.assert_almost_equal(profile['rmp'], desired_rmp)
+    np.testing.assert_almost_equal(profile['rpi'], desired_rpi)
 
 
 def test_stomp_small_series_self_join_multi_threaded():
@@ -62,39 +67,44 @@ def test_stomp_small_series_self_join_multi_threaded():
     desired = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0])
     desired_pi = np.array([4, 5, 6, 7, 0, 1, 2, 3, 0])
 
+    desired_lmp = np.array([np.inf, np.inf, np.inf, 4, 2.82842712, 0, 0, 0, 0])
+    desired_lpi = np.array([0, 0, 0, 1, 1, 1, 2, 3, 4])
+
+    desired_rmp = np.array([0, 0, 0, 0, 0, 2.82842712, np.inf, np.inf, np.inf])
+    desired_rpi = np.array([4, 5, 6, 7, 8, 8, 0, 0, 0])
+
     profile = stomp(ts, w)
     np.testing.assert_almost_equal(profile['mp'], desired)
     np.testing.assert_almost_equal(profile['pi'], desired_pi)
 
+    np.testing.assert_almost_equal(profile['lmp'], desired_lmp)
+    np.testing.assert_almost_equal(profile['lpi'], desired_lpi)
 
-def test_stomp_small_series_self_join_multi_threaded_pi():
-    ts = np.array([0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0])
-    w = 4
-    desired = np.array([4, 5, 6, 7, 0, 1, 2, 3, 0])
-
-    profile = stomp(ts, w)
-    np.testing.assert_almost_equal(profile['pi'], desired)
+    np.testing.assert_almost_equal(profile['rmp'], desired_rmp)
+    np.testing.assert_almost_equal(profile['rpi'], desired_rpi)
 
 
 def test_stomp_small_series_self_join_ray():
     ts = np.array([0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0])
     w = 4
     desired = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0])
+    desired_pi = np.array([4, 5, 6, 7, 0, 1, 2, 3, 0])
+
+    desired_lmp = np.array([np.inf, np.inf, np.inf, 4, 2.82842712, 0, 0, 0, 0])
+    desired_lpi = np.array([0, 0, 0, 1, 1, 1, 2, 3, 4])
+
+    desired_rmp = np.array([0, 0, 0, 0, 0, 2.82842712, np.inf, np.inf, np.inf])
+    desired_rpi = np.array([4, 5, 6, 7, 8, 8, 0, 0, 0])
 
     ray.init()
     profile = stomp(ts, w)
     ray.shutdown()
-
+    
     np.testing.assert_almost_equal(profile['mp'], desired)
+    np.testing.assert_almost_equal(profile['pi'], desired_pi)
 
+    np.testing.assert_almost_equal(profile['lmp'], desired_lmp)
+    np.testing.assert_almost_equal(profile['lpi'], desired_lpi)
 
-def test_stomp_small_series_self_join_ray_pi():
-    ts = np.array([0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0])
-    w = 4
-    desired = np.array([4, 5, 6, 7, 0, 1, 2, 3, 0])
-
-    ray.init()
-    profile = stomp(ts, w)
-    ray.shutdown()
-
-    np.testing.assert_almost_equal(profile['pi'], desired)
+    np.testing.assert_almost_equal(profile['rmp'], desired_rmp)
+    np.testing.assert_almost_equal(profile['rpi'], desired_rpi)

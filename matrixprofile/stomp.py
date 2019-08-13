@@ -323,6 +323,8 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
     # precompute some common values - profile length, query length etc.
     profile_length = core.get_profile_length(ts, query, window_size)
     data_length = len(ts)
+    query_length = len(query)
+    num_queries = query_length - window_size + 1
     exclusion_zone = int(np.ceil(window_size / 2.0))
 
     # do not use exclusion zone for join
@@ -376,7 +378,7 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
 
         # batch compute with ray
         batches = []        
-        for start, end in core.generate_batch_jobs(profile_length, n_jobs):
+        for start, end in core.generate_batch_jobs(num_queries, n_jobs):
             batches.append(_batch_compute_ray.remote(
                 start, end, ts_id, query_id, window_size_id, data_length_id,
                 profile_length_id, exclusion_zone_id, is_join_id, data_mu_id,
@@ -388,7 +390,7 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
     else:
         # batch compute with multiprocessing
         args = []
-        for start, end in core.generate_batch_jobs(profile_length, n_jobs):
+        for start, end in core.generate_batch_jobs(num_queries, n_jobs):
             args.append((
                 start, end, ts, query, window_size, data_length,
                 profile_length, exclusion_zone, is_join, data_mu, data_sig,
@@ -406,26 +408,33 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
                 results = pool.map(_batch_compute, args)
 
     # now we combine the batch results
-    # TODO: we could save some operations here in single threaded mode, but
-    # I don't think that there is that much overhead.
-    for index, result in enumerate(results):
-        start = batch_windows[index][0]
-        end = batch_windows[index][1]        
-        
-        # update the matrix profile
-        indices = result['mp'] < matrix_profile
-        matrix_profile[indices] = result['mp'][indices]
-        profile_index[indices] = result['pi'][indices]
+    if len(results) == 1:
+        result = results[0]
+        matrix_profile = result['mp']
+        profile_index = result['pi']
+        left_matrix_profile = result['lmp']
+        left_profile_index = result['lpi']
+        right_matrix_profile = result['rmp']
+        right_profile_index = result['rpi']
+    else:
+        for index, result in enumerate(results):
+            start = batch_windows[index][0]
+            end = batch_windows[index][1]        
+            
+            # update the matrix profile
+            indices = result['mp'] < matrix_profile
+            matrix_profile[indices] = result['mp'][indices]
+            profile_index[indices] = result['pi'][indices]
 
-        # update the left and right matrix profiles
-        if not is_join:
-            indices = result['lmp'] < left_matrix_profile
-            left_matrix_profile[indices] = result['lmp'][indices]
-            left_profile_index[indices] = result['lpi'][indices]
+            # update the left and right matrix profiles
+            if not is_join:
+                indices = result['lmp'] < left_matrix_profile
+                left_matrix_profile[indices] = result['lmp'][indices]
+                left_profile_index[indices] = result['lpi'][indices]
 
-            indices = result['rmp'] < right_matrix_profile
-            right_matrix_profile[indices] = result['rmp'][indices]
-            right_profile_index[indices] = result['rpi'][indices]           
+                indices = result['rmp'] < right_matrix_profile
+                right_matrix_profile[indices] = result['rmp'][indices]
+                right_profile_index[indices] = result['rpi'][indices]           
 
     return {
         'mp': matrix_profile,

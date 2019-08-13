@@ -181,3 +181,23 @@ def test_sliding_dot_product():
     dp_desired = np.array([36, 28, 26, 46, 68, 50, 57, 64, 99, 148])
 
     np.testing.assert_almost_equal(dp, dp_desired)
+
+
+def test_generate_batch_jobs_single_job():
+    profile_length = 9
+    n_jobs = 1
+
+    desired = [[0, 9]]
+    actual = list(core.generate_batch_jobs(profile_length, n_jobs))
+
+    np.testing.assert_equal(actual, desired)
+
+
+def test_generate_batch_jobs_multiple_jobs():
+    profile_length = 9
+    n_jobs = 4
+
+    desired = [(0, 3), (3, 6), (6, 9), (9, 9)]
+    actual = list(core.generate_batch_jobs(profile_length, n_jobs))
+
+    np.testing.assert_equal(actual, desired)
