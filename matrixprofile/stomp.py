@@ -447,5 +447,5 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
         'ez': exclusion_zone,
         'join': is_join,
         'class': "MatrixProfile",
-        'algorithm': "stomp_parallel"
+        'algorithm': "stomp"
     }
