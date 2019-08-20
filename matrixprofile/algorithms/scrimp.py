@@ -253,7 +253,7 @@ def time_is_exceeded(start_time, runtime):
 
 
 def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, runtime=None,
-                     random_state=None):
+                     random_state=None, n_jobs=-1):
     """SCRIMP++ is an anytime algorithm that computes the matrix profile for a 
     given time series (ts) over a given window size (m). Essentially, it allows
     for an approximate solution to be provided for quicker analysis. In the 
@@ -288,6 +288,8 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, runtime=None,
             None.
         random_state : int, default None
             Set the random seed generator for reproducible results.
+        n_jobs : int, default all
+            The number of cpu cores to use.
 
         Returns
         -------

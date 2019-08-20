@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 from matrixprofile import core
 
 
-def plot(obj, data=None):
+def visualize(obj, data=None):
 	"""
 	Plots an object generated from one of the algorithms. In some cases
 	multiple plots will be generated.
