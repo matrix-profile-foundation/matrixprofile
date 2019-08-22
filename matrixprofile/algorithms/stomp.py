@@ -100,7 +100,7 @@ def _batch_compute(args):
         last_product = np.copy(first_product)
     else:
         first_window = query[batch_start - 1:batch_start + window_size - 1]        
-        last_product = core.sliding_dot_product(ts, first_window)
+        last_product = core.fft_convolve(ts, first_window)
 
     query_sum = np.sum(first_window)
     query_2sum = np.sum(first_window ** 2)
@@ -355,7 +355,7 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
     # precompute some statistics on ts
     data_mu, data_sig = core.moving_avg_std(ts, window_size)
     first_window = query[0:window_size]
-    first_product = core.sliding_dot_product(ts, first_window)
+    first_product = core.fft_convolve(ts, first_window)
 
     batch_windows = []
     results = []

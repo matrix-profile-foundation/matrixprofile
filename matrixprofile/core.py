@@ -271,6 +271,32 @@ def moving_avg_std(a, window=3):
     return (mu, sig)
 
 
+def fft_convolve(ts, query):
+    """
+    Computes the sliding dot product for query over the time series using
+    the quicker FFT convolution approach.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series.
+    query : array_like
+        The query.
+
+    Returns
+    -------
+    array_like - The sliding dot product.
+    """
+    n = len(ts)
+    m = len(query)
+    x = np.fft.fft(ts)
+    y = np.append(np.flipud(query), np.zeros([1, n - m]))
+    y = np.fft.fft(y)
+    z = np.fft.ifft(x * y)
+
+    return np.real(z[m - 1:n])
+
+
 def sliding_dot_product(ts, query):
     """
     Computes the sliding dot product for query over the time series using

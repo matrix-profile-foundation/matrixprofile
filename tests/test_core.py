@@ -173,6 +173,16 @@ def test_moving_avg_std():
     np.testing.assert_almost_equal(std, std_desired)
 
 
+def test_fft_convolve():
+    query = np.array([1, 2, 3, 4])
+    ts = np.array([4, 5, 6, 1, 2, 3, 8, 9, 1, 7, 8, 15, 20])
+
+    dp = core.fft_convolve(ts, query)
+    dp_desired = np.array([36, 28, 26, 46, 68, 50, 57, 64, 99, 148])
+
+    np.testing.assert_almost_equal(dp, dp_desired)
+
+
 def test_sliding_dot_product():
     query = np.array([1, 2, 3, 4])
     ts = np.array([4, 5, 6, 1, 2, 3, 8, 9, 1, 7, 8, 15, 20])
