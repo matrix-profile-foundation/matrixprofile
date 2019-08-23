@@ -8,8 +8,6 @@ from __future__ import unicode_literals
 range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
-"""Tests for `mass_ts` package."""
-
 import os
 
 import pytest
