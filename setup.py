@@ -5,12 +5,29 @@ import numpy
 import os
 from glob import glob
 
+SOURCE_URL = 'https://github.com/target/matrixprofile-ts'
+
+# Glob compliant file paths used to find Cython files for compilation
 EXTENSION_PATHS = [
     'matrixprofile/algorithms/*.pyx',
     'matrixprofile/*.pyx'
 ]
 
 def find_extensions():
+    """Utility script that finds Cython files to be compiled. It makes use of
+    EXTENSION_PATHS global variable.
+
+    Note
+    ----
+    The namespace of the compiled files will be the path of the directory in
+    which it was found in. For example, matrixprofile/algorithms/mpx.pyx
+    would be compiled into the namespace "matrixprofile.algorithms.mpx".
+
+    Returns
+    -------
+    list(Extension) :
+        A list of Extension object instances for Cython compilation.
+    """
     extensions = []
 
     for ep in EXTENSION_PATHS:
@@ -29,13 +46,17 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="matrixprofile-ts",
-    version="0.0.6",
-    author="Andrew Van Benschoten",
-    author_email="avbs89@gmail.com",
+    version="0.1.0",
+    author="Andrew Van Benschoten, Tyler Marrs (Matrix Profile Foundation)",
+    author_email="avbs89@gmail.com, tylerwmarrs@gmail.com",
     description="An Open Source Python Time Series Library For Motif Discovery using Matrix Profile",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/target/matrixprofile-ts",
+    url=SOURCE_URL,
+    project_urls={
+        'Matrix Profile Foundation': 'https://matrixprofile.org',
+        'Source Code': SOURCE_URL,
+    },
     packages = setuptools.find_packages(),
     setup_requires=['cython>=0.x',],
     install_requires=['numpy>=1.11.3', 'matplotlib==3.0.3', 'ray==0.7.2'],
