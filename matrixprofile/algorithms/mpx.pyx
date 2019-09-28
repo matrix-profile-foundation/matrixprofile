@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
-
+from libcpp cimport bool
 from libc.math cimport pow
 from libc.math cimport floor
 cdef extern from "math.h":
@@ -21,7 +21,7 @@ import numpy as np
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def mpx(ndarray[np.float64_t, ndim=1] ts not None, unsigned int w):
+def mpx(ndarray[np.float64_t, ndim=1] ts not None, unsigned int w, int cross_correlation):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
     now it only supports single dimension self joins.
@@ -32,6 +32,9 @@ def mpx(ndarray[np.float64_t, ndim=1] ts not None, unsigned int w):
         The time series to compute the matrix profile for.
     w : int
         The window size.
+    cross_correlation : int
+        Flag (0, 1) to determine if cross_correlation distance should be
+        returned. It defaults to Euclidean Distance (0).
     
     Returns
     -------
@@ -134,7 +137,8 @@ def mpx(ndarray[np.float64_t, ndim=1] ts not None, unsigned int w):
                 mpi[offset + diag] = offset
     
     # convert normalized cross correlation to euclidean distance
-    for i in range(profile_len):
-        mp[i] = sqrt(2 * w * (1 - mp[i]))
+    if cross_correlation == 0:
+        for i in range(profile_len):
+            mp[i] = sqrt(2 * w * (1 - mp[i]))
     
     return (mp, mpi)
