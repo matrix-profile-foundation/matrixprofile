@@ -129,10 +129,14 @@ def mpx(ndarray[np.float64_t, ndim=1] ts not None, unsigned int w, int cross_cor
             
             # update the distance profile and profile index
             if c_cmp > mp[offset]:
+                if c_cmp > 1:
+                    c_cmp = 1
                 mp[offset] = c_cmp
                 mpi[offset] = offset + diag
             
             if c_cmp > mp[offset + diag]:
+                if c_cmp > 1:
+                    c_cmp = 1
                 mp[offset + diag] = c_cmp
                 mpi[offset + diag] = offset
     
