@@ -19,6 +19,9 @@ from matrixprofile.algorithms.mpx import mpx
 
 
 def split(lower_bound, upper_bound, middle):
+    """
+    Helper function to split the indices for BFS.
+    """
     if lower_bound == middle:
         L = None
         R = [middle + 1, upper_bound]
@@ -33,6 +36,19 @@ def split(lower_bound, upper_bound, middle):
 
 
 def binary_split(n):
+    """
+    Create a breadth first search for indices 0..n.
+
+    Parameters
+    ----------
+    n : int
+        The length of indices.
+
+    Returns
+    -------
+    array_like :
+        The indices to iterate to perform BFS.
+    """
     index = []
     intervals = []
     
@@ -63,12 +79,23 @@ def binary_split(n):
     return index
 
 
-def plot_pmp(data, cmap=None):
-    plt.figure(figsize = (15,15))
+def plot_pmp(pmp, cmap=None):
+    """
+    Plots the PMP. Right now it assumes you are using a Jupyter or Ipython
+    notebook.
+
+    Parameters
+    ----------
+    pmp : array_like
+        The Pan Matrix Profile to plot.
+    cmap: str
+        A valid Matplotlib color map.
+    """
+    plt.figure(figsize = (10,10))
     depth = 256
-    test = np.ceil(data * depth) / depth
+    test = np.ceil(pmp * depth) / depth
     test[test > 1] = 1
-    plt.imshow(test, cmap=cmap)
+    plt.imshow(test, cmap=cmap, interpolation=None, aspect='auto')
     plt.gca().invert_yaxis()
     plt.title('PMP')
     plt.xlabel('Profile Index')
@@ -76,44 +103,100 @@ def plot_pmp(data, cmap=None):
     plt.show()
 
 
-def skimp(ts, windows=None, show_progress=False, cross_correlation=False):
+def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
+          sample_pct=0.1):
+    """
+    Computes the Pan Matrix Profile (PMP) for the given time series. When the
+    time series is only passed, windows start from 8 and increase by increments
+    of 2 up to length(ts) / 2. Also, the PMP is only computed using 10% of the
+    windows unless sample_pct is set to a different value.
+
+    Note
+    ----
+    When windows is explicitly provided, sample_pct no longer takes affect. The
+    MP for all windows provided will be computed.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series.
+    show_progress: bool, default = False
+        Show the progress in percent complete in increments of 5% by printing
+        it out to the console.
+    cross_correlation : bool, default = False
+        Return the MP values as Pearson Correlation instead of Euclidean
+        distance.
+    sample_pct : float, default = 0.1 (10%)
+        Number of window sizes to compute MPs for. Decimal percent between
+        0 and 1.
+
+    Returns
+    -------
+    (array_like, array_like, array_like) :
+        The (PMP, PMPI, Windows).
+
+    Raises
+    ------
+    ValueError :
+        1. ts is not array_like.
+        2. windows is not an iterable
+        3. show_progress is not a boolean.
+        4. cross_correlation is not a boolean.
+        5. sample_pct is not between 0 and 1.
+    """
     ts = core.to_np_array(ts)
     n = len(ts)
     
+    # Argument validation
     if not isinstance(windows, (Iterable, np.ndarray)):
         start = 8
         end = int(math.floor(len(ts) / 2))
         windows = range(start, end + 1)
+    else:
+        sample_pct = 1
+        
+    if not isinstance(show_progress, bool):
+        raise ValueError('show_progress must be a boolean!')
     
     if not isinstance(cross_correlation, bool):
         raise ValueError('cross_correlation must be a boolean!')
     
-    r = len(windows)
-
-    split_index = binary_split(r)
-    pmp = np.full((r, n), np.inf)
-    idx = np.full(r, -1)
+    if not isinstance(sample_pct, (int, float)) or sample_pct > 1 or sample_pct < 0:
+        raise ValueError('sample_pct must be a decimal between 0 and 1')
+    
+    # create a breath first search index list of our window sizes
+    split_index = binary_split(len(windows))
+    pmp = np.full((len(split_index), n), np.inf)
+    idx = np.full(len(split_index), -1)
+    
+    # compute the sample pct index
+    last_index = len(split_index)
+    if sample_pct < 1:
+        last_index = int(np.floor(len(split_index) * sample_pct))
+        last_index = np.minimum(len(split_index), last_index)
     
     pct_shown = {}
-    
-    for i in range(len(split_index)):
+
+    # compute all matrix profiles for each window size
+    for i in range(last_index):
         window_size = windows[split_index[i]]
         mp, pi = mpx(ts, window_size, int(cross_correlation))
         pmp[split_index[i], 0:len(mp)] = mp
         
         j = split_index[i]
-        while j < len(split_index) and idx[j] != j:
+        while j < last_index and idx[j] != j:
             idx[j] = split_index[i]
             j = j + 1
         
+        # output the progress
         if show_progress:
-            pct_complete = round((i / (len(split_index) - 1)) * 100, 2)
+            pct_complete = round((i / (last_index - 1)) * 100, 2)
             int_pct = math.floor(pct_complete)
             if int_pct % 5 == 0 and int_pct not in pct_shown:
                 print('{}% complete'.format(int_pct))
                 pct_shown[int_pct] = 1
     
-    return (pmp, idx)
+    return (pmp, idx, windows)
 
 
 def maximum_subsequence(ts, threshold):
