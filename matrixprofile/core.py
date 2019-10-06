@@ -14,7 +14,6 @@ import sys
 
 import numpy as np
 
-from matrixprofile import cycore
 
 logger = logging.getLogger(__name__)
 
@@ -452,6 +451,9 @@ def generate_batch_jobs(profile_length, n_jobs):
                 end = profile_length
 
             yield (start, end)
+
+            if end == profile_length:
+                break
 
 
 def apply_exclusion_zone(exclusion_zone, is_join, window_size, data_length,
