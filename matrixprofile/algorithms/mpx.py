@@ -1,0 +1,31 @@
+import math
+
+import numpy as np
+
+from matrixprofile import core
+from matrixprofile.algorithms.cympx import mpx as cympx
+
+def mpx(ts, w, cross_correlation=False):
+    """
+    The MPX algorithm computes the matrix profile without using the FFT. Right
+    now it only supports single dimension self joins.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series to compute the matrix profile for.
+    w : int
+        The window size.
+    cross_correlation : bool, Default=False
+        Setermine if cross_correlation distance should be returned. It defaults
+        to Euclidean Distance.
+    
+    Returns
+    -------
+    (array_like, array_like) :
+        The matrix profile (distance profile, profile index).
+    """
+    ts = core.to_np_array(ts).astype('d')
+    mp, mpi = cympx(ts, w, int(cross_correlation))
+
+    return (np.asarray(mp), np.asarray(mpi))

@@ -4,7 +4,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-range = getattr(__builtins__, 'xrange', range)
+# range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
 from libcpp cimport bool
@@ -21,7 +21,8 @@ import numpy as np
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def mpx(ndarray[np.float64_t, ndim=1] ts not None, unsigned int w, int cross_correlation):
+@cython.wraparound(False)
+cpdef mpx(double[:] ts, unsigned int w, int cross_correlation):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
     now it only supports single dimension self joins.
@@ -41,24 +42,24 @@ def mpx(ndarray[np.float64_t, ndim=1] ts not None, unsigned int w, int cross_cor
     (array_like, array_like) :
         The matrix profile (distance profile, profile index).
     """
-    cdef Py_ssize_t i, j, diag, offset
-    cdef Py_ssize_t n = ts.shape[0]
+    cdef unsigned int i, j, diag, offset
+    cdef unsigned int n = ts.shape[0]
 
     # the original implementation allows the minlag to be manually set
     # here it is always w / 4 similar to SCRIMP++
-    cdef Py_ssize_t minlag = int(floor(w / 4))
-    cdef Py_ssize_t profile_len = n - w + 1
+    cdef unsigned int minlag = int(floor(w / 4))
+    cdef unsigned int profile_len = n - w + 1
     
     cdef double p, s, x, z, c, a1, a2, a3, mu_a, c_cmp
-    cdef np.ndarray[np.double_t, ndim=1] h = np.empty(n, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] r = np.empty(n, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] mu = np.empty(profile_len, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] sig = np.empty(profile_len, dtype='d')
+    cdef double[:] h = np.empty(n, dtype='d')
+    cdef double[:] r = np.empty(n, dtype='d')
+    cdef double[:] mu = np.empty(profile_len, dtype='d')
+    cdef double[:] sig = np.empty(profile_len, dtype='d')
     
-    cdef np.ndarray[np.double_t, ndim=1] df = np.empty(profile_len, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] dg = np.empty(profile_len, dtype='d')
+    cdef double[:] df = np.empty(profile_len, dtype='d')
+    cdef double[:] dg = np.empty(profile_len, dtype='d')
     cdef np.ndarray[np.double_t, ndim=1] mp = np.full(profile_len, -1, dtype='d')
-    cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, np.nan, dtype='int')  
+    cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, np.nan, dtype='int')
     
     # mean and std calculations below use the following approach
     # Ogita et al, Accurate Sum and Dot Product
@@ -67,6 +68,7 @@ def mpx(ndarray[np.float64_t, ndim=1] ts not None, unsigned int w, int cross_cor
     # compute moving mean
     p = ts[0]
     s = 0
+
     for i in range(1, w):
         x = p + ts[i]
         z = x - p
