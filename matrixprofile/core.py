@@ -14,6 +14,7 @@ import sys
 
 import numpy as np
 
+from matrixprofile import cycore
 
 logger = logging.getLogger(__name__)
 
@@ -264,9 +265,8 @@ def moving_avg_std(a, window=3):
     The moving avg and std. over the array as a tuple.
     (avg, std)
     """
-    windowed = rolling_window(a, window)
-    mu = np.mean(windowed, -1)
-    sig = np.std(windowed, -1)
+    a = a.astype('d')
+    mu, sig = cycore.moving_avg_std(a, window)
 
     return (mu, sig)
 

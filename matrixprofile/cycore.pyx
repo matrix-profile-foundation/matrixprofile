@@ -21,7 +21,7 @@ import numpy as np
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def muinvn(ndarray[np.float64_t, ndim=1] a not None, unsigned int w):
+def muinvn(double[:] a, unsigned int w):
     """
     Computes the moving average and standard deviation over the provided
     array. This approach uses Welford's method. It leads to more precision
@@ -98,7 +98,7 @@ def muinvn(ndarray[np.float64_t, ndim=1] a not None, unsigned int w):
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def moving_avg_std(ndarray[np.float64_t, ndim=1] a, unsigned int w):
+def moving_avg_std(double[:] a, unsigned int w):
     """
     Computes the moving average and standard deviation over the provided
     array.
