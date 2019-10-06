@@ -203,11 +203,21 @@ def test_generate_batch_jobs_single_job():
     np.testing.assert_equal(actual, desired)
 
 
+def test_generate_batch_jobs_small_ts_many_jobs():
+    profile_length = 9
+    n_jobs = 12
+
+    desired = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9)]
+    actual = list(core.generate_batch_jobs(profile_length, n_jobs))
+
+    np.testing.assert_equal(actual, desired)
+
+
 def test_generate_batch_jobs_multiple_jobs():
     profile_length = 9
     n_jobs = 4
 
-    desired = [(0, 3), (3, 6), (6, 9), (9, 9)]
+    desired = [(0, 3), (3, 6), (6, 9)]
     actual = list(core.generate_batch_jobs(profile_length, n_jobs))
 
     np.testing.assert_equal(actual, desired)
