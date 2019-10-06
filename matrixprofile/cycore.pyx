@@ -43,10 +43,10 @@ def muinvn(ndarray[np.float64_t, ndim=1] a not None, unsigned int w):
     cdef Py_ssize_t n = a.shape[0]
     cdef double p, s, x, z, c, a1, a2, a3, mu_a
     cdef Py_ssize_t profile_len = n - w + 1
-    cdef np.ndarray[np.double_t, ndim=1] h = np.empty(n, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] r = np.empty(n, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] mu = np.empty(profile_len, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] sig = np.empty(profile_len, dtype='d')  
+    cdef double[:] h = np.empty(n, dtype='d')
+    cdef double[:] r = np.empty(n, dtype='d')
+    cdef double[:] mu = np.empty(profile_len, dtype='d')
+    cdef double[:] sig = np.empty(profile_len, dtype='d')
     
     # compute moving mean
     p = a[0]
@@ -119,13 +119,13 @@ def moving_avg_std(ndarray[np.float64_t, ndim=1] a, unsigned int w):
     cdef Py_ssize_t n = a.shape[0]
     cdef Py_ssize_t ws = w
     cdef Py_ssize_t profile_len = n - w + 1
-    cdef np.ndarray[np.double_t, ndim=1] cumsum = np.empty(n, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] sq_cumsum = np.empty(n, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] sums = np.empty(profile_len, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] sq_sums = np.empty(profile_len, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] mu = np.empty(profile_len, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] sig_sq = np.empty(profile_len, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] sig = np.empty(profile_len, dtype='d')
+    cdef double[:] cumsum = np.empty(n, dtype='d')
+    cdef double[:] sq_cumsum = np.empty(n, dtype='d')
+    cdef double[:] sums = np.empty(profile_len, dtype='d')
+    cdef double[:] sq_sums = np.empty(profile_len, dtype='d')
+    cdef double[:] mu = np.empty(profile_len, dtype='d')
+    cdef double[:] sig_sq = np.empty(profile_len, dtype='d')
+    cdef double[:] sig = np.empty(profile_len, dtype='d')
     
     cumsum[0] = a[0]
     for i in range(1, n):
