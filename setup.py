@@ -13,6 +13,19 @@ EXTENSION_PATHS = [
     'matrixprofile/*.pyx'
 ]
 
+# Skip these extensions explicitly
+SKIP_EXTENSIONS = [
+    'matrixprofile/algorithms/cympx.pyx',
+]
+
+def skip_extension(path):
+    skip = False
+    for skip in SKIP_EXTENSIONS:
+        if skip in path:
+            skip = True
+    
+    return skip
+
 def find_extensions():
     """Utility script that finds Cython files to be compiled. It makes use of
     EXTENSION_PATHS global variable.
@@ -32,14 +45,20 @@ def find_extensions():
 
     for ep in EXTENSION_PATHS:
         for fp in glob(ep):
-            module_path = fp.replace(os.path.sep, '.').replace('.pyx', '')
-            extensions.append(
-                Extension(module_path, [fp,])
-            )
+            if not skip_extension(fp):
+                module_path = fp.replace(os.path.sep, '.').replace('.pyx', '')
+                extensions.append(
+                    Extension(module_path, [fp,])
+                )
     
     return extensions
 
 extensions = find_extensions()
+extensions.append(Extension(
+    'matrixprofile.algorithms.cympx',
+    ['matrixprofile/algorithms/cympx.pyx'],
+    extra_compile_args = ["-O3", "-march=native", "-fopenmp" ],
+))
 
 with open("README.md", "r") as fh:
     long_description = fh.read()

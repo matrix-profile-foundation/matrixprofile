@@ -16,7 +16,7 @@ from matrixprofile import core
 from matrixprofile.algorithms.cympx import mpx as cympx
 
 
-def mpx(ts, w, cross_correlation=False):
+def mpx(ts, w, cross_correlation=False, n_jobs=-1):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
     now it only supports single dimension self joins.
@@ -30,6 +30,8 @@ def mpx(ts, w, cross_correlation=False):
     cross_correlation : bool, Default=False
         Setermine if cross_correlation distance should be returned. It defaults
         to Euclidean Distance.
+    n_jobs : int, Default all
+        Number of cpu cores to use.
     
     Returns
     -------
@@ -37,6 +39,7 @@ def mpx(ts, w, cross_correlation=False):
         The matrix profile (distance profile, profile index).
     """
     ts = core.to_np_array(ts).astype('d')
-    mp, mpi = cympx(ts, w, int(cross_correlation))
+    n_jobs = core.valid_n_jobs(n_jobs)
+    mp, mpi = cympx(ts, w, int(cross_correlation), n_jobs)
 
     return (np.asarray(mp), np.asarray(mpi))

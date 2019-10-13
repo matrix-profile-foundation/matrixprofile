@@ -7,11 +7,12 @@ from __future__ import unicode_literals
 # range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
-from libcpp cimport bool
 from libc.math cimport pow
 from libc.math cimport floor
-cdef extern from "math.h":
-    double sqrt(double m)
+from libc.math cimport ceil
+from libc.math cimport sqrt
+
+from cython.parallel import prange
 
 from numpy cimport ndarray
 cimport numpy as np
@@ -22,7 +23,7 @@ import numpy as np
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-cpdef mpx(double[:] ts, unsigned int w, int cross_correlation):
+cpdef mpx(double[:] ts, unsigned int w, int cross_correlation, int n_jobs):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
     now it only supports single dimension self joins.
@@ -36,6 +37,8 @@ cpdef mpx(double[:] ts, unsigned int w, int cross_correlation):
     cross_correlation : int
         Flag (0, 1) to determine if cross_correlation distance should be
         returned. It defaults to Euclidean Distance (0).
+    n_jobs : int, Default = all
+        Number of cpu cores to use. Defaults to using all.
     
     Returns
     -------
@@ -90,7 +93,7 @@ cpdef mpx(double[:] ts, unsigned int w, int cross_correlation):
         mu[i - w + 1] = (p + s) / w
     
     # compute moving standard deviation    
-    for i in range(profile_len):
+    for i in prange(profile_len, num_threads=n_jobs, nogil=True):
         for j in range(i, i + w):
             mu_a = ts[j] - mu[i]
             h[j] = mu_a * mu_a
@@ -113,14 +116,14 @@ cpdef mpx(double[:] ts, unsigned int w, int cross_correlation):
     
     # this is where we compute the diagonals and later the matrix profile
     df[0] = 0
-    for i in range(w, n):
+    for i in prange(w, n, num_threads=n_jobs, nogil=True):
         df[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
     
     dg[0] = 0
-    for i in range(w, n):
-        dg[i - w + 1] = (ts[i] - mu[i - w + 1]) + (ts[i - w] - mu[i - w])
+    for i in prange(w, n, num_threads=n_jobs, nogil=True):
+        dg[i - w + 1] = (ts[i] - mu[i - w + 1]) + (ts[i - w] - mu[i - w])    
     
-    for diag in range(minlag, profile_len):
+    for diag in prange(minlag, profile_len, num_threads=n_jobs, nogil=True):
         c = 0
         for i in range(diag, diag + w):
             c = c + ((ts[i] - mu[diag]) * (ts[i-diag] - mu[0]))        
