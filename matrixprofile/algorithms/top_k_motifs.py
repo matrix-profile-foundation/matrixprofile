@@ -7,11 +7,14 @@ from __future__ import unicode_literals
 range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
+import numpy as np
+
 from matrixprofile import core
 from matrixprofile.algorithms.mass2 import mass2
 
 
-def top_k_motifs(ts, profile, exclusion_zone, k=3, max_neighbors=10, radius=3):
+def top_k_motifs(ts, profile, exclusion_zone=None, k=3, max_neighbors=10,
+	             radius=3):
     """
     Find the top K number of motifs (patterns) given a matrix profile. By
     default the algorithm will find up to 3 motifs (k) and up to 10 of their
@@ -23,9 +26,10 @@ def top_k_motifs(ts, profile, exclusion_zone, k=3, max_neighbors=10, radius=3):
     	The original data used to compute the matrix profile.
     profile : dict
         The matrix profile computed from the compute function.
-    exclusion_zone : int
+    exclusion_zone : int, Default 1/2 window_size
         Desired number of values to exclude on both sides of the motif. This
-        avoid trivial matches.
+        avoids trivial matches. It defaults to half of the computed window
+        size. Setting the exclusion zone to 0 makes it not apply.
     k : int, Default = 3
         Desired number of motifs to find.
     neighbor_count : int, Default = 10
@@ -53,6 +57,12 @@ def top_k_motifs(ts, profile, exclusion_zone, k=3, max_neighbors=10, radius=3):
     motifs = []
     mp = np.copy(profile['mp'])
     mpi = profile['pi']
+
+    # TODO: this is based on STOMP standards when this motif finding algorithm
+    # originally came out. Should we default this to 4.0 instead? That seems
+    # to be the common value now per new research.
+    if exclusion_zone is None:
+    	exclusion_zone = int(np.ceil(window_size / 2.0))
 
     for i in range(k):
     	min_idx = np.argmin(mp)
