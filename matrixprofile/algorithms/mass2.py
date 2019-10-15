@@ -56,10 +56,10 @@ def mass2(ts, query, extras=False):
     meany = np.mean(y)
     sigmay = np.std(y)
     
-    meanx = core.moving_average(x, m)
-    meanx = np.append(np.ones([1, len(x) - len(meanx)]), meanx)
-    sigmax = core.moving_std(x, m)
+    meanx, sigmax = core.moving_avg_std(x, m)
+    meanx = np.append(np.ones([1, len(x) - len(meanx)]), meanx)    
     sigmax = np.append(np.zeros([1, len(x) - len(sigmax)]), sigmax)
+
     
     y = np.append(np.flip(y), np.zeros([1, n - m]))
     

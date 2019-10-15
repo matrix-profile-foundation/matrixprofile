@@ -192,6 +192,55 @@ def clean_nan_inf(ts):
     return ts
 
 
+def is_nan_inf(val):
+    """
+    Helper function to determine if a given value is NaN or infinite.
+
+    Parameters
+    ----------
+    val : obj
+        The value to test against.
+
+    Returns
+    -------
+    boolean - True or False respectively.
+    """
+    return np.isnan(v) or np.isinf(v)
+
+
+def is_not_nan_inf(val):
+    """
+    Helper function to determine if a given value is not NaN or infinite.
+
+    Parameters
+    ----------
+    val : obj
+        The value to test against.
+
+    Returns
+    -------
+    boolean - True or False respectively.
+    """
+    not_nan = not np.isnan(v)
+    not_inf = not np.isinf(v)
+    return not_nan and not_inf
+
+
+def nan_inf_indices(a):
+    """
+    Helper method to obtain the nan/inf indices of an array.
+
+    Parameters
+    ----------
+    a : array_like
+        The array to test.
+
+    Returns
+    -------
+    Masked array of indices containing nan/inf.
+    """
+
+
 def rolling_window(a, window):
     """
     Provides a rolling window on a numpy array given an array and window size.
