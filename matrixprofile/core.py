@@ -205,7 +205,7 @@ def is_nan_inf(val):
     -------
     boolean - True or False respectively.
     """
-    return np.isnan(v) or np.isinf(v)
+    return np.isnan(val) or np.isinf(val)
 
 
 def is_not_nan_inf(val):
@@ -221,8 +221,8 @@ def is_not_nan_inf(val):
     -------
     boolean - True or False respectively.
     """
-    not_nan = not np.isnan(v)
-    not_inf = not np.isinf(v)
+    not_nan = not np.isnan(val)
+    not_inf = not np.isinf(val)
     return not_nan and not_inf
 
 
@@ -239,6 +239,7 @@ def nan_inf_indices(a):
     -------
     Masked array of indices containing nan/inf.
     """
+    return (np.isnan(a)) | (np.isinf(a))
 
 
 def rolling_window(a, window):

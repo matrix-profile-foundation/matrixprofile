@@ -221,3 +221,47 @@ def test_generate_batch_jobs_multiple_jobs():
     actual = list(core.generate_batch_jobs(profile_length, n_jobs))
 
     np.testing.assert_equal(actual, desired)
+
+
+def test_is_nan_inf():
+    assert(core.is_nan_inf(np.inf) == True)
+    assert(core.is_nan_inf(np.nan) == True)
+    assert(core.is_nan_inf(100) == False)
+
+
+def test_is_not_nan_inf():
+    assert(core.is_not_nan_inf(np.inf) == False)
+    assert(core.is_not_nan_inf(np.nan) == False)
+    assert(core.is_not_nan_inf(100) == True)
+
+
+def test_nan_inf_indices_all_inf():
+    a = np.array([np.inf, np.inf, np.inf])
+    desired = np.array([True, True, True])
+    actual = core.nan_inf_indices(a)
+
+    np.testing.assert_equal(desired, actual)
+
+
+def test_nan_inf_indices_all_nan():
+    a = np.array([np.nan, np.nan, np.nan])
+    desired = np.array([True, True, True])
+    actual = core.nan_inf_indices(a)
+
+    np.testing.assert_equal(desired, actual)
+
+
+def test_nan_inf_indices_some_true():
+    a = np.array([1, np.inf, np.nan])
+    desired = np.array([False, True, True])
+    actual = core.nan_inf_indices(a)
+
+    np.testing.assert_equal(desired, actual)
+
+
+def test_nan_inf_indices_all_false():
+    a = np.array([1, 1, 1])
+    desired = np.array([False, False, False])
+    actual = core.nan_inf_indices(a)
+
+    np.testing.assert_equal(desired, actual)
