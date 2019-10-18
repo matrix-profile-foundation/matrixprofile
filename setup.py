@@ -16,7 +16,6 @@ EXTENSION_PATHS = [
 # Skip these extensions explicitly
 SKIP_EXTENSIONS = [
     'matrixprofile/algorithms/cympx.pyx',
-    'matrixprofile/algorithms/cympx_ab.pyx',
 ]
 
 def skip_extension(path):
@@ -58,11 +57,6 @@ extensions = find_extensions()
 extensions.append(Extension(
     'matrixprofile.algorithms.cympx',
     ['matrixprofile/algorithms/cympx.pyx'],
-    extra_compile_args = ["-O3", "-march=native", "-fopenmp" ],
-))
-extensions.append(Extension(
-    'matrixprofile.algorithms.cympx_ab',
-    ['matrixprofile/algorithms/cympx_ab.pyx'],
     extra_compile_args = ["-O3", "-march=native", "-fopenmp" ],
 ))
 

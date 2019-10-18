@@ -14,7 +14,7 @@ import numpy as np
 
 from matrixprofile import core
 from matrixprofile.algorithms.cympx import mpx as cympx
-from matrixprofile.algorithms.cympx_ab import mpx_ab as cympx_ab
+from matrixprofile.algorithms.cympx import mpx_ab as cympx_ab
 
 
 def mpx(ts, w, query=None, cross_correlation=False, n_jobs=-1):

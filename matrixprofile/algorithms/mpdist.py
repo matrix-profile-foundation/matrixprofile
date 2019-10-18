@@ -13,7 +13,7 @@ import math
 import numpy as np
 
 from matrixprofile import core
-from matrixprofile.algorithms.cympx_ab import mpx_ab as cympx_ab
+from matrixprofile.algorithms.cympx import mpx_ab as cympx_ab
 
 
 def mpdist(ts, ts_b, w, n_jobs=-1):
