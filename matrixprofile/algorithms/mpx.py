@@ -47,14 +47,7 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=-1):
     if core.is_array_like(query):
         query = core.to_np_array(query).astype('d')
         mp, mpi, mpb, mpib = cympx_ab(ts, query, w, int(cross_correlation), n_jobs)
-
-        return (
-            np.asarray(mp),
-            np.asarray(mpi),
-            np.asarray(mpb),
-            np.asarray(mpib)
-        )
-
-    mp, mpi = cympx(ts, w, int(cross_correlation), n_jobs)
+    else:
+        mp, mpi = cympx(ts, w, int(cross_correlation), n_jobs)
 
     return (np.asarray(mp), np.asarray(mpi))

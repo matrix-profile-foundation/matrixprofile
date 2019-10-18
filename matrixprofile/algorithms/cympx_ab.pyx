@@ -17,17 +17,11 @@ from cython.parallel import prange
 from numpy cimport ndarray
 cimport numpy as np
 cimport cython
+from numpy.math cimport INFINITY
 
 import numpy as np
 
 from matrixprofile.cycore import muinvn
-
-
-# cpdef int minInt(int x, int y):
-#     return y ^ ((x ^ y) & -(x < y));
-
-# cpdef double minDouble(double x, double y):
-#     return y ^ ((x ^ y) & -(x < y));
 
 
 @cython.boundscheck(False)
@@ -54,13 +48,13 @@ cpdef mpx_ab(double[:] ts, double[:] query, unsigned int w, int cross_correlatio
     
     Returns
     -------
-    (array_like, array_like) :
-        The matrix profile (distance profile, profile index).
+    (array_like, array_like, array_like, array_like) :
+        The matrix profile (distance profile, profile index, dist..b, prof..b).
     """
     cdef unsigned int i, j, k, mx
     cdef unsigned int n = ts.shape[0]
     cdef unsigned int qn = query.shape[0]
-    cdef double cov_, corr_
+    cdef double cov_, corr_, eucdist, mxdist
 
     cdef unsigned int profile_len = n - w + 1
     cdef unsigned int profile_lenb = qn - w + 1
@@ -83,10 +77,6 @@ cpdef mpx_ab(double[:] ts, double[:] query, unsigned int w, int cross_correlatio
     cdef np.ndarray[np.double_t, ndim=1] mpb = np.full(profile_lenb, -1, dtype='d')
     cdef np.ndarray[np.int_t, ndim=1] mpib = np.full(profile_lenb, np.nan, dtype='int')
     
-    diff_ga[0] = 0
-    diff_fb[0] = 0
-    diff_gb[0] = 0
-
     # # this is where we compute the diagonals and later the matrix profile
     diff_fa[0] = 0    
     for i in prange(w, n, num_threads=n_jobs, nogil=True):
@@ -94,7 +84,7 @@ cpdef mpx_ab(double[:] ts, double[:] query, unsigned int w, int cross_correlatio
 
     diff_fb[0] = 0    
     for i in prange(w, qn, num_threads=n_jobs, nogil=True):
-        diff_fa[i - w + 1] = (0.5 * (query[i] - query[i - w]))
+        diff_fb[i - w + 1] = (0.5 * (query[i] - query[i - w]))
     
     diff_ga[0] = 0
     for i in prange(w, n, num_threads=n_jobs, nogil=True):
@@ -102,35 +92,78 @@ cpdef mpx_ab(double[:] ts, double[:] query, unsigned int w, int cross_correlatio
 
     diff_gb[0] = 0
     for i in prange(w, qn, num_threads=n_jobs, nogil=True):
-        diff_ga[i - w + 1] = (query[i] - mub[i - w + 1]) + (query[i - w] - mub[i - w])
+        diff_gb[i - w + 1] = (query[i] - mub[i - w + 1]) + (query[i - w] - mub[i - w])
 
 
+    # AB JOIN
     for i in prange(profile_len, num_threads=n_jobs, nogil=True):
         mx = (profile_len - i) if (profile_len - i) < profile_lenb else profile_lenb
 
         cov_ = 0
         for j in range(i, i + w):
-            cov_ = cov_ + ((ts[i] - mua[i]) * (query[j-i] - mub[0]))
+            cov_ = cov_ + ((ts[j] - mua[i]) * (query[j-i] - mub[0]))
 
         for j in range(mx):
             cov_ = cov_ + diff_fa[j + i] * diff_gb[j] + diff_ga[j + i] * diff_fb[j]
             corr_ = cov_ * siga[j + i] * sigb[j]
 
             if corr_ > mp[j + i]:
-                mp[j + i] = corr_ if corr_ < 1.0 else 1.0
+                mp[j + i] = corr_
                 mpi[j + i] = j
 
             if corr_ > mpb[j]:
-                mpb[j] = corr_ if corr_ < 1.0 else 1.0
+                mpb[j] = corr_
                 mpib[j] = j + i
 
 
+    # BA JOIN
+    for i in prange(profile_lenb, num_threads=n_jobs, nogil=True):
+        mx = (profile_lenb - i) if (profile_lenb - i) < profile_len else profile_len
+
+        cov_ = 0
+        for j in range(i, i + w):
+            cov_ = cov_ + ((query[j] - mub[i]) * (ts[j-i] - mua[0]))
+
+        for j in range(mx):
+            cov_ = cov_ + diff_fb[j + i] * diff_ga[j] + diff_gb[j + i] * diff_fa[j]
+            corr_ = cov_ * sigb[j + i] * siga[j]
+
+            if corr_ > mpb[j + i]:
+                mpb[j + i] = corr_
+                mpib[j + i] = j
+
+            if corr_ > mp[j]:
+                mp[j] = corr_
+                mpi[j] = j + i
+
+
     # convert normalized cross correlation to euclidean distance
+    mxdist = 2 * sqrt(w)
     if cross_correlation == 0:
         for i in range(profile_len):
-            mp[i] = sqrt(2 * w * (1 - mp[i]))
+            eucdist = sqrt(2 * w * (1 - mp[i]))
+            if eucdist < 0:
+                eucdist = 0
+
+            if eucdist == mxdist:
+                eucdist = INFINITY
+            mp[i] = eucdist
 
         for i in range(profile_lenb):
-            mpb[i] = sqrt(2 * w * (1 - mpb[i]))
+            eucdist = sqrt(2 * w * (1 - mpb[i]))
+            if eucdist < 0:
+                eucdist = 0
+
+            if eucdist == mxdist:
+                eucdist = INFINITY
+            mpb[i] = eucdist
+    elif cross_correlation == 1:
+        for i in range(profile_len):
+            if mp[i] > 1:
+                mp[i] = 1
+
+        for i in range(profile_lenb):
+            if mpb[i] > 1:
+                mpb[i] = 1
     
     return (mp, mpi, mpb, mpib)
