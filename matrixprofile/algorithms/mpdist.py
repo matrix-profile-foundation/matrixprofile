@@ -54,12 +54,13 @@ def mpdist(ts, ts_b, w, n_jobs=-1):
 
 	mp_abba = np.append(mp, mpb)
 	data_len = len(ts) + len(ts_b)
-	abba_sorted = np.copy(mp_abba[~core.nan_inf_indices(mp_abba)])
-	abba_sorted.sort()
+	abba_sorted = np.sort(mp_abba[~core.nan_inf_indices(mp_abba)])
+
+	print(abba_sorted)
 
 	distance = np.inf
 	if len(abba_sorted) > 0:
-		idx = np.min([len(abba_sorted) - 1, int(np.ceil(0.05 * data_len))])
+		idx = np.min([len(abba_sorted) - 1, int(np.ceil(0.05 * data_len)) - 1])
 		distance = abba_sorted[idx]
 
 	return distance
