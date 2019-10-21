@@ -34,7 +34,7 @@ def top_k_discords(profile, exclusion_zone=None, k=3):
     List of indices where the discords were found in the matrix profile.
     """
     found = []
-    tmp = np.copy(profile['mp'])
+    tmp = np.copy(profile['mp']).astype('d')
     n = len(tmp)
 
     # TODO: this is based on STOMP standards when this motif finding algorithm
@@ -55,7 +55,7 @@ def top_k_discords(profile, exclusion_zone=None, k=3):
             found.append(idx)
 
             # apply exclusion zone
-            if exclusion_zone > 0 and idx != indices[-1]:
+            if exclusion_zone > 0:
                 exclusion_zone_start = np.max([0, idx - exclusion_zone])
                 exclusion_zone_end = np.min([n, idx + exclusion_zone])
                 tmp[exclusion_zone_start:exclusion_zone_end] = np.inf

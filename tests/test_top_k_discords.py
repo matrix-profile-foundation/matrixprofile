@@ -18,9 +18,6 @@ from matrixprofile.algorithms.top_k_discords import top_k_discords
 
 
 def test_mp_all_same():
-	"""In this case it should only find one entry - the last as the view
-	gets flipped.
-	"""
 	profile = {
 		'mp': np.ones(10),
         'w': 4
@@ -32,4 +29,30 @@ def test_mp_all_same():
 
 
 def test_discords_no_exclusion():
-    raise ValueError('NEEDS MORE TESTING!!!!!!!')
+	profile = {
+		'mp': np.array([1, 2, 3, 4]),
+		'w': 4
+	}
+	desired = np.array([3, 2, 1])
+	discords = top_k_discords(profile, k=3, exclusion_zone=0)
+	np.testing.assert_almost_equal(discords, desired)
+
+
+def test_discords_no_exclusion_all():
+	profile = {
+		'mp': np.array([1, 2, 3, 4]),
+		'w': 4
+	}
+	desired = np.array([3, 2, 1, 0])
+	discords = top_k_discords(profile, k=4, exclusion_zone=0)
+	np.testing.assert_almost_equal(discords, desired)
+
+
+def test_discords_exclude_one():
+	profile = {
+		'mp': np.array([1, 2, 3, 4]),
+		'w': 4
+	}
+	desired = np.array([3, 1])
+	discords = top_k_discords(profile, k=4, exclusion_zone=1)
+	np.testing.assert_almost_equal(discords, desired)
