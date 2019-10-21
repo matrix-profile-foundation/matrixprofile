@@ -14,7 +14,9 @@ import numpy as np
 
 from matrixprofile import core
 from matrixprofile.algorithms.cympx import mpx as cympx
+from matrixprofile.algorithms.cympx import mpx_parallel as cympx_parallel
 from matrixprofile.algorithms.cympx import mpx_ab as cympx_ab
+from matrixprofile.algorithms.cympx import mpx_ab_parallel as cympx_ab_parallel
 
 
 def mpx(ts, w, query=None, cross_correlation=False, n_jobs=-1):
@@ -46,8 +48,15 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=-1):
 
     if core.is_array_like(query):
         query = core.to_np_array(query).astype('d')
-        mp, mpi, mpb, mpib = cympx_ab(ts, query, w, int(cross_correlation), n_jobs)
+        if n_jobs > 1:
+            mp, mpi, mpb, mpib = cympx_ab_parallel(ts, query, w, 
+                int(cross_correlation), n_jobs)
+        else:
+            mp, mpi, mpb, mpib = cympx_ab(ts, query, w, int(cross_correlation))
     else:
-        mp, mpi = cympx(ts, w, int(cross_correlation), n_jobs)
+        if n_jobs > 1:
+            mp, mpi = cympx_parallel(ts, w, int(cross_correlation), n_jobs)
+        else:
+            mp, mpi = cympx(ts, w, int(cross_correlation))
 
     return (np.asarray(mp), np.asarray(mpi))
