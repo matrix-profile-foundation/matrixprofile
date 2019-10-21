@@ -14,6 +14,7 @@ import numpy as np
 
 from matrixprofile import core
 from matrixprofile.algorithms.cympx import mpx_ab as cympx_ab
+from matrixprofile.algorithms.cympx import mpx_ab_parallel as cympx_ab_parallel
 
 
 def mpdist(ts, ts_b, w, n_jobs=-1):
@@ -50,7 +51,10 @@ def mpdist(ts, ts_b, w, n_jobs=-1):
 	if not core.is_one_dimensional(ts_b):
 		raise ValueError('ts_b must be one dimensional!')
 
-	mp, mpi, mpb, mpib = cympx_ab(ts, ts_b, w, 0, n_jobs)
+	if n_jobs > 1:
+		mp, mpi, mpb, mpib = cympx_ab_parallel(ts, ts_b, w, 0, n_jobs)
+	else:
+		mp, mpi, mpb, mpib = cympx_ab(ts, ts_b, w, 0)
 
 	mp_abba = np.append(mp, mpb)
 	data_len = len(ts) + len(ts_b)
