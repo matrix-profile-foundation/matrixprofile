@@ -78,11 +78,12 @@ def top_k_motifs(ts, profile, exclusion_zone=None, k=3, max_neighbors=10,
         second_idx = np.max([min_idx, mpi[min_idx]])
 
         # compute distance profile using mass2 for first appearance
-        query = ts[first_idx:]
+        query = ts[first_idx:first_idx + window_size]
         distance_profile = mass2(ts, query)
 
         # exclude already picked motifs and neighbors
-        # distance_profile[core.nan_inf_indices(mp)] = np.inf
+        mask = core.nan_inf_indices(mp)    
+        distance_profile[mask] = np.inf
 
         # apply exclusion zone for motif pair
         for j in (first_idx, second_idx):
