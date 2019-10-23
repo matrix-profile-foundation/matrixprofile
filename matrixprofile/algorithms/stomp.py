@@ -278,9 +278,14 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
         'rpi': The right matrix profile 1NN indices,
         'lmp': The left matrix profile,
         'lpi': The left matrix profile 1NN indices,
+        'metric': The distance metric computed for the mp,
         'w': The window size used to compute the matrix profile,
         'ez': The exclusion zone used,
-        'join': Flag indicating if a similarity join was computed
+        'join': Flag indicating if a similarity join was computed,
+        'data': {
+            'ts': Time series data,
+            'query': Query data if supplied
+        }
         'class': "MatrixProfile"
         'algorithm': "stomp_parallel"
     }
@@ -443,9 +448,14 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
         'rpi': right_profile_index,
         'lmp': left_matrix_profile,
         'lpi': left_profile_index,
+        'metric': 'euclidean',
         'w': window_size,
         'ez': exclusion_zone,
         'join': is_join,
+        'data': {
+            'ts': ts,
+            'query': query
+        },
         'class': "MatrixProfile",
         'algorithm': "stomp"
     }

@@ -40,14 +40,33 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=-1):
     
     Returns
     -------
-    (array_like, array_like) :
-        The matrix profile (distance profile, profile index).
+    A dict of key data points computed.
+    {
+        'mp': The matrix profile,
+        'pi': The matrix profile 1NN indices,
+        'rmp': The right matrix profile,
+        'rpi': The right matrix profile 1NN indices,
+        'lmp': The left matrix profile,
+        'lpi': The left matrix profile 1NN indices,
+        'metric': The distance metric computed for the mp,
+        'w': The window size used to compute the matrix profile,
+        'ez': The exclusion zone used,
+        'join': Flag indicating if a similarity join was computed,
+        'data': {
+            'ts': Time series data,
+            'query': Query data if supplied
+        }
+        'class': "MatrixProfile"
+        'algorithm': "mpx"
+    }
     """
     ts = core.to_np_array(ts).astype('d')
     n_jobs = core.valid_n_jobs(n_jobs)
+    is_join = False
 
     if core.is_array_like(query):
         query = core.to_np_array(query).astype('d')
+        is_join = True
         if n_jobs > 1:
             mp, mpi, mpb, mpib = cympx_ab_parallel(ts, query, w, 
                 int(cross_correlation), n_jobs)
@@ -59,4 +78,28 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=-1):
         else:
             mp, mpi = cympx(ts, w, int(cross_correlation))
 
-    return (np.asarray(mp), np.asarray(mpi))
+
+    mp = np.asarray(mp)
+    mpi = np.asarray(mpi)
+    distance_metric = 'euclidean'
+    if cross_correlation:
+        distance_metric = 'cross_correlation'
+
+    return {
+        'mp': mp,
+        'pi': mpi,
+        'rmp': None,
+        'rpi': None,
+        'lmp': None,
+        'lpi': None,
+        'metric': distance_metric,
+        'w': w,
+        'ez': int(np.floor(w / 4)),
+        'join': is_join,
+        'data': {
+            'ts': ts,
+            'query': query
+        },
+        'class': 'MatrixProfile',
+        'algorithm': 'mpx'
+    }
