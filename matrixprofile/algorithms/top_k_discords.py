@@ -11,7 +11,7 @@ range = getattr(__builtins__, 'xrange', range)
 import numpy as np
 
 
-def top_k_discords(profile, exclusion_zone=None, k=3):
+def top_k_discords(obj, exclusion_zone=None, k=3):
     """
     Find the top K number of discords (anomalies) given a matrix profile,
     exclusion zone and the desired number of discords. The exclusion zone
@@ -22,27 +22,30 @@ def top_k_discords(profile, exclusion_zone=None, k=3):
 
     Parameters
     ----------
-    profile : dict
-        The matrix profile computed from the compute function.
-    exclusion_zone : int, Default 1/2 window_size
+    obj : dict
+        The output of a matrix profile algorithm.
+    exclusion_zone : int, Default mp algorithm ez
         Desired number of values to exclude on both sides of the anomaly.
     k : int
         Desired number of discords to find.
 
     Returns
     -------
+    The original input obj with an additional "discords" key containing the
+    following.
+
     List of indices where the discords were found in the matrix profile.
     """
     found = []
-    tmp = np.copy(profile['mp']).astype('d')
+    tmp = np.copy(obj.get('mp', None)).astype('d')
     n = len(tmp)
 
     # TODO: this is based on STOMP standards when this motif finding algorithm
     # originally came out. Should we default this to 4.0 instead? That seems
     # to be the common value now per new research.
-    window_size = profile['w']
+    window_size = obj.get('w', None)
     if exclusion_zone is None:
-        exclusion_zone = int(np.ceil(window_size / 2.0))
+        exclusion_zone = obj.get('ez', None)
     
     # obtain indices in ascending order
     indices = np.argsort(tmp)
@@ -63,4 +66,7 @@ def top_k_discords(profile, exclusion_zone=None, k=3):
         if len(found) >= k:
             break
 
-    return found
+
+    obj['discords'] = np.array(found, dtype='int')
+
+    return obj

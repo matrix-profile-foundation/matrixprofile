@@ -20,10 +20,11 @@ from matrixprofile.algorithms.top_k_discords import top_k_discords
 def test_mp_all_same():
 	profile = {
 		'mp': np.ones(10),
+		'ez': 2,
         'w': 4
 	}
 
-	discords = top_k_discords(profile)
+	discords = top_k_discords(profile)['discords']
 	desired = np.array([9, 6, 3])
 	np.testing.assert_almost_equal(discords, desired)
 
@@ -34,7 +35,7 @@ def test_discords_no_exclusion():
 		'w': 4
 	}
 	desired = np.array([3, 2, 1])
-	discords = top_k_discords(profile, k=3, exclusion_zone=0)
+	discords = top_k_discords(profile, k=3, exclusion_zone=0)['discords']
 	np.testing.assert_almost_equal(discords, desired)
 
 
@@ -44,7 +45,7 @@ def test_discords_no_exclusion_all():
 		'w': 4
 	}
 	desired = np.array([3, 2, 1, 0])
-	discords = top_k_discords(profile, k=4, exclusion_zone=0)
+	discords = top_k_discords(profile, k=4, exclusion_zone=0)['discords']
 	np.testing.assert_almost_equal(discords, desired)
 
 
@@ -54,5 +55,5 @@ def test_discords_exclude_one():
 		'w': 4
 	}
 	desired = np.array([3, 1])
-	discords = top_k_discords(profile, k=4, exclusion_zone=1)
+	discords = top_k_discords(profile, k=4, exclusion_zone=1)['discords']
 	np.testing.assert_almost_equal(discords, desired)
