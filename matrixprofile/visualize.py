@@ -17,7 +17,24 @@ from matplotlib.lines import Line2D
 from matrixprofile import core
 
 
-def visualize(obj, data=None):
+def __combine(a, b):
+	"""
+	Helper function to combine lists or a list and an object.
+	"""
+	output = []
+	if isinstance(a, list) and isinstance(b, list):
+		output = a + b
+	elif isinstance(a, list):
+		output = a
+		output.append(b)
+	elif isinstance(b, list):
+		output = b
+		output.append(a)
+
+	return output
+
+
+def visualize(obj):
 	"""
 	Plots an object generated from one of the algorithms. In some cases
 	multiple plots will be generated.
@@ -26,23 +43,28 @@ def visualize(obj, data=None):
 	----------
 	obj : dict_like
 		The object to plot.
-	data : array_like
-		The original data used in computation.
 
 	Returns
 	-------
-	Nothing at the moment. It is purely for display.
+	A list of matplotlib figures.
 	"""
+	figures = []
+
 	mp_class = obj.get('class', None)
-	func = None
 
 	if mp_class == 'MatrixProfile':
-		func = plot_mp
+		figures = __combine(figures, plot_mp(obj))
+	
+	if 'motifs' in obj:
+		figures = __combine(figures, plot_motifs(obj))
+	
+	if 'discords' in obj:
+		figures = __combine(figures, plot_discords(obj))
 
-	return func(obj, data=data)
+	return figures
 
 
-def plot_mp(obj, data=None):
+def plot_mp(obj):
 	"""
 	Plots a matrix profile object.
 
@@ -50,19 +72,24 @@ def plot_mp(obj, data=None):
 	----------
 	obj : dict_like
 		The matrix profile object to plot.
-	data : array_like, Optional
-		The original data used to compute the matrix profile.
 
 	Returns
 	-------
-	Nothing at the moment. It is purely for display.
+	The matplotlib figure object.
 	"""
 	plot_count = 0
+	data = obj.get('data', None)
+	ts = None
+	query = None
+	if data:
+		ts = data.get('ts', None)
+		query = data.get('query', None)
+
 	mp = obj.get('mp', None)
 	lmp = obj.get('lmp', None)
 	rmp = obj.get('rmp', None)
 
-	for val in [data, mp, lmp, rmp]:
+	for val in [ts, query, mp, lmp, rmp]:
 		if core.is_array_like(val):
 			plot_count += 1
 
@@ -75,47 +102,68 @@ def plot_mp(obj, data=None):
 
 	current = 0
 
-	fig, axes = plt.subplots(plot_count, 1, sharex=True, figsize=(20,10))
+	fig, axes = plt.subplots(plot_count, 1, sharex=True, figsize=(15, 7))
 
 	if not isinstance(axes, Iterable):
 		axes = [axes,]
 
-	# plot the original data
-	if core.is_array_like(data):
-		axes[current].plot(np.arange(len(data)), data)
-		axes[current].set_title('Data')
+	# plot the original ts
+	if core.is_array_like(ts):
+		axes[current].plot(np.arange(len(ts)), ts)
+		axes[current].set_ylabel('Data', size=14)
+		current += 1
+
+	# plot the original query
+	if core.is_array_like(query):
+		axes[current].plot(np.arange(len(query)), query)
+		axes[current].set_ylabel('Query', size=14)
 		current += 1
 
 	# plot matrix profile
 	if core.is_array_like(mp):
 		mp_adj = np.append(mp, np.zeros(w - 1) + np.nan)
 		axes[current].plot(np.arange(len(mp_adj)), mp_adj)
-		axes[current].set_title('Matrix Profile')
+		axes[current].set_ylabel('Matrix Profile', size=14)
 		current += 1
 
 	# plot left matrix profile
 	if core.is_array_like(lmp):
 		mp_adj = np.append(lmp, np.zeros(w - 1) + np.nan)
 		axes[current].plot(np.arange(len(mp_adj)), mp_adj)
-		axes[current].set_title('Left Matrix Profile')
+		axes[current].set_ylabel('Left Matrix Profile', size=14)
 		current += 1
 
 	# plot left matrix profile
 	if core.is_array_like(rmp):
 		mp_adj = np.append(rmp, np.zeros(w - 1) + np.nan)
 		axes[current].plot(np.arange(len(mp_adj)), mp_adj)
-		axes[current].set_title('Right Matrix Profile')
+		axes[current].set_ylabel('Right Matrix Profile', size=14)
 		current += 1
 
+	fig.tight_layout()
 
-def plot_discords(obj, data):
+	return fig
+
+
+def plot_discords(obj):
 	"""
 	Plot discords.
+
+	Parameters
+	----------
+	obj : dict_like
+		The matrix profile object to plot.
+
+	Returns
+	-------
+	The matplotlib figure object.
 	"""
 	mp = obj['mp']
 	w = obj['w']
 	discords = obj['discords']
-	ts = data
+	data = obj.get('data', None)
+	if data:
+		ts = data.get('ts', None)
 
 	mp_adjusted = np.append(mp, np.full(w + 1, np.nan))
 
@@ -140,22 +188,39 @@ def plot_discords(obj, data):
 	    Line2D([0], [0], color='red', marker='*', lw=0),
 	    Line2D([0], [0], color='blue'),
 	]
-	fig.legend(lines, ['Discord', 'MP'], bbox_to_anchor=(1.06, 0.44))
-
+	fig.legend(lines, ['Discord', 'MP'], bbox_to_anchor=(1.07, 0.44))
 
 	fig.tight_layout()
 
+	return fig
 
-def plot_motifs(obj, data):
+
+def plot_motifs(obj):
 	"""
 	Plot motifs.
+
+	Parameters
+	----------
+	obj : dict_like
+		The matrix profile object to plot.
+
+	Returns
+	-------
+	A list of matplotlib figure objects.
 	"""
+	figures = []
+
 	mp = obj['mp']
 	w = obj['w']
 	motifs = obj['motifs']
-	ts = data
+	data = obj.get('data', None)
+	if data:
+		ts = data.get('ts', None)
 
 	fig, axes = plt.subplots(len(motifs), 2, figsize=(15, 7), sharey='row', sharex='col')
+	if len(motifs) == 1:
+		axes = [axes,]
+
 	pair_num = 1
 	for ax_row, motif in zip(axes, motifs):
 	    first = True
@@ -171,8 +236,12 @@ def plot_motifs(obj, data):
 	    pair_num += 1
 
 	fig.tight_layout()
+	figures.append(fig)
 
 	fig, axes = plt.subplots(len(motifs), 1, figsize=(15, 7), sharey='row', sharex='col')
+	if len(motifs) == 1:
+		axes = [axes,]
+
 	pair_num = 1
 	for ax, motif in zip(axes, motifs):
 	    ax.plot(np.arange(len(ts)), ts)
@@ -196,3 +265,7 @@ def plot_motifs(obj, data):
 	]
 	fig.legend(lines, ['Data', 'Motif', 'Neighbor'], bbox_to_anchor=(1.08, 0.975))
 	fig.tight_layout()
+
+	figures.append(fig)
+
+	return figures
