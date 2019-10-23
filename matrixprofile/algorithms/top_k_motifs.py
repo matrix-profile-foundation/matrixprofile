@@ -13,8 +13,7 @@ from matrixprofile import core
 from matrixprofile.algorithms.mass2 import mass2
 
 
-def top_k_motifs(ts, profile, exclusion_zone=None, k=3, max_neighbors=10,
-                 radius=3):
+def top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
     """
     Find the top K number of motifs (patterns) given a matrix profile. By
     default the algorithm will find up to 3 motifs (k) and up to 10 of their
@@ -22,11 +21,9 @@ def top_k_motifs(ts, profile, exclusion_zone=None, k=3, max_neighbors=10,
 
     Parameters
     ----------
-    ts : array_like
-        The original data used to compute the matrix profile.
-    profile : dict
-        The matrix profile computed from the compute function.
-    exclusion_zone : int, Default 1/2 window_size
+    obj : dict
+        The output from one of the matrix profile algorithms.
+    exclusion_zone : int, Default to algorithm ez
         Desired number of values to exclude on both sides of the motif. This
         avoids trivial matches. It defaults to half of the computed window
         size. Setting the exclusion zone to 0 makes it not apply.
@@ -40,6 +37,9 @@ def top_k_motifs(ts, profile, exclusion_zone=None, k=3, max_neighbors=10,
 
     Returns
     -------
+    The original input obj with the addition of the "motifs" key. The motifs
+    key consists of the following structure.
+
     A list of dicts containing motif indices and their corresponding neighbor
     indices.
 
@@ -50,19 +50,23 @@ def top_k_motifs(ts, profile, exclusion_zone=None, k=3, max_neighbors=10,
         }
     ]
     """
-    window_size = profile['w']
+    window_size = obj['w']
+    data = obj.get('data', None)
+    if data:
+        ts = data.get('ts', None)
+
     data_len = len(ts)
     mu, sig = core.moving_avg_std(ts, window_size)
-    profile_len = len(profile['mp'])
+    profile_len = len(obj['mp'])
     motifs = []
-    mp = np.copy(profile['mp'])
-    mpi = profile['pi']
+    mp = np.copy(obj['mp'])
+    mpi = obj['pi']
 
     # TODO: this is based on STOMP standards when this motif finding algorithm
     # originally came out. Should we default this to 4.0 instead? That seems
     # to be the common value now per new research.
     if exclusion_zone is None:
-        exclusion_zone = int(np.ceil(window_size / 2.0))
+        exclusion_zone = obj.get('ez', None)
 
     for i in range(k):
         min_idx = np.argmin(mp)
@@ -140,4 +144,6 @@ def top_k_motifs(ts, profile, exclusion_zone=None, k=3, max_neighbors=10,
             'neighbors': neighbors
         })
 
-    return motifs
+        obj['motifs'] = motifs
+
+    return obj

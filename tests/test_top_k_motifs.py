@@ -17,14 +17,16 @@ import numpy as np
 from matrixprofile.algorithms.top_k_motifs import top_k_motifs
 
 def test_all_inf():
-	ts = np.array([1, 1, 1, 1, 1, 1, 1, 1])
-	profile = {
+	obj = {
 		'mp': np.array([np.inf, np.inf, np.inf, np.inf, np.inf]),
 		'pi': np.array([0, 0, 0, 0, 0]),
-		'w': 4
+		'w': 4,
+		'data': {
+			'ts': np.array([1, 1, 1, 1, 1, 1, 1, 1])
+		}
 	}
 
-	motifs = top_k_motifs(ts, profile)
+	motifs = top_k_motifs(obj)
 	desired = np.array([])
 
 	np.testing.assert_equal(motifs, desired)
