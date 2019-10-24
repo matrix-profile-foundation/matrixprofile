@@ -56,8 +56,6 @@ def top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
         ts = data.get('ts', None)
 
     data_len = len(ts)
-    mu, sig = core.moving_avg_std(ts, window_size)
-    profile_len = len(obj['mp'])
     motifs = []
     mp = np.copy(obj['mp'])
     mpi = obj['pi']
