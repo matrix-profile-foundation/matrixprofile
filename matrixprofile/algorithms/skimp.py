@@ -11,6 +11,8 @@ range = getattr(__builtins__, 'xrange', range)
 from collections.abc import Iterable
 import math
 
+import warnings
+
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -244,3 +246,81 @@ def maximum_subsequence(ts, threshold, n_jobs=-1):
         window_size = window_size * 2
     
     return window_size
+
+
+def top_k_discords(pmp, windows, exclusion_zone=None, k=3):
+    """
+    Computes the top K discords for the given Pan-MatrixProfile. The return
+    values is a list of row by col indices.
+
+    Note
+    ----
+    This algorithm is written to work with Euclidean distance. If you submit
+    a PMP of Pearson metrics, then it is first converted to Euclidean.
+
+    Parameters
+    ----------
+    pmp : array_like
+        The Pan-MatrixProfile.
+    windows : array_like
+        The windows used to compute the respective matrix profiles. They should
+        match row wise with the PMP.
+    exclusion_zone : int, Default window / 2
+        The zone to exclude around the found discords to reduce trivial
+        findings. By default we use the row-wise window / 2.
+    k : int
+        Maximum number of discords to find.
+
+    Returns
+    -------
+    A 2D array of indices. The first column corresponds to the row index and 
+    the second column corresponds to the column index of the submitted PMP.
+    """
+
+    # this function requires euclidean distance
+    # we assume that it is pearson when min max is between 0 and 1
+    mask = ~core.nan_inf_indices(pmp)
+    min_val = pmp[mask].min()
+    max_val = pmp[mask].max()
+    
+    tmp = None
+    if min_val >= 0 and max_val <= 1:
+        msg = """
+        min and max values appear to be Pearson metric.
+        This function requires Euclidean distance. Converting...
+        """
+        warnings.warn(msg)
+        tmp = core.pearson_to_euclidean(pmp, windows)
+    else:
+        tmp = np.copy(pmp).astype('d')        
+    
+    # replace nan and infs with -infinity
+    # for whatever reason numpy argmax finds infinity as max so
+    # this is a way to get around it by converting to -infinity
+    tmp[core.nan_inf_indices(tmp)] = -np.inf
+            
+    # iterate finding the max value k times or until negative
+    # infinity is obtained
+    found = []
+    
+    for _ in range(k):
+        max_idx = np.unravel_index(np.argmax(tmp), tmp.shape)
+        window = windows[max_idx[0]]
+        
+        if tmp[max_idx] == -np.inf:
+            break
+        
+        found.append(max_idx)
+        
+        # apply exclusion zone
+        # the exclusion zone is based on 1/2 of the window size
+        # used to compute that specific matrix profile
+        n = tmp[max_idx[0]].shape[0]
+        if exclusion_zone is None:
+            exclusion_zone = int(np.floor(window / 2))
+
+        ez_start = np.max([0, max_idx[1] - exclusion_zone])
+        ez_stop = np.min([n, max_idx[1] + exclusion_zone])
+        tmp[max_idx[0]][ez_start:ez_stop] = -np.inf
+        
+    return np.array(found)
