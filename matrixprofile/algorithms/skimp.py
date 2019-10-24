@@ -232,9 +232,9 @@ def maximum_subsequence(ts, threshold):
     cross_correlation = 1
 
     while window_size <= max_window:
-        pmp, pmpi = mpx(ts, window_size, cross_correlation)
-        mask = ~np.isinf(pmp)
-        correlation_max = np.max(pmp[mask])
+        mp = mpx(ts, window_size, cross_correlation=True)['mp']
+        mask = ~np.isinf(mp)
+        correlation_max = np.max(mp[mask])
 
         if correlation_max < threshold:
             break
