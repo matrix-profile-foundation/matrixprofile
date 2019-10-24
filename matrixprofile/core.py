@@ -547,3 +547,24 @@ def pearson_to_euclidean(a, windows):
             euc_a[idx][is_inf] = np.inf
     
     return euc_a
+
+
+def is_pearson_array(a):
+    """
+    Helper function to determine if an array contains pearson metrics only. It
+    is assumed that if the min is >= 0 and max is <= 1, then it is pearson.
+
+    Parameters
+    ----------
+    a : array_like
+        The array to test.
+
+    Returns
+    -------
+    True or false respectively.
+    """
+    mask = ~nan_inf_indices(a)
+    min_val = a[mask].min()
+    max_val = a[mask].max()
+
+    return min_val >= 0 and max_val <= 1
