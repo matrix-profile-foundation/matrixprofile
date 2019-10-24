@@ -180,7 +180,8 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     # compute all matrix profiles for each window size
     for i in range(last_index):
         window_size = windows[split_index[i]]
-        mp, pi = mpx(ts, window_size, int(cross_correlation))
+        profile = mpx(ts, window_size, int(cross_correlation))
+        mp = profile.get('mp')
         pmp[split_index[i], 0:len(mp)] = mp
         
         j = split_index[i]

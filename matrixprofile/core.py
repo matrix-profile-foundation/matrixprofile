@@ -466,8 +466,6 @@ def valid_n_jobs(n_jobs):
     if n_jobs > max_cpus:
         n_jobs = max_cpus
     
-    logger.warning('Multiprocessing with {} cpus.'.format(n_jobs))
-
     return n_jobs
 
 
