@@ -17,7 +17,7 @@ def top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
     """
     Find the top K number of motifs (patterns) given a matrix profile. By
     default the algorithm will find up to 3 motifs (k) and up to 10 of their
-    neighbors with a radius of 3.
+    neighbors with a radius of 3 * min_dist.
 
     Parameters
     ----------
@@ -111,7 +111,7 @@ def top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
         for j in range(max_neighbors):
             neighbor_idx = np.argmin(distance_profile)
             neighbor_dist = distance_profile[neighbor_idx]
-            not_in_radius = not ((radius * min_dist) < neighbor_dist)
+            not_in_radius = not ((radius * min_dist) >= neighbor_dist)
 
             # no more neighbors exist based on radius
             if core.is_nan_inf(neighbor_dist) or not_in_radius:
