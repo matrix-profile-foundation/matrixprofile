@@ -265,3 +265,23 @@ def test_nan_inf_indices_all_false():
     actual = core.nan_inf_indices(a)
 
     np.testing.assert_equal(desired, actual)
+
+
+def test_pearson_to_euclidean_1d():
+    a = np.array([0.23, 0.5, 0.34, 0.67, 0.88])
+    w = [4,]
+    desired = np.array([2.48193473, 2, 2.29782506, 1.62480768, 0.9797959])
+    actual = core.pearson_to_euclidean(a, w)
+
+    np.testing.assert_almost_equal(desired, actual)
+
+
+def test_pearson_to_euclidean_2d():
+    a = np.array([[0.23, 0.5, 0.34, 0.67, 0.88],
+                  [0.23, 0.5, 0.34, 0.67, 0.88]])
+    w = [4, 4]
+    desired = np.array([[2.48193473, 2, 2.29782506, 1.62480768, 0.9797959],
+                        [2.48193473, 2, 2.29782506, 1.62480768, 0.9797959]])
+    actual = core.pearson_to_euclidean(a, w)
+
+    np.testing.assert_almost_equal(desired, actual)

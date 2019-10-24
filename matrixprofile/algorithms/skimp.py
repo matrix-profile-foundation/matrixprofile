@@ -104,7 +104,7 @@ def plot_pmp(pmp, cmap=None):
 
 
 def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
-          sample_pct=0.1):
+          sample_pct=0.1, n_jobs=-1):
     """
     Computes the Pan Matrix Profile (PMP) for the given time series. When the
     time series is only passed, windows start from 8 and increase by increments
@@ -129,6 +129,8 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     sample_pct : float, default = 0.1 (10%)
         Number of window sizes to compute MPs for. Decimal percent between
         0 and 1.
+    n_jobs : int, default all
+        The number of cpu cores to use.
 
     Returns
     -------
@@ -180,7 +182,8 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     # compute all matrix profiles for each window size
     for i in range(last_index):
         window_size = windows[split_index[i]]
-        profile = mpx(ts, window_size, int(cross_correlation))
+        profile = mpx(ts, window_size, cross_correlation=cross_correlation,
+            n_jobs=n_jobs)
         mp = profile.get('mp')
         pmp[split_index[i], 0:len(mp)] = mp
         
@@ -197,7 +200,7 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
                 print('{}% complete'.format(int_pct))
                 pct_shown[int_pct] = 1
     
-    return (pmp, idx, windows)
+    return (pmp, idx, np.array(windows))
 
 
 def maximum_subsequence(ts, threshold):

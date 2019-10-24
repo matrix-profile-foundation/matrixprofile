@@ -512,3 +512,38 @@ def apply_exclusion_zone(exclusion_zone, is_join, window_size, data_length,
         distance_profile[ez_start:ez_end] = np.inf
 
     return distance_profile
+
+
+def pearson_to_euclidean(a, windows):
+    """
+    Converts an array of Pearson metrics to Euclidean. The array and windows
+    should both be row-wise aligned.
+
+    Parameters
+    ----------
+    a : array_like
+        The array of Pearson metrics.
+    windows : int or array_like
+        The window(s) used to compute the Pearson metrics.
+
+    Returns
+    -------
+    New array of same dimensions as input array, but with Euclidean distance.
+    """
+    euc_a = np.full(a.shape, np.inf, dtype='d')
+    
+    if is_one_dimensional(a):
+
+        window = windows
+        if is_array_like(windows):
+            window = windows[0]
+
+        is_inf = np.isinf(a)
+        euc_a = np.sqrt(2 * window * (1 - a))
+    else:
+        for window, idx in zip(windows, range(a.shape[0])):
+            is_inf = np.isinf(a[idx])
+            euc_a[idx] = np.sqrt(2 * window * (1 - a[idx]))
+            euc_a[idx][is_inf] = np.inf
+    
+    return euc_a
