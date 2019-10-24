@@ -203,7 +203,7 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     return (pmp, idx, np.array(windows))
 
 
-def maximum_subsequence(ts, threshold):
+def maximum_subsequence(ts, threshold, n_jobs=-1):
     """
     Finds the maximum subsequence length based on the threshold provided. Note
     that this threshold is domain specific requiring some knowledge about the
@@ -219,6 +219,8 @@ def maximum_subsequence(ts, threshold):
     threshold : float
         The correlation coefficient used as the threshold. It should be between
         0 and 1.
+    n_jobs : int, default all
+        The number of cpu cores to use.
     
     Returns
     -------
@@ -232,7 +234,7 @@ def maximum_subsequence(ts, threshold):
     cross_correlation = 1
 
     while window_size <= max_window:
-        mp = mpx(ts, window_size, cross_correlation=True)['mp']
+        mp = mpx(ts, window_size, cross_correlation=True, n_jobs=n_jobs)['mp']
         mask = ~np.isinf(mp)
         correlation_max = np.max(mp[mask])
 
