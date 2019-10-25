@@ -9,20 +9,25 @@ range = getattr(__builtins__, 'xrange', range)
 
 import math
 
+from matrixprofile import core
+
 from matrixprofile.algorithms.top_k_discords import top_k_discords
 from matrixprofile.algorithms.top_k_motifs import top_k_motifs
 from matrixprofile.algorithms import skimp
 from matrixprofile.algorithms.mpx import mpx
 from matrixprofile.algorithms.scrimp import scrimp_plus_plus
-from matrixprofile.visualize import plot_mp
+from matrixprofile import visualize
 
 
 def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
     ts = core.to_np_array(ts)
 
+    if isinstance(threshold, type(None)):
+        threshold = 0.98
+
     # when a threshold is passed, we compute the upper window
     if isinstance(windows, type(None)):
-        upper_w = maximum_subsequence(ts, threshold)
+        upper_w = skimp.maximum_subsequence(ts, threshold)
 
         # determine windows to be computed
         # from 8 in steps of 2 until upper w
@@ -31,41 +36,36 @@ def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
         windows = range(start, upper_w + 1)
 
     # compute the pmp
-    pmp, idx, windows = skimp.skimp(ts, windows=windows, sample_pct=sample_pct)
+    profile = skimp.skimp(ts, windows=windows, sample_pct=sample_pct)
 
-    # TODO: These need to be implemented
     # extract top motifs
-    # extract top discords    
-    # plot top motifs
-    # plot top discords
+    profile = top_k_motifs(profile)
+
+    # extract top discords
+    profile = top_k_discords(profile)
 
     # plot pmp
-    pmp_plot = skimp.plot_pmp(pmp)
+    figures = visualize(profile)
 
-    return None # TODO!!!!!!!
+    return (profile, figures)
 
 
 def analyze_mp_exact(ts, query, window, n_jobs=-1):
     ts = core.to_np_array(ts)
 
     # compute mp
-    profile = mpx(ts, query, window, n_jobs=n_jobs)
+    profile = mpx(ts, window, query=query, n_jobs=n_jobs)
 
     # extract top motifs
-    motifs = top_k_motifs(ts, profile)
+    profile = top_k_motifs(profile)
 
     # extract top discords
-    discords = top_k_discords(profile)
+    profile = top_k_discords(profile)
 
     # plot mp
-    mp_plot = plot_mp(profile, data=ts)
+    figures = visualize(profile)
 
-    # TODO: need to figure out discord and motif plotting
-    # plot top motifs
-
-    # plot top discords
-
-    return None # TODO!!!!!!!
+    return (profile, figures)
 
 
 def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=-1):
@@ -76,23 +76,18 @@ def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=-1):
     profile = scrimp_plus_plus(ts, query, window, sample_pct=sample_pct, n_jobs=n_jobs)
 
     # extract top motifs
-    motifs = top_k_motifs(ts, profile)
+    profile = top_k_motifs(profile)
 
     # extract top discords
-    discords = top_k_discords(profile)
+    profile = top_k_discords(profile)
 
     # plot mp
-    mp_plot = plot_mp(profile, data=ts)
+    figures = plot_mp(profile)
 
-    # TODO: need to figure out discord and motif plotting
-    # plot top motifs
-
-    # plot top discords
-
-    return None # TODO!!!!!!!
+    return (profile, figures)
 
 
-def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=None, n_jobs=-1):
+def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs=-1):
     """
     TODO: Figure out if we should have parameters that allow end users to tweak
     the discord and motif parameters. Right now I think that it would be a
@@ -117,8 +112,16 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=None, n_jobs
     3. Top Motifs
     4. Top Discords
     5. Plot PMP, motifs and discords.
+
+    Returns
+    -------
+    tuple : (profile, figures)
+        The appropriate PMP or MP profile object and associated figures.
     """
     result = None
+
+    # determine proper number of jobs
+    n_jobs = core.valid_n_jobs(n_jobs)
 
     # determine what algorithm to use based on params
     no_window = isinstance(windows, type(None))
@@ -132,9 +135,9 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=None, n_jobs
     if no_window or many_windows:
         result = analyze_pmp(ts, query, sample_pct, threshold, windows=windows, n_jobs=n_jobs)
     elif single_window and is_exact:
-        result = analyze_mp_exact(ts, query, window, n_jobs=n_jobs)
+        result = analyze_mp_exact(ts, query, windows, n_jobs=n_jobs)
     elif single_window and is_approx:
-        result = analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=n_jobs)
+        result = analyze_mp_approximate(ts, query, windows, sample_pct, n_jobs=n_jobs)
     else:
         raise RuntimeError('Param combination resulted in an uknown operation')
 

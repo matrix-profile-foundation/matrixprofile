@@ -10,8 +10,10 @@ range = getattr(__builtins__, 'xrange', range)
 
 import numpy as np
 
+from matrixprofile import core
 
-def pmp_top_k_discords(obj, windows, exclusion_zone=None, k=3):
+
+def pmp_top_k_discords(obj, exclusion_zone=None, k=3):
     """
     Computes the top K discords for the given Pan-MatrixProfile. The return
     values is a list of row by col indices.
@@ -25,9 +27,6 @@ def pmp_top_k_discords(obj, windows, exclusion_zone=None, k=3):
     ----------
     obj : dict
         Data structure from a PMP algorithm.
-    windows : array_like
-        The windows used to compute the respective matrix profiles. They should
-        match row wise with the PMP.
     exclusion_zone : int, Default window / 2
         The zone to exclude around the found discords to reduce trivial
         findings. By default we use the row-wise window / 2.
@@ -45,6 +44,7 @@ def pmp_top_k_discords(obj, windows, exclusion_zone=None, k=3):
     # convert if the metric is pearson
     metric = obj.get('metric', None)
     pmp = obj.get('pmp', None)
+    windows = obj.get('windows', None)
     
     tmp = None
     if metric == 'pearson':
