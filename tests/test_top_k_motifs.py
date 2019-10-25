@@ -23,7 +23,8 @@ def test_all_inf():
 		'w': 4,
 		'data': {
 			'ts': np.array([1, 1, 1, 1, 1, 1, 1, 1])
-		}
+		},
+		'class': 'MatrixProfile'
 	}
 
 	motifs = top_k_motifs(obj)

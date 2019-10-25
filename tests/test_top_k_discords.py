@@ -21,7 +21,8 @@ def test_mp_all_same():
 	profile = {
 		'mp': np.ones(10),
 		'ez': 2,
-        'w': 4
+        'w': 4,
+        'class': 'MatrixProfile'
 	}
 
 	discords = top_k_discords(profile)['discords']
@@ -32,7 +33,8 @@ def test_mp_all_same():
 def test_discords_no_exclusion():
 	profile = {
 		'mp': np.array([1, 2, 3, 4]),
-		'w': 4
+		'w': 4,
+		'class': 'MatrixProfile'
 	}
 	desired = np.array([3, 2, 1])
 	discords = top_k_discords(profile, k=3, exclusion_zone=0)['discords']
@@ -42,7 +44,8 @@ def test_discords_no_exclusion():
 def test_discords_no_exclusion_all():
 	profile = {
 		'mp': np.array([1, 2, 3, 4]),
-		'w': 4
+		'w': 4,
+		'class': 'MatrixProfile'
 	}
 	desired = np.array([3, 2, 1, 0])
 	discords = top_k_discords(profile, k=4, exclusion_zone=0)['discords']
@@ -52,7 +55,8 @@ def test_discords_no_exclusion_all():
 def test_discords_exclude_one():
 	profile = {
 		'mp': np.array([1, 2, 3, 4]),
-		'w': 4
+		'w': 4,
+		'class': 'MatrixProfile'
 	}
 	desired = np.array([3, 1])
 	discords = top_k_discords(profile, k=4, exclusion_zone=1)['discords']

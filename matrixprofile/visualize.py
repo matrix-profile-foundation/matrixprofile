@@ -50,18 +50,63 @@ def visualize(obj):
 	"""
 	figures = []
 
-	mp_class = obj.get('class', None)
+	cls = obj.get('class', None)
 
-	if mp_class == 'MatrixProfile':
+	# plot MP
+	if cls == 'MatrixProfile':
 		figures = __combine(figures, plot_mp(obj))
 	
-	if 'motifs' in obj:
-		figures = __combine(figures, plot_motifs(obj))
-	
-	if 'discords' in obj:
-		figures = __combine(figures, plot_discords(obj))
+		if 'motifs' in obj:
+			figures = __combine(figures, plot_motifs_mp(obj))
+		
+		if 'discords' in obj:
+			figures = __combine(figures, plot_discords_mp(obj))
+
+	# plot PMP
+	if cls == 'PMP':
+		figures = __combine(figures, plot_pmp(obj))
+
+		if 'motifs' in obj:
+			# TODO
+			pass
+		
+		if 'discords' in obj:
+			# TODO
+			pass
 
 	return figures
+
+
+def plot_pmp(obj):
+    """
+    Plots the PMP. Right now it assumes you are using a Jupyter or Ipython
+    notebook.
+
+    Parameters
+    ----------
+    pmp : dict
+        The dict structure from a PMP algorithm.
+    cmap: str
+        A valid Matplotlib color map.
+
+    Returns
+	-------
+	The matplotlib figure object.
+    """
+    pmp = obj.get('pmp', None)
+    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    depth = 256
+    test = np.ceil(pmp * depth) / depth
+    test[test > 1] = 1
+    ax.imshow(test, interpolation=None, aspect='auto')
+    ax.invert_yaxis()
+    ax.set_title('PMP')
+    ax.set_xlabel('Profile Index')
+    ax.set_ylabel('Window Size')
+    
+    fig.tight_layout()
+
+    return fig
 
 
 def plot_mp(obj):
@@ -145,7 +190,7 @@ def plot_mp(obj):
 	return fig
 
 
-def plot_discords(obj):
+def plot_discords_mp(obj):
 	"""
 	Plot discords.
 
@@ -195,7 +240,7 @@ def plot_discords(obj):
 	return fig
 
 
-def plot_motifs(obj):
+def plot_motifs_mp(obj):
 	"""
 	Plot motifs.
 
