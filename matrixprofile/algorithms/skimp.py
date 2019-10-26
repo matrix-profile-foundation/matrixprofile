@@ -51,6 +51,12 @@ def binary_split(n):
     array_like :
         The indices to iterate to perform BFS.
     """
+    # having length of 1 causes infinite loop and it just doesn't really
+    # make much sense.
+    # just return it
+    if n < 2:
+        return [0,]
+
     index = []
     intervals = []
     
@@ -210,7 +216,7 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     }
     
 
-def maximum_subsequence(ts, threshold, n_jobs=-1):
+def maximum_subsequence(ts, threshold, n_jobs=-1, include_pmp=False):
     """
     Finds the maximum subsequence length based on the threshold provided. Note
     that this threshold is domain specific requiring some knowledge about the
@@ -228,26 +234,55 @@ def maximum_subsequence(ts, threshold, n_jobs=-1):
         0 and 1.
     n_jobs : int, default all
         The number of cpu cores to use.
+    include_pmp : bool, default False
+        Include the PanMatrixProfile for the computed windows.
     
     Returns
     -------
+    With pmp=False (default)
     int :
         The maximum subsequence length based on the threshold provided.
+    
+    With pmp=True
+    dict :
+        A dict containing the upper window, windows and pmp.
+    {
+        'upper_window': The upper window,
+        'windows': array_like windows used to compute the pmp,
+        'pmp': the pan matrix profile as a 2D array,
+        'pmpi': the pmp indices,
+    }
     """
     ts = core.to_np_array(ts)
     correlation_max = np.inf
     window_size = 8
     max_window = int(np.floor(len(ts) / 2))
-    cross_correlation = 1
+
+    windows = []
+    pmp = []
+    pmpi = []
 
     while window_size <= max_window:
-        mp = mpx(ts, window_size, cross_correlation=True, n_jobs=n_jobs)['mp']
-        mask = ~np.isinf(mp)
-        correlation_max = np.max(mp[mask])
+        profile = mpx(ts, window_size, cross_correlation=True, n_jobs=n_jobs)
+        mask = ~np.isinf(profile['mp'])
+        correlation_max = np.max(profile['mp'][mask])
+
+        if include_pmp:
+            windows.append(window_size)
+            pmp.append(core.pearson_to_euclidean(profile['mp'], window_size))
+            pmpi.append(profile['pi'])
+
+        window_size = window_size * 2
 
         if correlation_max < threshold:
             break
-
-        window_size = window_size * 2
     
+    if include_pmp:
+        return {
+            'upper_window': window_size,
+            'windows': windows,
+            'pmp': pmp,
+            'pmpi': pmpi
+        }
+
     return window_size
