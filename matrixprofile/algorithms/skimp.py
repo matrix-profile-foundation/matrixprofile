@@ -242,11 +242,11 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=-1, inc
     
     Returns
     -------
-    With pmp=False (default)
+    With include_pmp=False (default)
     int :
         The maximum subsequence length based on the threshold provided.
     
-    With pmp=True
+    With include_pmp=True
     dict :
         A dict containing the upper window, windows and pmp.
     {
@@ -311,7 +311,8 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=-1, inc
 
     # refine the upper u by increase by + X% increments
     refine_start = 1 + refine_stepsize
-    test_windows = np.arange(refine_start, 2, step=refine_stepsize)
+    refine_end = 2 + refine_stepsize
+    test_windows = np.arange(refine_start, refine_end, step=refine_stepsize)
     test_windows = np.floor(test_windows * window_size).astype('int')
 
     # keep windows divisible by 2
