@@ -7,57 +7,18 @@ from glob import glob
 
 SOURCE_URL = 'https://github.com/target/matrixprofile-ts'
 
-# Glob compliant file paths used to find Cython files for compilation
-EXTENSION_PATHS = [
-    'matrixprofile/algorithms/*.pyx',
-    'matrixprofile/*.pyx'
-]
-
-# Skip these extensions explicitly
-SKIP_EXTENSIONS = [
-    'matrixprofile/algorithms/cympx.pyx',
-]
-
-def skip_extension(path):
-    skip = False
-    for skip in SKIP_EXTENSIONS:
-        if skip in path:
-            skip = True
-    
-    return skip
-
-def find_extensions():
-    """Utility script that finds Cython files to be compiled. It makes use of
-    EXTENSION_PATHS global variable.
-
-    Note
-    ----
-    The namespace of the compiled files will be the path of the directory in
-    which it was found in. For example, matrixprofile/algorithms/mpx.pyx
-    would be compiled into the namespace "matrixprofile.algorithms.mpx".
-
-    Returns
-    -------
-    list(Extension) :
-        A list of Extension object instances for Cython compilation.
-    """
-    extensions = []
-
-    for ep in EXTENSION_PATHS:
-        for fp in glob(ep):
-            if not skip_extension(fp):
-                module_path = fp.replace(os.path.sep, '.').replace('.pyx', '')
-                extensions.append(
-                    Extension(module_path, [fp,])
-                )
-    
-    return extensions
-
-extensions = find_extensions()
+# manual list of files to be compiled
+extensions = []
 extensions.append(Extension(
     'matrixprofile.algorithms.cympx',
     ['matrixprofile/algorithms/cympx.pyx'],
     extra_compile_args = ["-O3", "-march=native", "-fopenmp" ],
+))
+
+extensions.append(Extension(
+    'matrixprofile.cycore',
+    ['matrixprofile/cycore.pyx'],
+    extra_compile_args = ["-O3", "-march=native"],
 ))
 
 with open("README.md", "r") as fh:

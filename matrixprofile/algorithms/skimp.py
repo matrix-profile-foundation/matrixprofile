@@ -216,7 +216,7 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     }
     
 
-def maximum_subsequence(ts, threshold, n_jobs=-1, include_pmp=False):
+def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=-1, include_pmp=False):
     """
     Finds the maximum subsequence length based on the threshold provided. Note
     that this threshold is domain specific requiring some knowledge about the
@@ -229,9 +229,12 @@ def maximum_subsequence(ts, threshold, n_jobs=-1, include_pmp=False):
     ----------
     ts : array_like
         The time series to analyze.
-    threshold : float
+    threshold : float, Default 0.95
         The correlation coefficient used as the threshold. It should be between
         0 and 1.
+    refine_stepsize : float, Default 0.05
+        Used in the refinement step to find a more precise upper window. It
+        should be a percentage between 0.01 and 0.99.
     n_jobs : int, default all
         The number of cpu cores to use.
     include_pmp : bool, default False
@@ -253,26 +256,80 @@ def maximum_subsequence(ts, threshold, n_jobs=-1, include_pmp=False):
         'pmpi': the pmp indices,
     }
     """
-    ts = core.to_np_array(ts)
-    correlation_max = np.inf
-    window_size = 8
-    max_window = int(np.floor(len(ts) / 2))
-
-    windows = []
+    windows = np.array([], dtype='int')
+    pearson = np.array([], dtype='d')
     pmp = []
     pmpi = []
 
+    ts = core.to_np_array(ts)
+    n = len(ts)
+    correlation_max = np.inf
+    window_size = 8
+    max_window = int(np.floor(len(ts) / 2))
+    
+    def resize(mp, pi, n):
+        """Helper function to resize mp and pi to be aligned with the
+        PMP. Also convert pearson to euclidean."""
+        mp = core.pearson_to_euclidean(profile['mp'], window_size)
+        infs = np.full(n - mp.shape[0], np.inf)
+        nans = np.full(n - mp.shape[0], np.nan)
+        mp = np.append(mp, infs)
+        pi = np.append(profile['pi'], nans)
+        
+        return (mp, pi)
+
+    # first perform a wide search by increasing window by 2 in
+    # each iteration
     while window_size <= max_window:
-        profile = mpx(ts, window_size, cross_correlation=True, n_jobs=n_jobs)
+        profile = mpx(ts, window_size, cross_correlation=True)
         mask = ~np.isinf(profile['mp'])
         correlation_max = np.max(profile['mp'][mask])
 
-        if include_pmp:
-            windows.append(window_size)
-            pmp.append(core.pearson_to_euclidean(profile['mp'], window_size))
-            pmpi.append(profile['pi'])
+        windows = np.append(windows, window_size)
+        pearson = np.append(pearson, correlation_max)
+        
+        if include_pmp:            
+            mp, pi = resize(profile['mp'], profile['pi'], n)
+            pmp.append(mp)
+            pmpi.append(pi)
+
+        if correlation_max < threshold:
+            break
 
         window_size = window_size * 2
+
+    # find last window within threshold and throw away
+    # computations outside of the threshold
+    mask = pearson > threshold
+    pearson = pearson[mask]
+    windows = windows[mask]
+    window_size = windows[-1]
+    
+    if include_pmp:
+        pmp = np.vstack(pmp)[mask]
+        pmpi = np.vstack(pmpi)[mask]
+
+    # refine the upper u by increase by + X% increments
+    refine_start = 1 + refine_stepsize
+    test_windows = np.arange(refine_start, 2, step=refine_stepsize)
+    test_windows = np.floor(test_windows * window_size).astype('int')
+
+    # keep windows divisible by 2
+    mask = test_windows % 2 == 1
+    test_windows[mask] = test_windows[mask] + 1
+    
+    for window_size in test_windows:
+        profile = mpx(ts, window_size, cross_correlation=True)
+        mask = ~np.isinf(profile['mp'])
+        correlation_max = np.max(profile['mp'][mask])
+
+        windows = np.append(windows, window_size)
+        pearson = np.append(pearson, correlation_max)
+        
+        if include_pmp:
+            mp, pi = resize(profile['mp'], profile['pi'], n)
+            pmp = np.append(pmp, [mp,], axis=0)
+            pmpi = np.append(pmpi, [pi,], axis=0)
 
         if correlation_max < threshold:
             break
@@ -284,5 +341,5 @@ def maximum_subsequence(ts, threshold, n_jobs=-1, include_pmp=False):
             'pmp': pmp,
             'pmpi': pmpi
         }
-
+    
     return window_size
