@@ -26,17 +26,19 @@ def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
         threshold = 0.98
 
     # when a threshold is passed, we compute the upper window
+    profile = None
     if isinstance(windows, type(None)):
-        upper_w = skimp.maximum_subsequence(ts, threshold)
+        profile = skimp.maximum_subsequence(ts, threshold, include_pmp=True)
 
         # determine windows to be computed
         # from 8 in steps of 2 until upper w
         start = 8
         end = int(math.floor(len(ts) / 2))
-        windows = range(start, upper_w + 1)
+        windows = range(start, profile['upper_window'] + 1)
 
     # compute the pmp
-    profile = skimp.skimp(ts, windows=windows, sample_pct=sample_pct)
+    profile = skimp.skimp(ts, windows=windows, sample_pct=sample_pct,
+        pmp_obj=profile)
 
     # extract top motifs
     profile = top_k_motifs(profile)
