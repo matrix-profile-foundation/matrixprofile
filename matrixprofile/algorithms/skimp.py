@@ -87,7 +87,7 @@ def binary_split(n):
     return index
 
 
-def skimp(ts, windows=None, cross_correlation=False, pmp_obj=None,
+def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
           sample_pct=0.1, n_jobs=-1):
     """
     Computes the Pan Matrix Profile (PMP) for the given time series. When the
@@ -104,13 +104,12 @@ def skimp(ts, windows=None, cross_correlation=False, pmp_obj=None,
     ----------
     ts : array_like
         The time series.
+    show_progress: bool, default = False
+        Show the progress in percent complete in increments of 5% by printing
+        it out to the console.
     cross_correlation : bool, default = False
         Return the MP values as Pearson Correlation instead of Euclidean
         distance.
-    pmp_obj : dict, default = None
-        Repurpose already computed window sizes with this provided PMP. It
-        should be the output of a PMP algorithm such as skimp or maximum
-        subsequence.
     sample_pct : float, default = 0.1 (10%)
         Number of window sizes to compute MPs for. Decimal percent between
         0 and 1.
@@ -152,6 +151,9 @@ def skimp(ts, windows=None, cross_correlation=False, pmp_obj=None,
         windows = range(start, end + 1)
     else:
         sample_pct = 1
+        
+    if not isinstance(show_progress, bool):
+        raise ValueError('show_progress must be a boolean!')
     
     if not isinstance(cross_correlation, bool):
         raise ValueError('cross_correlation must be a boolean!')
@@ -176,22 +178,6 @@ def skimp(ts, windows=None, cross_correlation=False, pmp_obj=None,
     # compute all matrix profiles for each window size
     for i in range(last_index):
         window_size = windows[split_index[i]]
-
-        # check if we already computed this MP given a passed in PMP
-        if isinstance(pmp_obj, dict):
-            cw = pmp_obj.get('windows', None)
-            w_idx = np.argwhere(cw == window_size)
-            
-            # having the window provided, we simply copy over the data instead
-            # of recomputing it
-            if len(w_idx) == 1:
-                w_idx = w_idx[0][0]
-                pmp[split_index[i], :] = pmp_obj['pmp'][w_idx, :]
-                pmpi[split_index[i], :] = pmp_obj['pmpi'][w_idx, :]
-
-                continue
-
-
         profile = mpx(ts, window_size, cross_correlation=cross_correlation,
             n_jobs=n_jobs)
         mp = profile.get('mp')
@@ -203,6 +189,14 @@ def skimp(ts, windows=None, cross_correlation=False, pmp_obj=None,
         while j < last_index and idx[j] != j:
             idx[j] = split_index[i]
             j = j + 1
+        
+        # output the progress
+        if show_progress:
+            pct_complete = round((i / (last_index - 1)) * 100, 2)
+            int_pct = math.floor(pct_complete)
+            if int_pct % 5 == 0 and int_pct not in pct_shown:
+                print('{}% complete'.format(int_pct))
+                pct_shown[int_pct] = 1
 
     metric = 'euclidean'
     if cross_correlation:
@@ -316,9 +310,8 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=-1, inc
         pmpi = np.vstack(pmpi)[mask]
 
     # refine the upper u by increase by + X% increments
-    refine_start = 1 + refine_stepsize
-    refine_end = 2 + refine_stepsize
-    test_windows = np.arange(refine_start, refine_end, step=refine_stepsize)
+    test_windows = np.arange(refine_stepsize, 1, step=refine_stepsize) + 1
+    test_windows = np.append(test_windows, 2)
     test_windows = np.floor(test_windows * window_size).astype('int')
 
     # keep windows divisible by 2
