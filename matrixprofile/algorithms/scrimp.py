@@ -32,7 +32,31 @@ import numpy as np
 
 from matrixprofile import core
 
+
 def calc_distance_profile(X, y, n, m, meanx, sigmax):
+    """
+    Computes the distance profile.
+
+    Parameters
+    ----------
+    X : array_like
+        The FFT transformed time series.
+    y : array_like
+        The query.
+    n : int
+        The length of the time series.
+    m : int
+        The window size.
+    meanx : array_like
+        The moving mean of the time series.
+    sigmax : array_like
+        The moving standard deviation of the time series.
+
+    Returns
+    -------
+    array_like :
+        The distance profile.
+    """
     # reverse the query
     y = np.flip(y, 0)
    
@@ -57,58 +81,12 @@ def calc_distance_profile(X, y, n, m, meanx, sigmax):
 
     return np.sqrt(np.absolute(dist))
 
-def next_subsequence(ts, idx, m):
-    return ts[idx:idx + m]
-
-
-def calc_exclusion_start(idx, exclusion_zone):
-    return int(np.max([0, idx - exclusion_zone]))
-
-
-def calc_exclusion_stop(idx, exclusion_zone, profile_len):
-    return int(np.min([profile_len, idx + exclusion_zone]))
-
-
-def apply_exclusion_zone(idx, exclusion_zone, profile_len, distance_profile):
-    exc_start = calc_exclusion_start(idx, exclusion_zone)
-    exc_stop = calc_exclusion_stop(idx, exclusion_zone, profile_len)
-    distance_profile[exc_start:exc_stop + 1] = np.inf
-
-    return distance_profile
-
-
-def find_and_store_nn(iteration, idx, matrix_profile, mp_index, 
-                      distance_profile):
-    if iteration == 0:
-        matrix_profile = distance_profile
-        mp_index[:] = idx
-    else:
-        update_pos = distance_profile < matrix_profile
-        mp_index[update_pos] = idx
-        matrix_profile[update_pos] = distance_profile[update_pos]
-
-    idx_min = np.argmin(distance_profile)
-    matrix_profile[idx] = distance_profile[idx_min]
-    mp_index[idx] = idx_min
-    idx_nn = mp_index[idx]
-
-    return (matrix_profile, mp_index, idx_nn)
-
-
-def calc_idx_diff(idx, idx_nn):
-    return idx_nn - idx
-
 
 def calc_dotproduct_idx(dotproduct, m, mp, idx, sigmax, idx_nn, meanx):
     dotproduct[idx] = (m - mp[idx] ** 2 / 2) * \
         sigmax[idx] * sigmax[idx_nn] + m * meanx[idx] * meanx[idx_nn]
 
     return dotproduct
-
-
-def calc_end_idx(profile_len, idx, step_size, idx_diff):
-    return np.min([profile_len - 1, idx + step_size - 1, 
-                  profile_len - idx_diff - 1])
 
 
 def calc_dotproduct_end_idx(ts, dp, idx, m, endidx, idx_nn, idx_diff):
@@ -136,10 +114,6 @@ def calc_refine_distance_end_idx(refine_distance, dp, idx, endidx, meanx,
     refine_distance[idx+1:endidx+1] = np.sqrt(np.abs(2 * tmp_h))    
 
     return refine_distance
-
-
-def calc_begin_idx(idx, step_size, idx_diff):
-    return np.max([0, idx - step_size + 1, 2 - idx_diff])
 
 
 def calc_dotproduct_begin_idx(ts, dp, beginidx, idx, idx_diff, m, 
@@ -205,136 +179,96 @@ def apply_update_positions(matrix_profile, mp_index, refine_distance, beginidx,
     return (matrix_profile, mp_index)
 
 
-def calc_curlastz(ts, m, n, idx, profile_len, curlastz):
-    curlastz[idx] = np.sum(ts[0:m] * ts[idx:idx+m])
+def compute_indices(profile_len, step_size, sample_pct):
+    """
+    Computes the indices used for profile index iteration based on the
+    number of samples and step size.
 
-    tmp_a = ts[m:n - idx]
-    tmp_b = ts[idx + m:n]
-    tmp_c = ts[0:profile_len - idx - 1]
-    tmp_d = ts[idx:profile_len - 1]
-    tmp_e = tmp_a * tmp_b
-    tmp_f = tmp_c * tmp_d
-    curlastz[idx+1:profile_len] = curlastz[idx] + np.cumsum(tmp_e - tmp_f)
-
-    return curlastz
-
-
-def calc_curdistance(curlastz, meanx, sigmax, idx, profile_len, m, 
-                     curdistance):
-    tmp_a = curlastz[idx:profile_len+1]
-    tmp_b = meanx[idx:profile_len]
-    tmp_c = meanx[0:profile_len-idx]
-    tmp_d = sigmax[idx:profile_len]
-    tmp_e = sigmax[0:profile_len-idx]
-    tmp_f = tmp_b * tmp_c
-    tmp_g = (m-(tmp_a - m * tmp_f) / (tmp_d * tmp_e))
-    curdistance[idx:profile_len] = np.sqrt(np.abs(2 * tmp_g))
-
-    return curdistance
-
-
-def time_is_exceeded(start_time, runtime):
-    """Helper method to determine if the runtime has exceeded or not.
+    Parameters
+    ----------
+    profile_len : int
+        The length of the profile to be computed.
+    step_size : float
+        step_size : float, default 0.25
+        The sampling interval for the window. The paper suggest 0.25 is the
+        most practical. It should be a float value between 0 and 1.
+    sample_pct : float, default = 0.1 (10%)
+        Number of samples to compute distances for in the MP.
 
     Returns
     -------
-    bool
-        Whether or not hte runtime has exceeded.
+    array_like :
+        The indices to compute.
     """
-    elapsed = time.time() - start_time
-    exceeded = runtime is not None and elapsed >= runtime
-    if exceeded:
-        warnings.warn(
-            'Max runtime exceeded. Approximate solution is given.',
-            RuntimeWarning
-        )
+    compute_order = np.arange(0, profile_len, step=step_size)
+    sample_size = int(np.ceil(len(compute_order) * sample_pct))
+    samples = np.random.choice(compute_order, size=sample_size, replace=False)
 
-    return exceeded
+    return samples
 
 
-def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, runtime=None,
+def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
                      random_state=None, n_jobs=-1):
-    """SCRIMP++ is an anytime algorithm that computes the matrix profile for a 
-    given time series (ts) over a given window size (m). Essentially, it allows
-    for an approximate solution to be provided for quicker analysis. In the 
-    case of this implementation, the runtime is measured based on the wall 
-    clock. If the number of seconds exceeds the runtime, then the approximate
-    solution is returned. If the runtime is None, the exact solution is 
-    returned.
-
-    This algorithm was created at the University of California Riverside. For
-    further academic understanding, please review this paper:
-
-    Matrix Proﬁle XI: SCRIMP++: Time Series Motif Discovery at Interactive
-    Speed. Yan Zhu, Chin-Chia Michael Yeh, Zachary Zimmerman, Kaveh Kamgar
-    Eamonn Keogh, ICDM 2018.
-
-    https://www.cs.ucr.edu/~eamonn/SCRIMP_ICDM_camera_ready_updated.pdf
-
-        Parameters
-        ----------
-        ts : np.ndarray
-            The time series to compute the matrix profile for.
-        window_size : int
-            The window size.
-        query : array_like
-            Optionally, a query can be provided to perform a similarity join.
-        step_size : float, default 0.25
-            The sampling interval for the window. The paper suggest 0.25 is the
-            most practical. It should be a float value between 0 and 1.
-        runtime : int, default None
-            The maximum number of seconds based on wall clock time for this
-            algorithm to run. It computes the exact solution when it is set to
-            None.
-        random_state : int, default None
-            Set the random seed generator for reproducible results.
-        n_jobs : int, default all
-            The number of cpu cores to use.
-
-        Returns
-        -------
-        A dict of key data points computed.
-        {
-            'mp': The matrix profile,
-            'pi': The matrix profile 1NN indices,
-            'rmp': The right matrix profile,
-            'rpi': The right matrix profile 1NN indices,
-            'lmp': The left matrix profile,
-            'lpi': The left matrix profile 1NN indices,
-            'w': The window size used to compute the matrix profile,
-            'ez': The exclusion zone used,
-            'join': Flag indicating if a similarity join was computed
-            'class': "MatrixProfile"
-            'algorithm': "stomp_parallel"
-        }
-
-        Raises
-        ------
-        ValueError
-            If window_size < 4.
-            If window_size > query length / 2.
-            If ts is not a list or np.array.
-            If query is not a list or np.array.
-            If ts or query is not one dimensional.
     """
-    # start the timer here
-    start_time = time.time()
+    This is the PreScrimp algorithm from the SCRIMP++ paper. It is primarly
+    used to compute the approximate matrix profile. In this case we use
+    a sample percentage to mock "the anytime/approximate nature".
 
-    # validate step_size
-    if not isinstance(step_size, float) or step_size > 1 or step_size < 0:
-        raise ValueError('step_size should be a float between 0 and 1.')
+    Parameters
+    ----------
+    ts : np.ndarray
+        The time series to compute the matrix profile for.
+    window_size : int
+        The window size.
+    query : array_like
+        Optionally, a query can be provided to perform a similarity join.
+    step_size : float, default 0.25
+        The sampling interval for the window. The paper suggest 0.25 is the
+        most practical. It should be a float value between 0 and 1.
+    sample_pct : float, default = 0.1 (10%)
+        Number of samples to compute distances for in the MP.
+    random_state : int, default None
+        Set the random seed generator for reproducible results.
+    n_jobs : int, default all
+        The number of cpu cores to use.
 
-    # validate runtime
-    if runtime is not None and (not isinstance(runtime, int) or runtime < 1):
-        raise ValueError('runtime should be a valid positive integer.')
+    Note
+    ----
+    The matrix profiles computed from prescrimp will always be the approximate
+    solution.
 
-    # validate random_state
-    if random_state is not None:
-        try:
-            np.random.seed(random_state)
-        except:
-            raise ValueError('Invalid random_state value given.')
-    
+    Returns
+    -------
+    A dict of key data points computed.
+    {
+        'mp': The matrix profile,
+        'pi': The matrix profile 1NN indices,
+        'rmp': The right matrix profile,
+        'rpi': The right matrix profile 1NN indices,
+        'lmp': The left matrix profile,
+        'lpi': The left matrix profile 1NN indices,
+        'metric': The distance metric computed for the mp,
+        'w': The window size used to compute the matrix profile,
+        'ez': The exclusion zone used,
+        'join': Flag indicating if a similarity join was computed,
+        'data': {
+            'ts': Time series data,
+            'query': Query data if supplied
+        }
+        'class': "MatrixProfile"
+        'algorithm': "prescrimp"
+    }
+
+    Raises
+    ------
+    ValueError
+        If window_size < 4.
+        If window_size > query length / 2.
+        If ts is not a list or np.array.
+        If query is not a list or np.array.
+        If ts or query is not one dimensional.
+        If sample_pct is not between 0 and 1.
+    """
     is_join = core.is_similarity_join(ts, query)
     if not is_join:
         query = ts
@@ -342,6 +276,21 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, runtime=None,
     # data conversion to np.array
     ts = core.to_np_array(ts)
     query = core.to_np_array(query)
+
+    # validate step_size
+    if not isinstance(step_size, float) or step_size > 1 or step_size < 0:
+        raise ValueError('step_size should be a float between 0 and 1.')
+
+    # validate sample_pct
+    if not isinstance(sample_pct, float) or sample_pct > 1 or sample_pct < 0:
+        raise ValueError('sample_pct should be a float between 0 and 1.')
+
+    # validate random_state
+    if random_state is not None:
+        try:
+            np.random.seed(random_state)
+        except:
+            raise ValueError('Invalid random_state value given.')
 
     if window_size < 4:
         error = "window size must be at least 4."
@@ -354,72 +303,74 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, runtime=None,
     # precompute some common values - profile length, query length etc.
     step_size = int(math.floor(window_size * step_size))
     profile_length = core.get_profile_length(ts, query, window_size)
-    data_length = ts.size
-    query_length = query.size
-    num_queries = query_length - window_size + 1
+    data_length = len(ts)
+    query_length = len(query)
     exclusion_zone = int(np.ceil(window_size / 4.0))
 
-    # do not use exclusion zone for join
-    if is_join:
-        exclusion_zone = 0
-
-    # initialization
     matrix_profile = np.zeros(profile_length)
-    mp_index = np.zeros(profile_length, dtype='int32')
+    mp_index = np.zeros(profile_length, dtype='int')
 
-    # precompute some statistics on ts
-    data_mu, data_sig = core.moving_avg_std(ts, window_size)
     X = np.fft.fft(ts)
-    #first_window = query[0:window_size]
-    #dotproduct = core.sliding_dot_product(ts, first_window)
+    mux, sigx = core.moving_avg_std(ts, window_size)
 
-    ###########################
-    # PreSCRIMP
-    #
-    # compute distance profile
     dotproduct = np.zeros(profile_length)
     refine_distance = np.full(profile_length, np.inf)
     orig_index = np.arange(profile_length)
 
-    compute_order = list(range(0, profile_length, step_size))
-    np.random.shuffle(compute_order)
-
+    # iterate over sampled indices and update the matrix profile
+    compute_order = compute_indices(profile_length, step_size, sample_pct)
     for iteration, idx in enumerate(compute_order):
+        subsequence = ts[idx:idx + window_size]
+
         # compute distance profile
-        subsequence = next_subsequence(ts, idx, window_size)
-        
-        distance_profile = calc_distance_profile(X, subsequence, data_length, window_size, data_mu,
-                                                 data_sig)
+        distance_profile = calc_distance_profile(X, subsequence, data_length,
+            window_size, mux, sigx)
         
         # apply exclusion zone
-        distance_profile = apply_exclusion_zone(
-            idx, exclusion_zone, profile_length, distance_profile)
-        
+        distance_profile = core.apply_exclusion_zone(exclusion_zone, is_join,
+            window_size, data_length, idx, distance_profile)
+
         # find and store nearest neighbor
-        matrix_profile, mp_index, idx_nn = find_and_store_nn(
-            iteration, idx, matrix_profile, mp_index, distance_profile)
+        if iteration == 0:
+            matrix_profile = distance_profile
+            mp_index[:] = idx
+        else:
+            update_pos = distance_profile < matrix_profile
+            mp_index[update_pos] = idx
+            matrix_profile[update_pos] = distance_profile[update_pos]
 
-        idx_diff = calc_idx_diff(idx, idx_nn)
-        dotproduct = calc_dotproduct_idx(dotproduct, window_size, matrix_profile, idx,
-                                         data_sig, idx_nn, data_mu)
+        idx_min = np.argmin(distance_profile)
+        matrix_profile[idx] = distance_profile[idx_min]
+        mp_index[idx] = idx_min
+        idx_nn = mp_index[idx]
 
-        endidx = calc_end_idx(profile_length, idx, step_size, idx_diff)
+        # compute the target indices
+        idx_diff = idx_nn - idx
+        endidx = np.min([
+            profile_length - 1,
+            idx + step_size - 1, 
+            profile_length - idx_diff - 1
+        ])
+        beginidx = np.max([0, idx - step_size + 1, 2 - idx_diff])
+
+        # compute dot product and refine distance for the idx, begin idx 
+        # and end idx
+        dotproduct = calc_dotproduct_idx(dotproduct, window_size, 
+            matrix_profile, idx, sigx, idx_nn, mux)
 
         dotproduct = calc_dotproduct_end_idx(ts, dotproduct, idx, window_size,
                                              endidx, idx_nn, idx_diff)
 
         refine_distance = calc_refine_distance_end_idx(
-            refine_distance, dotproduct, idx, endidx, data_mu, data_sig, idx_nn,
+            refine_distance, dotproduct, idx, endidx, mux, sigx, idx_nn,
             idx_diff, window_size)
         
-        beginidx = calc_begin_idx(idx, step_size, idx_diff)
-
         dotproduct = calc_dotproduct_begin_idx(
             ts, dotproduct, beginidx, idx, idx_diff, window_size, idx_nn)
 
         refine_distance = calc_refine_distance_begin_idx(
             refine_distance, dotproduct, beginidx, idx, idx_diff, idx_nn, 
-            data_sig, data_mu, window_size)
+            sigx, mux, window_size)
 
         matrix_profile, mp_index = apply_update_positions(matrix_profile, 
                                                           mp_index, 
@@ -427,47 +378,6 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, runtime=None,
                                                           beginidx, 
                                                           endidx, 
                                                           orig_index, idx_diff)
-
-        # check if time is up
-        if time_is_exceeded(start_time, runtime):            
-            break
-
-    if not time_is_exceeded(start_time, runtime):
-        ###########################
-        # SCRIMP
-        #
-        compute_order = orig_index[orig_index > exclusion_zone]
-        np.random.shuffle(compute_order)
-
-        curlastz = np.zeros(profile_length)
-        curdistance = np.zeros(profile_length)
-        dist1 = np.full(profile_length, np.inf)
-        dist2 = np.full(profile_length, np.inf)
-
-        for idx in compute_order:
-            curlastz = calc_curlastz(ts, window_size, data_length, idx, profile_length, curlastz)
-            curdistance = calc_curdistance(curlastz, data_mu, data_sig, idx, 
-                                           profile_length, window_size, curdistance)
-
-            dist1[0:idx-1] = np.inf
-            dist1[idx:profile_length] = curdistance[idx:profile_length]
-
-            dist2[0:profile_length - idx] = curdistance[idx:profile_length]
-            dist2[profile_length - idx + 2:profile_length] = np.inf
-
-            loc1 = dist1 < matrix_profile
-            if loc1.any():
-                matrix_profile[loc1] = dist1[loc1]
-                mp_index[loc1] = orig_index[loc1] - idx + 1
-
-            loc2 = dist2 < matrix_profile
-            if loc2.any():
-                matrix_profile[loc2] = dist2[loc2]
-                mp_index[loc2] = orig_index[loc2] + idx - 1
-
-            # check if time is up
-            if time_is_exceeded(start_time, runtime):             
-                break
 
     return {
         'mp': matrix_profile,
@@ -479,6 +389,154 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, runtime=None,
         'w': window_size,
         'ez': exclusion_zone,
         'join': is_join,
-        'class': "MatrixProfile",
+        'metric': 'euclidean',
+        'data': {
+            'ts': ts,
+            'query': query
+        },
+        'class': 'MatrixProfile',
+        'algorithm': 'prescrimp',
+    }
+
+
+def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
+                     random_state=None, n_jobs=-1):
+    """SCRIMP++ is an anytime algorithm that computes the matrix profile for a 
+    given time series (ts) over a given window size (m). Essentially, it allows
+    for an approximate solution to be provided for quicker analysis. In the 
+    case of this implementation, sample percentage is used. An approximate
+    solution is given based a sample percentage from 0 to 1. The default sample
+    percentage is currently 10%.
+
+    This algorithm was created at the University of California Riverside. For
+    further academic understanding, please review this paper:
+
+    Matrix Proﬁle XI: SCRIMP++: Time Series Motif Discovery at Interactive
+    Speed. Yan Zhu, Chin-Chia Michael Yeh, Zachary Zimmerman, Kaveh Kamgar
+    Eamonn Keogh, ICDM 2018.
+
+    https://www.cs.ucr.edu/~eamonn/SCRIMP_ICDM_camera_ready_updated.pdf
+
+    Parameters
+    ----------
+    ts : np.ndarray
+        The time series to compute the matrix profile for.
+    window_size : int
+        The window size.
+    query : array_like
+        Optionally, a query can be provided to perform a similarity join.
+    step_size : float, default 0.25
+        The sampling interval for the window. The paper suggest 0.25 is the
+        most practical. It should be a float value between 0 and 1.
+    sample_pct : float, default = 0.1 (10%)
+        Number of samples to compute distances for in the MP.
+    random_state : int, default None
+        Set the random seed generator for reproducible results.
+    n_jobs : int, default all
+        The number of cpu cores to use.
+
+    Returns
+    -------
+    A dict of key data points computed.
+    {
+        'mp': The matrix profile,
+        'pi': The matrix profile 1NN indices,
+        'rmp': The right matrix profile,
+        'rpi': The right matrix profile 1NN indices,
+        'lmp': The left matrix profile,
+        'lpi': The left matrix profile 1NN indices,
+        'metric': The distance metric computed for the mp,
+        'w': The window size used to compute the matrix profile,
+        'ez': The exclusion zone used,
+        'join': Flag indicating if a similarity join was computed,
+        'data': {
+            'ts': Time series data,
+            'query': Query data if supplied
+        }
+        'class': "MatrixProfile"
         'algorithm': "scrimp++"
     }
+
+    Raises
+    ------
+    ValueError
+        If window_size < 4.
+        If window_size > query length / 2.
+        If ts is not a list or np.array.
+        If query is not a list or np.array.
+        If ts or query is not one dimensional.
+        If sample_pct is not between 0 and 1.
+    """
+    ###########################
+    # PreSCRIMP
+    ###########################
+    # This may seem hacky here, but it prevents me from having to pass the
+    # compute indices to the prescrimp function. We are guaranteed to get
+    # the sample computation order by getting the intial state and resetting
+    # it prior to regeneration in the SCRIMP phase.
+    np_random_state = np.random.get_state()
+    profile = prescrimp(ts, window_size, query=query, step_size=step_size,
+        sample_pct=sample_pct, random_state=random_state, n_jobs=n_jobs)
+
+    # data conversion to np.array
+    ts = profile['data']['ts']
+    query = profile['data']['query']
+
+    # precompute some common values - profile length, query length etc.
+    step_size = int(math.floor(window_size * step_size))
+    profile_length = core.get_profile_length(ts, query, window_size)
+    data_length = len(ts)
+    query_length = len(query)
+    exclusion_zone = profile['ez']
+    window_size = profile['w']
+
+    # precompute some statistics on ts
+    data_mu, data_sig = core.moving_avg_std(ts, window_size)
+
+    ###########################
+    # SCRIMP
+    ###########################
+    # reset numpy random state to the captured state above
+    np.random.set_state(np_random_state)
+    compute_order = compute_indices(profile_length, step_size, sample_pct)
+    orig_index = np.arange(profile_length)
+
+    curlastz = np.zeros(profile_length)
+    curdistance = np.zeros(profile_length)
+    dist1 = np.full(profile_length, np.inf)
+    dist2 = np.full(profile_length, np.inf)
+
+    for idx in compute_order:
+        # compute last z
+        curlastz[idx] = np.sum(ts[0:window_size] * ts[idx:idx + window_size])
+        curlastz[idx+1:] = curlastz[idx] + np.cumsum(
+            (ts[window_size:data_length - idx] * ts[idx + window_size:data_length]) -\
+            (ts[0:profile_length - idx - 1] * ts[idx:profile_length - 1])
+        )
+
+        # compute distances
+        curdistance[idx:profile_length] = np.sqrt(np.abs(
+            2 * (window_size - (curlastz[idx:profile_length + 1] -\
+                window_size * (data_mu[idx:] * data_mu[0:profile_length - idx])) /\
+                (data_sig[idx:] * data_sig[0:profile_length - idx]))
+        ))
+
+        dist1[0:idx - 1] = np.inf
+        dist1[idx:] = curdistance[idx:]
+
+        dist2[0:profile_length - idx] = curdistance[idx:]
+        dist2[profile_length - idx + 2:] = np.inf
+
+        loc1 = dist1 < profile['mp']
+        if loc1.any():
+            profile['mp'][loc1] = dist1[loc1]
+            profile['pi'][loc1] = orig_index[loc1] - idx + 1
+
+        loc2 = dist2 < profile['mp']
+        if loc2.any():
+            profile['mp'][loc2] = dist2[loc2]
+            profile['pi'][loc2] = orig_index[loc2] + idx - 1
+
+    profile['algorithm'] = 'scrimp++'
+
+    return profile
