@@ -467,6 +467,13 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
         If ts or query is not one dimensional.
         If sample_pct is not between 0 and 1.
     """
+    # validate random_state
+    if random_state is not None:
+        try:
+            np.random.seed(random_state)
+        except:
+            raise ValueError('Invalid random_state value given.')
+
     ###########################
     # PreSCRIMP
     ###########################
@@ -515,7 +522,7 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
         )
 
         # compute distances
-        curdistance[idx:profile_length] = np.sqrt(np.abs(
+        curdistance[idx:] = np.sqrt(np.abs(
             2 * (window_size - (curlastz[idx:profile_length + 1] -\
                 window_size * (data_mu[idx:] * data_mu[0:profile_length - idx])) /\
                 (data_sig[idx:] * data_sig[0:profile_length - idx]))
