@@ -319,9 +319,6 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
     if ray.is_initialized():
         cpus = int(ray.available_resources()['CPU'])
         n_jobs = cpus
-        logger.warning('Using Ray with {} cpus'.format(cpus))
-    elif n_jobs == 1:
-        logger.warning('Running stomp in single threaded mode.')
     else:
         n_jobs = core.valid_n_jobs(n_jobs)
 
