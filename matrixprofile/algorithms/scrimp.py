@@ -348,7 +348,7 @@ def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
         idx_diff = idx_nn - idx
         endidx = np.min([
             profile_length - 1,
-            idx + step_size - 1, 
+            idx + step_size - 1,
             profile_length - idx_diff - 1
         ])
         beginidx = np.max([0, idx - step_size + 1, 2 - idx_diff])
@@ -477,11 +477,6 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
     ###########################
     # PreSCRIMP
     ###########################
-    # This may seem hacky here, but it prevents me from having to pass the
-    # compute indices to the prescrimp function. We are guaranteed to get
-    # the sample computation order by getting the intial state and resetting
-    # it prior to regeneration in the SCRIMP phase.
-    np_random_state = np.random.get_state()
     profile = prescrimp(ts, window_size, query=query, step_size=step_size,
         sample_pct=sample_pct, random_state=random_state, n_jobs=n_jobs)
 
@@ -503,11 +498,20 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
     ###########################
     # SCRIMP
     ###########################
-    # reset numpy random state to the captured state above
-    np.random.set_state(np_random_state)
-    compute_order = compute_indices(profile_length, step_size, sample_pct)
-    orig_index = np.arange(profile_length)
 
+    # randomly sort indices for compute order
+    orig_index = np.arange(profile_length)
+    compute_order = np.copy(orig_index[orig_index > exclusion_zone])
+    np.random.shuffle(compute_order)
+
+    # TODO: Figure out if sampling makes sense in refinement as well
+    #
+    #
+    # sample_size = int(np.ceil(len(compute_order) * sample_pct))
+    # compute_order = np.random.choice(compute_order, size=sample_size, 
+    #     replace=False)
+
+    # initialize some values
     curlastz = np.zeros(profile_length)
     curdistance = np.zeros(profile_length)
     dist1 = np.full(profile_length, np.inf)
@@ -537,12 +541,13 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
         loc1 = dist1 < profile['mp']
         if loc1.any():
             profile['mp'][loc1] = dist1[loc1]
-            profile['pi'][loc1] = orig_index[loc1] - idx + 1
+            profile['pi'][loc1] = orig_index[loc1] - idx
 
         loc2 = dist2 < profile['mp']
         if loc2.any():
             profile['mp'][loc2] = dist2[loc2]
-            profile['pi'][loc2] = orig_index[loc2] + idx - 1
+            profile['pi'][loc2] = orig_index[loc2] + idx
+
 
     profile['algorithm'] = 'scrimp++'
 

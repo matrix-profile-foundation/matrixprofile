@@ -68,20 +68,30 @@ def test_scrimp_plus_plus():
     step_size = 0.25
     profile = scrimp.scrimp_plus_plus(ts, m, step_size=step_size, sample_pct=1.0)
 
+    expected_mp = np.array([
+        0,
+        3.2660,
+        3.2660,
+        3.2660,
+        0
+    ])
     expected_mpidx = np.array([
         4,
-        3,
+        2,
         0,
         0,
         0,
     ])
 
-    np.testing.assert_almost_equal(profile['pi'], expected_mpidx)
+    np.testing.assert_almost_equal(profile['mp'], expected_mp, decimal=4)
+    np.testing.assert_equal(profile['pi'], expected_mpidx)
 
     ts = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'sampledata.txt'))
     m = 32
     step_size = 0.25
     profile = scrimp.scrimp_plus_plus(ts, m, step_size=step_size, sample_pct=1.0)
     expected_mp = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'scrimp.mp.txt'))
+    expected_mpi = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'scrimp.mpi.txt')).astype('int') - 1
 
-    np.testing.assert_almost_equal(profile['mp'], expected_mp, decimal=4)
+    np.testing.assert_almost_equal(profile['mp'], expected_mp)
+    np.testing.assert_equal(profile['pi'], expected_mpi)
