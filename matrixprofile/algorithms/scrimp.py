@@ -318,7 +318,9 @@ def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
     orig_index = np.arange(profile_length)
 
     # iterate over sampled indices and update the matrix profile
-    compute_order = compute_indices(profile_length, step_size, sample_pct)
+    # compute_order = compute_indices(profile_length, step_size, sample_pct)
+    compute_order = np.arange(0, profile_len, step=step_size)
+
     for iteration, idx in enumerate(compute_order):
         subsequence = ts[idx:idx + window_size]
 
@@ -502,14 +504,12 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
     # randomly sort indices for compute order
     orig_index = np.arange(profile_length)
     compute_order = np.copy(orig_index[orig_index > exclusion_zone])
-    np.random.shuffle(compute_order)
+    #np.random.shuffle(compute_order)
 
-    # TODO: Figure out if sampling makes sense in refinement as well
-    #
-    #
-    # sample_size = int(np.ceil(len(compute_order) * sample_pct))
-    # compute_order = np.random.choice(compute_order, size=sample_size, 
-    #     replace=False)
+    # Only refine to provided sample_pct
+    sample_size = int(np.ceil(len(compute_order) * sample_pct))
+    compute_order = np.random.choice(compute_order, size=sample_size, 
+        replace=False)
 
     # initialize some values
     curlastz = np.zeros(profile_length)
