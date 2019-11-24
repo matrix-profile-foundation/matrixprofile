@@ -88,7 +88,7 @@ def binary_split(n):
 
 
 def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
-          sample_pct=0.1, n_jobs=-1):
+          pmp_obj=None, sample_pct=0.1, n_jobs=-1):
     """
     Computes the Pan Matrix Profile (PMP) for the given time series. When the
     time series is only passed, windows start from 8 and increase by increments
@@ -110,6 +110,10 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     cross_correlation : bool, default = False
         Return the MP values as Pearson Correlation instead of Euclidean
         distance.
+    pmp_obj : dict, default = None
+        Repurpose already computed window sizes with this provided PMP. It
+        should be the output of a PMP algorithm such as skimp or maximum
+        subsequence.
     sample_pct : float, default = 0.1 (10%)
         Number of window sizes to compute MPs for. Decimal percent between
         0 and 1.
@@ -178,6 +182,21 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     # compute all matrix profiles for each window size
     for i in range(last_index):
         window_size = windows[split_index[i]]
+
+        # check if we already computed this MP given a passed in PMP
+        if isinstance(pmp_obj, dict):
+            cw = pmp_obj.get('windows', None)
+            w_idx = np.argwhere(cw == window_size)
+            
+            # having the window provided, we simply copy over the data instead
+            # of recomputing it
+            if len(w_idx) == 1:
+                w_idx = w_idx[0][0]
+                pmp[split_index[i], :] = pmp_obj['pmp'][w_idx, :]
+                pmpi[split_index[i], :] = pmp_obj['pmpi'][w_idx, :]
+
+                continue
+
         profile = mpx(ts, window_size, cross_correlation=cross_correlation,
             n_jobs=n_jobs)
         mp = profile.get('mp')
