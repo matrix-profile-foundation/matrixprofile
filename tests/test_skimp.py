@@ -31,7 +31,7 @@ def test_binary_split_many():
     np.testing.assert_equal(actual, desired)
 
 
-def test_maximum_subsequence_128():
+def test_maximum_subsequence_36():
     np.random.seed(9999)
     ts = np.random.uniform(size=2**10)
     w = 2**5
@@ -41,10 +41,10 @@ def test_maximum_subsequence_128():
 
     upper = skimp.maximum_subsequence(ts, 0.98)
 
-    assert(upper == 128)
+    assert(upper == 36)
 
 
-def test_maximum_subsequence_256():
+def test_maximum_subsequence_68():
     np.random.seed(9999)
     ts = np.random.uniform(size=2**10)
     w = 2**6
@@ -54,4 +54,4 @@ def test_maximum_subsequence_256():
 
     upper = skimp.maximum_subsequence(ts, 0.98)
 
-    assert(upper == 256)
+    assert(upper == 68)
