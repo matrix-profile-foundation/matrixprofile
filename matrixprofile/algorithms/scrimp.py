@@ -319,7 +319,7 @@ def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
 
     # iterate over sampled indices and update the matrix profile
     # compute_order = compute_indices(profile_length, step_size, sample_pct)
-    compute_order = np.arange(0, profile_len, step=step_size)
+    compute_order = np.arange(0, profile_length, step=step_size)
 
     for iteration, idx in enumerate(compute_order):
         subsequence = ts[idx:idx + window_size]
