@@ -3,3 +3,4 @@ matplotlib==3.0.3
 pytest==3.5.1
 setuptools==39.1.0
 ray==0.7.2
+sphinx
