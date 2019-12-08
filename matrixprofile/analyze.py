@@ -20,6 +20,35 @@ from matrixprofile import visualize
 
 
 def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
+    """
+    Computes the Pan-MatrixProfile, top 3 motifs and top 3 discords for the
+    provided time series and query. Additionally, plots for the PMP, motifs
+    and discords is provided.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series to analyze.
+    query : array_like
+        The query to analyze.
+    sample_pct : float
+        A float between 0 and 1 representing how many samples to compute for
+        the PMP.
+    threshold : float
+        A correlation threshold between 0 and 1 that is used to compute the
+        upper window. Note that this is used only when the windows is None.
+    windows : array_like, default None
+        Integers representing the desired windows to use during the
+        computation of the PMP.
+    n_jobs : int, default -1 (all cpu cores)
+        The number of cpu cores to use when computing the PMP.
+    
+    Returns
+    -------
+    tuple : (profile, figures)
+        A tuple with the first item being the profile and the second being an
+        array of matplotlib figures.
+    """
     ts = core.to_np_array(ts)
 
     if isinstance(threshold, type(None)):
@@ -53,6 +82,28 @@ def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
 
 
 def analyze_mp_exact(ts, query, window, n_jobs=-1):
+    """
+    Computes the exact MatrixProfile, top 3 motifs and top 3 discords for the
+    provided time series and query. Additionally, the MatrixProfile, discords
+    and motifs are visualized.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series to analyze.
+    query : array_like
+        The query to analyze.
+    window : int
+        The window size to compute the MatrixProfile.
+    n_jobs : int, default -1 (all cpu cores)
+        The number of cpu cores to use when computing the MP.
+    
+    Returns
+    -------
+    tuple : (profile, figures)
+        A tuple with the first item being the profile and the second being an
+        array of matplotlib figures.
+    """
     ts = core.to_np_array(ts)
 
     # compute mp
@@ -71,10 +122,34 @@ def analyze_mp_exact(ts, query, window, n_jobs=-1):
 
 
 def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=-1):
+    """
+    Computes the exact MatrixProfile, top 3 motifs and top 3 discords for the
+    provided time series and query. Additionally, the MatrixProfile, discords
+    and motifs are visualized.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series to analyze.
+    query : array_like
+        The query to analyze.
+    window : int
+        The window size to compute the MatrixProfile.
+    sample_pct : float
+        A float between 0 and 1 representing how many samples to compute for
+        the MP. When it is 1, it is the same as using the exact algorithm.
+    n_jobs : int, default -1 (all cpu cores)
+        The number of cpu cores to use when computing the MP.
+    
+    Returns
+    -------
+    tuple : (profile, figures)
+        A tuple with the first item being the profile and the second being an
+        array of matplotlib figures.
+    """
     ts = core.to_np_array(ts)
 
     # compute mp
-    # TODO: scrimp++ is currently based on runtime and not sample pct!!!
     profile = scrimp_plus_plus(ts, query, window, sample_pct=sample_pct, n_jobs=n_jobs)
 
     # extract top motifs
@@ -84,32 +159,27 @@ def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=-1):
     profile = top_k_discords(profile)
 
     # plot mp
-    figures = plot_mp(profile)
+    figures = visualize(profile)
 
     return (profile, figures)
 
 
 def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs=-1):
     """
-    TODO: Figure out if we should have parameters that allow end users to tweak
-    the discord and motif parameters. Right now I think that it would be a
-    "power user" thing.
-
-
     Runs an appropriate workflow based on the parameters passed in. The goal
     of this function is to compute all fundamental algorithms on the provided
     time series data. For now the following is computed:
 
     1. Matrix Profile - exact or approximate based on sample_pct given that a
-       window is provided.
-    2. Top Motifs
-    3. Top Discords
+       window is provided. By default is the exact algorithm.
+    2. Top Motifs - The top 3 motifs are found.
+    3. Top Discords - The top 3 discords are found.
     4. Plot MP, Motifs and Discords
 
     When a window is not provided or more than a single window is provided,
     the PMP is computed:
 
-    1. Compute UPPER window when no window is provided
+    1. Compute UPPER window when no window(s) is provided
     2. Compute PMP for all windows
     3. Top Motifs
     4. Top Discords
