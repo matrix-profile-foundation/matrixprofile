@@ -13,7 +13,7 @@ import numpy as np
 from matrixprofile import core
 
 
-def pmp_top_k_discords(obj, exclusion_zone=None, k=3):
+def pmp_top_k_discords(profile, exclusion_zone=None, k=3):
     """
     Computes the top K discords for the given Pan-MatrixProfile. The return
     values is a list of row by col indices.
@@ -25,7 +25,7 @@ def pmp_top_k_discords(obj, exclusion_zone=None, k=3):
 
     Parameters
     ----------
-    obj : dict
+    profile : dict
         Data structure from a PMP algorithm.
     exclusion_zone : int, Default window / 2
         The zone to exclude around the found discords to reduce trivial
@@ -39,12 +39,14 @@ def pmp_top_k_discords(obj, exclusion_zone=None, k=3):
     the second column corresponds to the column index of the submitted PMP. It
     is placed back on the original object passed in as 'discords' key.
     """
+    if not core.is_pmp_obj(profile):
+        raise ValueError('Expecting PMP data structure!')
 
     # this function requires euclidean distance
     # convert if the metric is pearson
-    metric = obj.get('metric', None)
-    pmp = obj.get('pmp', None)
-    windows = obj.get('windows', None)
+    metric = profile.get('metric', None)
+    pmp = profile.get('pmp', None)
+    windows = profile.get('windows', None)
     
     tmp = None
     if metric == 'pearson':
@@ -81,12 +83,12 @@ def pmp_top_k_discords(obj, exclusion_zone=None, k=3):
         ez_stop = np.min([n, max_idx[1] + exclusion_zone])
         tmp[max_idx[0]][ez_start:ez_stop] = -np.inf
     
-    obj['discords'] = np.array(found)
+    profile['discords'] = np.array(found)
 
-    return obj
+    return profile
 
 
-def mp_top_k_discords(obj, exclusion_zone=None, k=3):
+def mp_top_k_discords(profile, exclusion_zone=None, k=3):
     """
     Find the top K number of discords (anomalies) given a matrix profile,
     exclusion zone and the desired number of discords. The exclusion zone
@@ -97,7 +99,7 @@ def mp_top_k_discords(obj, exclusion_zone=None, k=3):
 
     Parameters
     ----------
-    obj : dict
+    profile : dict
         The output of a matrix profile algorithm.
     exclusion_zone : int, Default mp algorithm ez
         Desired number of values to exclude on both sides of the anomaly.
@@ -106,21 +108,24 @@ def mp_top_k_discords(obj, exclusion_zone=None, k=3):
 
     Returns
     -------
-    The original input obj with an additional "discords" key containing the
+    The original input profile with an additional "discords" key containing the
     following.
 
     List of indices where the discords were found in the matrix profile.
     """
+    if not core.is_mp_obj(profile):
+        raise ValueError('Expecting MP data structure!')
+
     found = []
-    tmp = np.copy(obj.get('mp', None)).astype('d')
+    tmp = np.copy(profile.get('mp', None)).astype('d')
     n = len(tmp)
 
     # TODO: this is based on STOMP standards when this motif finding algorithm
     # originally came out. Should we default this to 4.0 instead? That seems
     # to be the common value now per new research.
-    window_size = obj.get('w', None)
+    window_size = profile.get('w', None)
     if exclusion_zone is None:
-        exclusion_zone = obj.get('ez', None)
+        exclusion_zone = profile.get('ez', None)
     
     # obtain indices in ascending order
     indices = np.argsort(tmp)
@@ -142,12 +147,12 @@ def mp_top_k_discords(obj, exclusion_zone=None, k=3):
             break
 
 
-    obj['discords'] = np.array(found, dtype='int')
+    profile['discords'] = np.array(found, dtype='int')
 
-    return obj
+    return profile
 
 
-def top_k_discords(obj, exclusion_zone=None, k=3):
+def top_k_discords(profile, exclusion_zone=None, k=3):
     """
     Find the top K number of discords (anomalies) given a mp or pmp,
     exclusion zone and the desired number of discords. The exclusion zone
@@ -158,7 +163,7 @@ def top_k_discords(obj, exclusion_zone=None, k=3):
 
     Parameters
     ----------
-    obj : dict
+    profile : dict
         The output of a matrix profile algorithm.
     exclusion_zone : int, Default mp algorithm ez
         Desired number of values to exclude on both sides of the anomaly.
@@ -167,12 +172,15 @@ def top_k_discords(obj, exclusion_zone=None, k=3):
 
     Returns
     -------
-    The original input obj with an additional "discords" key containing the
+    The original input profile with an additional "discords" key containing the
     following.
 
     List of indices where the discords were found in the matrix profile.
     """
-    cls = obj.get('class', None)
+    if not core.is_mp_or_pmp_obj(profile):
+        raise ValueError('Expecting MP or PMP data structure!')
+
+    cls = profile.get('class', None)
     func = None
 
     if cls == 'MatrixProfile':
@@ -183,7 +191,7 @@ def top_k_discords(obj, exclusion_zone=None, k=3):
         raise ValueError('Unsupported data structure!')
 
     return func(
-        obj,
+        profile,
         exclusion_zone=exclusion_zone,
         k=k,
     )

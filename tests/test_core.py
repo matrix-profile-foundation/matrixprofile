@@ -285,3 +285,22 @@ def test_pearson_to_euclidean_2d():
     actual = core.pearson_to_euclidean(a, w)
 
     np.testing.assert_almost_equal(desired, actual)
+
+
+def test_is_mp_obj():
+    assert(True == core.is_mp_obj({'class': 'MatrixProfile'}))
+    assert(False == core.is_mp_obj('s'))
+    assert(False == core.is_mp_obj({}))
+
+
+def test_is_pmp_obj():
+    assert(True == core.is_pmp_obj({'class': 'PMP'}))
+    assert(False == core.is_pmp_obj('s'))
+    assert(False == core.is_pmp_obj({}))
+
+
+def test_is_mp_or_pmp_obj():
+    assert(True == core.is_mp_or_pmp_obj({'class': 'PMP'}))
+    assert(True == core.is_mp_or_pmp_obj({'class': 'MatrixProfile'}))
+    assert(False == core.is_mp_or_pmp_obj('s'))
+    assert(False == core.is_mp_or_pmp_obj({}))

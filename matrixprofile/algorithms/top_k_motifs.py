@@ -13,7 +13,7 @@ from matrixprofile import core
 from matrixprofile.algorithms.mass2 import mass2
 
 
-def pmp_top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
+def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
     """
     Find the top K number of motifs (patterns) given a pan matrix profile. By
     default the algorithm will find up to 3 motifs (k) and up to 10 of their
@@ -21,7 +21,7 @@ def pmp_top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
 
     Parameters
     ----------
-    obj : dict
+    profile : dict
         The output from one of the pan matrix profile algorithms.
     exclusion_zone : int, Default to algorithm ez
         Desired number of values to exclude on both sides of the motif. This
@@ -51,23 +51,21 @@ def pmp_top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
         }
     ]
     """
-    data = obj.get('data', None)
+    if not core.is_pmp_obj(profile):
+        raise ValueError('Expecting PMP data structure!')
+
+    data = profile.get('data', None)
     ts = data.get('ts', None)
     data_len = len(ts)
     
-    pmp = obj.get('pmp', None)
+    pmp = profile.get('pmp', None)
     profile_len = pmp.shape[1]   
-    pmpi = obj.get('pmpi', None)
-    windows = obj.get('windows', None)
+    pmpi = profile.get('pmpi', None)
+    windows = profile.get('windows', None)
     
     # make sure we are working with Euclidean distances
     tmp = None
     if core.is_pearson_array(pmp):
-        msg = """
-        min and max values appear to be Pearson metric.
-        This function requires Euclidean distance. Converting...
-        """
-        warnings.warn(msg)
         tmp = core.pearson_to_euclidean(pmp, windows)
     else:
         tmp = np.copy(pmp).astype('d')
@@ -138,7 +136,7 @@ def pmp_top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
 
             # no more neighbors exist based on radius
             if core.is_nan_inf(neighbor_dist) or not_in_radius:
-                break;
+                break
 
             # add neighbor and apply exclusion zone
             neighbors.append((min_row_idx, neighbor_idx))
@@ -167,12 +165,12 @@ def pmp_top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
             'neighbors': neighbors
         })
     
-    obj['motifs'] = motifs
+    profile['motifs'] = motifs
 
-    return obj
+    return profile
 
 
-def mp_top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
+def mp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
     """
     Find the top K number of motifs (patterns) given a matrix profile. By
     default the algorithm will find up to 3 motifs (k) and up to 10 of their
@@ -180,7 +178,7 @@ def mp_top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
 
     Parameters
     ----------
-    obj : dict
+    profile : dict
         The output from one of the matrix profile algorithms.
     exclusion_zone : int, Default to algorithm ez
         Desired number of values to exclude on both sides of the motif. This
@@ -209,21 +207,24 @@ def mp_top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
         }
     ]
     """
-    window_size = obj['w']
-    data = obj.get('data', None)
+    if not core.is_mp_obj(profile):
+        raise ValueError('Expecting MP data structure!')
+
+    window_size = profile['w']
+    data = profile.get('data', None)
     if data:
         ts = data.get('ts', None)
 
     data_len = len(ts)
     motifs = []
-    mp = np.copy(obj['mp'])
-    mpi = obj['pi']
+    mp = np.copy(profile['mp'])
+    mpi = profile['pi']
 
     # TODO: this is based on STOMP standards when this motif finding algorithm
     # originally came out. Should we default this to 4.0 instead? That seems
     # to be the common value now per new research.
     if exclusion_zone is None:
-        exclusion_zone = obj.get('ez', None)
+        exclusion_zone = profile.get('ez', None)
 
     for i in range(k):
         min_idx = np.argmin(mp)
@@ -274,7 +275,7 @@ def mp_top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
 
             # no more neighbors exist based on radius
             if core.is_nan_inf(neighbor_dist) or not_in_radius:
-                break;
+                break
 
             # add neighbor and apply exclusion zone
             neighbors.append(neighbor_idx)
@@ -301,12 +302,12 @@ def mp_top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
             'neighbors': neighbors
         })
 
-        obj['motifs'] = motifs
+        profile['motifs'] = motifs
 
-    return obj
+    return profile
 
 
-def top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
+def top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
     """
     Find the top K number of motifs (patterns) given a matrix profile or a pan
     matrix profile. By default the algorithm will find up to 3 motifs (k) and
@@ -314,7 +315,7 @@ def top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
 
     Parameters
     ----------
-    obj : dict
+    profile : dict
         The output from one of the matrix profile algorithms.
     exclusion_zone : int, Default to algorithm ez
         Desired number of values to exclude on both sides of the motif. This
@@ -330,7 +331,7 @@ def top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
 
     Returns
     -------
-    The original input obj with the addition of the "motifs" key. The motifs
+    The original input profile with the addition of the "motifs" key. The motifs
     key consists of the following structure.
 
     A list of dicts containing motif indices and their corresponding neighbor
@@ -343,7 +344,10 @@ def top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
         }
     ]
     """
-    cls = obj.get('class', None)
+    if not core.is_mp_or_pmp_obj(profile):
+        raise ValueError('Expecting MP or PMP data structure!')
+
+    cls = profile.get('class', None)
     func = None
 
     if cls == 'MatrixProfile':
@@ -354,7 +358,7 @@ def top_k_motifs(obj, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
         raise ValueError('Unsupported data structure!')
 
     return func(
-        obj,
+        profile,
         exclusion_zone=exclusion_zone,
         k=k,
         max_neighbors=max_neighbors,

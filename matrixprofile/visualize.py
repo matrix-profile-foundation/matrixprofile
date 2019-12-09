@@ -50,6 +50,9 @@ def visualize(obj):
 	"""
 	figures = []
 
+	if not core.is_mp_or_pmp_obj(obj):
+		raise ValueError('MatrixProfile or Pan-MatrixProfile data structure expected!')
+
 	cls = obj.get('class', None)
 
 	# plot MP

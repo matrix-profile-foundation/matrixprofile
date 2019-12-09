@@ -568,3 +568,57 @@ def is_pearson_array(a):
     max_val = a[mask].max()
 
     return min_val >= 0 and max_val <= 1
+
+
+def is_mp_obj(obj):
+    """
+    Helper function to determine if the current object matches the structure
+    that the library enforices for MatrixProfiles.
+
+    Parameters
+    ----------
+    obj : object
+        The object to test.
+    
+    Returns
+    -------
+    bool :
+        True or false respectively.
+    """
+    return isinstance(obj, dict) and obj.get('class') == 'MatrixProfile'
+
+
+def is_pmp_obj(obj):
+    """
+    Helper function to determine if the current object matches the structure
+    that the library enforices for Pan-MatrixProfiles.
+
+    Parameters
+    ----------
+    obj : object
+        The object to test.
+    
+    Returns
+    -------
+    bool :
+        True or false respectively.
+    """
+    return isinstance(obj, dict) and obj.get('class') == 'PMP'
+
+
+def is_mp_or_pmp_obj(obj):
+    """
+    Helper function to determine if the current object matches the structure
+    that the library enforices for MatrixProfile and Pan-MatrixProfiles.
+
+    Parameters
+    ----------
+    obj : object
+        The object to test.
+    
+    Returns
+    -------
+    bool :
+        True or false respectively.
+    """
+    return is_pmp_obj(obj) or is_mp_obj(obj)
