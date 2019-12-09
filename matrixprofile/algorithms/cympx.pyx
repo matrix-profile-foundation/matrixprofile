@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 # range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
-from libc.math cimport pow
 from libc.math cimport floor
 from libc.math cimport ceil
 from libc.math cimport sqrt
@@ -204,8 +203,8 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
 @cython.wraparound(False)
 cpdef mpx_ab(double[:] ts, double[:] query, int w, int cross_correlation):
     """
-    The MPX algorithm computes the matrix profile without using the FFT. Right
-    now it only supports single dimension self joins.
+    The MPX algorithm computes the matrix profile without using the FFT. This
+    specific implementation includes similarity join (AB join).
 
     Parameters
     ----------
@@ -347,8 +346,8 @@ cpdef mpx_ab(double[:] ts, double[:] query, int w, int cross_correlation):
 @cython.wraparound(False)
 cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, int cross_correlation, int n_jobs):
     """
-    The MPX algorithm computes the matrix profile without using the FFT. Right
-    now it only supports single dimension self joins.
+    The MPX algorithm computes the matrix profile without using the FFT. This
+    specific implementation includes similarity join (AB join).
 
     Parameters
     ----------

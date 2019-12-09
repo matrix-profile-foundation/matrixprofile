@@ -67,7 +67,7 @@ def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
 
     # compute the pmp
     profile = skimp.skimp(ts, windows=windows, sample_pct=sample_pct,
-        pmp_obj=profile)
+                          pmp_obj=profile)
 
     # extract top motifs
     profile = top_k_motifs(profile)
@@ -199,7 +199,7 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs
     no_window = isinstance(windows, type(None))
     many_windows = core.is_array_like(windows) and len(windows) > 1
     single_window = isinstance(windows, int) or \
-        (core.is_array_like(windows) and len(windows) == 1)
+                    (core.is_array_like(windows) and len(windows) == 1)
     is_exact = sample_pct >= 1
     is_approx = sample_pct > 0 and sample_pct < 1
 
