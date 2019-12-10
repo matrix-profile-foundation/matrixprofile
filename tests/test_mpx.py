@@ -34,7 +34,7 @@ def test_mpx_small_series_self_join_euclidean_multi_threaded():
     desired = np.array([1.9550, 1.8388, 0.8739, 0, 0, 1.9550, 0.8739, 0, 0])
     desired_pi = np.array([4, 2, 6, 7, 8, 1, 2, 3, 4])
 
-    profile = mpx(ts, w, cross_correlation=False)
+    profile = mpx(ts, w, cross_correlation=False, n_jobs=-1)
     np.testing.assert_almost_equal(profile['mp'], desired, decimal=4)
     np.testing.assert_almost_equal(profile['pi'], desired_pi)
 
@@ -56,7 +56,7 @@ def test_mpx_small_series_self_join_pearson_multi_threaded():
     desired = np.array([0.522232967867094, 0.577350269189626, 0.904534033733291, 1, 1, 0.522232967867094, 0.904534033733291, 1, 1])
     desired_pi = np.array([4, 2, 6, 7, 8, 1, 2, 3, 4])
 
-    profile = mpx(ts, w, cross_correlation=True)
+    profile = mpx(ts, w, cross_correlation=True, n_jobs=-1)
     np.testing.assert_almost_equal(profile['mp'], desired, decimal=4)
     np.testing.assert_almost_equal(profile['pi'], desired_pi)
 
@@ -95,7 +95,7 @@ def test_mpx_small_series_similarity_join_multi_threaded():
     ])
     desired_pi = np.array([0, 1, 4, 1, 1, 1, 2, 1, 4, 2, 1, 2, 3, 4, 2, 1, 3])
 
-    profile = mpx(ts, w, cross_correlation=False, query=query)
+    profile = mpx(ts, w, cross_correlation=False, query=query, n_jobs=-1)
 
     np.testing.assert_almost_equal(profile['mp'], desired, decimal=4)
     np.testing.assert_almost_equal(profile['pi'], desired_pi)

@@ -208,7 +208,7 @@ def compute_indices(profile_len, step_size, sample_pct):
 
 
 def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
-                     random_state=None, n_jobs=-1):
+                     random_state=None, n_jobs=1):
     """
     This is the PreScrimp algorithm from the SCRIMP++ paper. It is primarly
     used to compute the approximate matrix profile. In this case we use
@@ -229,8 +229,8 @@ def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
         Number of samples to compute distances for in the MP.
     random_state : int, default None
         Set the random seed generator for reproducible results.
-    n_jobs : int, default all
-        The number of cpu cores to use.
+    n_jobs : int, Default = 1
+        Number of cpu cores to use.
 
     Note
     ----
@@ -402,7 +402,7 @@ def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
 
 
 def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
-                     random_state=None, n_jobs=-1):
+                     random_state=None, n_jobs=1):
     """SCRIMP++ is an anytime algorithm that computes the matrix profile for a 
     given time series (ts) over a given window size (m). Essentially, it allows
     for an approximate solution to be provided for quicker analysis. In the 
@@ -434,8 +434,8 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
         Number of samples to compute distances for in the MP.
     random_state : int, default None
         Set the random seed generator for reproducible results.
-    n_jobs : int, default all
-        The number of cpu cores to use.
+    n_jobs : int, Default = 1
+        Number of cpu cores to use.
 
     Returns
     -------

@@ -13,7 +13,7 @@ from matrixprofile.algorithms.stomp import stomp
 from matrixprofile import core
 
 
-def brute_force_pmp(ts, windows=None, n_jobs=-1):
+def brute_force_pmp(ts, windows=None):
 	"""
 	Computes the PMP data structure using the brute force approach.
 
@@ -25,8 +25,6 @@ def brute_force_pmp(ts, windows=None, n_jobs=-1):
 		An iterable composed of integer values for window sizes to compute the
 		matrix profile for. It defaults to half of the time series when it is
 		not provided.
-	n_jobs : int
-		Number of cpu cores to allocate. Defaults to all.
 
 	NOTE
 	----

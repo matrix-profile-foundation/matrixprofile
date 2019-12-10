@@ -121,8 +121,8 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
     cross_correlation : int
         Flag (0, 1) to determine if cross_correlation distance should be
         returned. It defaults to Euclidean Distance (0).
-    n_jobs : int, Default = all
-        Number of cpu cores to use. Defaults to using all.
+    n_jobs : int, Default = 1
+        Number of cpu cores to use.
     
     Returns
     -------
@@ -360,8 +360,8 @@ cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, int cross_correlatio
     cross_correlation : int
         Flag (0, 1) to determine if cross_correlation distance should be
         returned. It defaults to Euclidean Distance (0).
-    n_jobs : int, Default = all
-        Number of cpu cores to use. Defaults to using all.
+    n_jobs : int, Default = 1
+        Number of cpu cores to use.
     
     Returns
     -------

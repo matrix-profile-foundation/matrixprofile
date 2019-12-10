@@ -88,7 +88,7 @@ def binary_split(n):
 
 
 def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
-          pmp_obj=None, sample_pct=0.1, n_jobs=-1):
+          pmp_obj=None, sample_pct=0.1, n_jobs=1):
     """
     Computes the Pan Matrix Profile (PMP) for the given time series. When the
     time series is only passed, windows start from 8 and increase by increments
@@ -117,8 +117,8 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     sample_pct : float, default = 0.1 (10%)
         Number of window sizes to compute MPs for. Decimal percent between
         0 and 1.
-    n_jobs : int, default all
-        The number of cpu cores to use.
+    n_jobs : int, Default = 1
+        Number of cpu cores to use.
 
     Returns
     -------
@@ -235,7 +235,7 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     }
     
 
-def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=-1, include_pmp=False):
+def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1, include_pmp=False):
     """
     Finds the maximum subsequence length based on the threshold provided. Note
     that this threshold is domain specific requiring some knowledge about the
@@ -254,8 +254,8 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=-1, inc
     refine_stepsize : float, Default 0.05
         Used in the refinement step to find a more precise upper window. It
         should be a percentage between 0.01 and 0.99.
-    n_jobs : int, default all
-        The number of cpu cores to use.
+    n_jobs : int, Default = 1
+        Number of cpu cores to use.
     include_pmp : bool, default False
         Include the PanMatrixProfile for the computed windows.
     

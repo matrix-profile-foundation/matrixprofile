@@ -185,7 +185,7 @@ def _batch_compute(args):
     }
 
 
-def stomp(ts, window_size, query=None, n_jobs=-1):
+def stomp(ts, window_size, query=None, n_jobs=1):
     """
     Computes matrix profiles for a single dimensional time series using the 
     parallelized STOMP algorithm (by default). Ray or Python's multiprocessing
@@ -200,11 +200,8 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
         The size of the window to compute the matrix profile over.
     query : array_like
         Optionally, a query can be provided to perform a similarity join.
-    n_jobs : int, default All
-        The number of batch jobs to compute at once. Note that when ray is
-        initialized we cannot tell how many cores are available. You must
-        explicitly state how many jobs you want. In the case of
-        multiprocessing, n_jobs is a 1:1 relationship with number of cpu cores.
+    n_jobs : int, Default = 1
+        Number of cpu cores to use.
 
     Returns
     -------

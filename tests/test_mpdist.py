@@ -46,6 +46,6 @@ def test_small_series_multi_threaded():
     w = 4
 
     desired = 0.437690617625298
-    actual = mpdist(ts, query, w)
+    actual = mpdist(ts, query, w, n_jobs=-1)
 
     np.testing.assert_almost_equal(actual, desired)

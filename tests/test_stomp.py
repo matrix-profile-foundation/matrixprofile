@@ -70,7 +70,7 @@ def test_stomp_small_series_self_join_multi_threaded():
     desired_rmp = np.array([0, 0, 0, 0, 0, 2.82842712, np.inf, np.inf, np.inf])
     desired_rpi = np.array([4, 5, 6, 7, 8, 8, 0, 0, 0])
 
-    profile = stomp(ts, w)
+    profile = stomp(ts, w, n_jobs=-1)
     np.testing.assert_almost_equal(profile['mp'], desired)
     np.testing.assert_almost_equal(profile['pi'], desired_pi)
 
