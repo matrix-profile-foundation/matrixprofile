@@ -1,7 +1,16 @@
 import setuptools
 from distutils.extension import Extension
-from Cython.Build import cythonize
-import numpy
+
+try:
+    from Cython.Build import cythonize
+except:
+    raise RuntimeError('cython is required for matrixprofile-ts installation!')
+
+try:
+    import numpy
+except:
+    raise RuntimeError('numpy is required for matrixprofile-ts installation!')
+
 import os
 from glob import glob
 
@@ -21,7 +30,7 @@ extensions.append(Extension(
     extra_compile_args = ["-O3", "-march=native"],
 ))
 
-with open("README.md", "r") as fh:
+with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
 
 setuptools.setup(
@@ -39,7 +48,7 @@ setuptools.setup(
     },
     packages = setuptools.find_packages(),
     setup_requires=['cython>=0.x',],
-    install_requires=['numpy>=1.11.3', 'matplotlib==3.0.3', 'ray==0.7.2'],
+    install_requires=['numpy>=1.11.3', 'matplotlib>=3.0.3', 'ray==0.7.2'],
     ext_modules=cythonize(extensions),
     include_dirs=[numpy.get_include()],
     classifiers=[
