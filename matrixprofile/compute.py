@@ -17,7 +17,7 @@ from matrixprofile.algorithms.scrimp import scrimp_plus_plus
 from matrixprofile.algorithms.skimp import skimp
 
 
-def compute(ts, windows, query=None, sample_pct=1, n_jobs=-1):
+def compute(ts, windows, query=None, sample_pct=1, n_jobs=1):
 	"""
 	Computes the exact or approximate MatrixProfile based on the sample percent
 	specified. Currently, MPX and SCRIMP++ is used for the exact and
@@ -43,8 +43,8 @@ def compute(ts, windows, query=None, sample_pct=1, n_jobs=-1):
 	sample_pct : float, default = 1
         A float between 0 and 1 representing how many samples to compute for
         the MP or PMP. When it is 1, the exact algorithm is used.
-    n_jobs : int, default -1 (all cpu cores)
-        The number of cpu cores to use when computing the MP.
+    n_jobs : int, Default = 1
+        Number of cpu cores to use.
 	
 	Returns
 	-------
