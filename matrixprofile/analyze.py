@@ -164,7 +164,7 @@ def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=-1):
     return (profile, figures)
 
 
-def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs=-1):
+def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs=1):
     """
     Runs an appropriate workflow based on the parameters passed in. The goal
     of this function is to compute all fundamental algorithms on the provided
@@ -184,6 +184,27 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs
     3. Top Motifs
     4. Top Discords
     5. Plot PMP, motifs and discords.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series to analyze.
+    query : array_like, Optional
+        The query to analyze. Note that when computing the PMP the query is
+		ignored!
+    windows : int or array_like, Optional
+        The window(s) to compute the MatrixProfile. Note that it may be an int
+		for a single matrix profile computation or an array of ints for
+		computing the pan matrix profile.
+	sample_pct : float, default = 1
+        A float between 0 and 1 representing how many samples to compute for
+        the MP or PMP. When it is 1, the exact algorithm is used.
+    threshold : float, Default 0.98
+        The correlation coefficient used as the threshold. It should be between
+        0 and 1. This is used to compute the upper window size when no 
+        window(s) is given.
+    n_jobs : int, Default = 1
+        Number of cpu cores to use.
 
     Returns
     -------

@@ -235,7 +235,8 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     }
     
 
-def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1, include_pmp=False):
+def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
+    include_pmp=False):
     """
     Finds the maximum subsequence length based on the threshold provided. Note
     that this threshold is domain specific requiring some knowledge about the
