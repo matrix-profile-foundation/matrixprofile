@@ -48,7 +48,7 @@ setuptools.setup(
     },
     packages = setuptools.find_packages(),
     setup_requires=['cython>=0.x',],
-    install_requires=['numpy>=1.11.3', 'matplotlib>=3.0.3', 'ray==0.7.2'],
+    install_requires=['numpy>=1.16.2', 'matplotlib>=3.0.3'],
     ext_modules=cythonize(extensions),
     include_dirs=[numpy.get_include()],
     classifiers=[

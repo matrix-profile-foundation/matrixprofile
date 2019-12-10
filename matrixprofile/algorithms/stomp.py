@@ -10,7 +10,6 @@ range = getattr(__builtins__, 'xrange', range)
 import logging
 
 import numpy as np
-import ray
 
 from matrixprofile import core
 
@@ -186,67 +185,6 @@ def _batch_compute(args):
     }
 
 
-@ray.remote
-def _batch_compute_ray(batch_start, batch_end, ts, query, window_size, 
-                       data_length, profile_length, exclusion_zone, 
-                       is_join, data_mu, data_sig, first_product, skip_locs):
-    """
-    Wrapper function around _batch_compute that utilizes Ray instead of
-    Python's multiprocessing.
-
-    Parameters
-    ----------
-    batch_start : int
-        The starting index for this batch.
-    batch_end : int
-        The ending index for this batch.
-    ts : array_like
-        The time series to compute the matrix profile for.
-    query : array_like
-        The query.
-    window_size : int
-        The size of the window to compute the profile over.
-    data_length : int
-        The number of elements in the time series.
-    profile_length : int
-        The number of elements that will be in the final matrix
-        profile.
-    exclusion_zone : int
-        Used to exclude trivial matches.
-    is_join : bool
-        Flag to indicate if an AB join or self join is occuring.
-    data_mu : array_like
-        The moving average over the time series for the given window
-        size.
-    data_sig : array_like
-        The moving standard deviation over the time series for the
-        given window size.
-    first_product : array_like
-        The first sliding dot product for the time series over index
-        0 to window_size.
-    skip_locs : array_like
-        Indices that should be skipped for distance profile calculation
-        due to a nan or inf.
-
-    Returns
-    -------
-    The matrix profile, left and right matrix profiles and their respective
-    profile indices.
-    {
-        'mp': The matrix profile,
-        'pi': The matrix profile 1NN indices,
-        'rmp': The right matrix profile,
-        'rpi': The right matrix profile 1NN indices,
-        'lmp': The left matrix profile,
-        'lpi': The left matrix profile 1NN indices,
-    }
-    """
-    args = (batch_start, batch_end, ts, query, window_size, data_length, 
-            profile_length, exclusion_zone, is_join, data_mu, data_sig,
-            first_product, skip_locs)
-    return _batch_compute(args)
-
-
 def stomp(ts, window_size, query=None, n_jobs=-1):
     """
     Computes matrix profiles for a single dimensional time series using the 
@@ -315,11 +253,8 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
         error = "Time series is too short relative to desired window size"
         raise ValueError(error)
 
-    # use ray, multiprocessing or single threaded approach
-    if ray.is_initialized():
-        cpus = int(ray.available_resources()['CPU'])
-        n_jobs = cpus
-    elif n_jobs == 1:
+    # multiprocessing or single threaded approach
+    if n_jobs == 1:
         pass
     else:
         n_jobs = core.valid_n_jobs(n_jobs)
@@ -363,53 +298,25 @@ def stomp(ts, window_size, query=None, n_jobs=-1):
 
     batch_windows = []
     results = []
-    if ray.is_initialized():
+    
+    # batch compute with multiprocessing
+    args = []
+    for start, end in core.generate_batch_jobs(num_queries, n_jobs):
+        args.append((
+            start, end, ts, query, window_size, data_length,
+            profile_length, exclusion_zone, is_join, data_mu, data_sig,
+            first_product, skip_locs
+        ))
+        batch_windows.append((start, end))
 
-        # ray likes to have globally accessible data
-        # here it makes sense for these variables so we put them in the object
-        # store
-        ts_id = ray.put(ts)
-        query_id = ray.put(query)
-        window_size_id = ray.put(window_size)
-        data_length_id = ray.put(data_length)
-        profile_length_id = ray.put(profile_length)
-        exclusion_zone_id = ray.put(exclusion_zone)
-        is_join_id = ray.put(is_join)
-        data_mu_id = ray.put(data_mu)
-        data_sig_id = ray.put(data_sig)
-        first_product_id = ray.put(first_product)
-        skip_locs_id = ray.put(skip_locs)
-
-        # batch compute with ray
-        batches = []        
-        for start, end in core.generate_batch_jobs(num_queries, n_jobs):
-            batches.append(_batch_compute_ray.remote(
-                start, end, ts_id, query_id, window_size_id, data_length_id,
-                profile_length_id, exclusion_zone_id, is_join_id, data_mu_id,
-                data_sig_id, first_product_id, skip_locs_id
-            ))
-            batch_windows.append((start, end))
-        
-        results = [ray.get(batch) for batch in batches]
+    # we are running single threaded stomp - no need to initialize any
+    # parallel environments.
+    if n_jobs == 1 or len(args) == 1:
+        results.append(_batch_compute(args[0]))
     else:
-        # batch compute with multiprocessing
-        args = []
-        for start, end in core.generate_batch_jobs(num_queries, n_jobs):
-            args.append((
-                start, end, ts, query, window_size, data_length,
-                profile_length, exclusion_zone, is_join, data_mu, data_sig,
-                first_product, skip_locs
-            ))
-            batch_windows.append((start, end))
-
-        # we are running single threaded stomp - no need to initialize any
-        # parallel environments.
-        if n_jobs == 1 or len(args) == 1:
-            results.append(_batch_compute(args[0]))
-        else:
-            # parallelize
-            with core.mp_pool()(n_jobs) as pool:
-                results = pool.map(_batch_compute, args)
+        # parallelize
+        with core.mp_pool()(n_jobs) as pool:
+            results = pool.map(_batch_compute, args)
 
     # now we combine the batch results
     if len(results) == 1:
