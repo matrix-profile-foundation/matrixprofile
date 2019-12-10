@@ -34,15 +34,17 @@ def __combine(a, b):
 	return output
 
 
-def visualize(obj):
+def visualize(profile):
 	"""
-	Plots an object generated from one of the algorithms. In some cases
-	multiple plots will be generated.
+	Automatically creates plots for the provided data structure. In some cases
+	many plots are created. For example, when a MatrixProfile is passed with
+	corresponding motifs and discords, the matrix profile, discords and motifs
+	will be plotted.
 
 	Parameters
 	----------
-	obj : dict_like
-		The object to plot.
+	profile : dict_like
+		A MatrixProfile or Pan-MatrixProfile data structure.
 
 	Returns
 	-------
@@ -50,60 +52,55 @@ def visualize(obj):
 	"""
 	figures = []
 
-	if not core.is_mp_or_pmp_obj(obj):
+	if not core.is_mp_or_pmp_obj(profile):
 		raise ValueError('MatrixProfile or Pan-MatrixProfile data structure expected!')
 
-	cls = obj.get('class', None)
+	cls = profile.get('class', None)
 
 	# plot MP
 	if cls == 'MatrixProfile':
-		figures = __combine(figures, plot_mp(obj))
+		figures = __combine(figures, plot_mp(profile))
 	
-		if 'motifs' in obj:
-			figures = __combine(figures, plot_motifs_mp(obj))
+		if 'motifs' in profile:
+			figures = __combine(figures, plot_motifs_mp(profile))
 		
-		if 'discords' in obj:
-			figures = __combine(figures, plot_discords_mp(obj))
+		if 'discords' in profile:
+			figures = __combine(figures, plot_discords_mp(profile))
 
 	# plot PMP
 	if cls == 'PMP':
-		figures = __combine(figures, plot_pmp(obj))
+		figures = __combine(figures, plot_pmp(profile))
 
-		if 'motifs' in obj:
-			# TODO
-			pass
+		if 'motifs' in profile:
+			figures = __combine(figures, plot_motifs_pmp(profile))
 		
-		if 'discords' in obj:
-			# TODO
-			pass
+		if 'discords' in profile:
+			figures = __combine(figures, plot_discords_pmp(profile))
 
 	return figures
 
 
-def plot_pmp(obj):
+def plot_pmp(profile):
     """
-    Plots the PMP. Right now it assumes you are using a Jupyter or Ipython
-    notebook.
+    Plots the given Pan-MatrixProfile data structure provided.
 
     Parameters
     ----------
-    pmp : dict
+    profile : dict
         The dict structure from a PMP algorithm.
-    cmap: str
-        A valid Matplotlib color map.
 
     Returns
 	-------
 	The matplotlib figure object.
     """
-    pmp = obj.get('pmp', None)
+    pmp = profile.get('pmp', None)
     fig, ax = plt.subplots(1, 1, figsize=(10, 10))
     depth = 256
     test = np.ceil(pmp * depth) / depth
     test[test > 1] = 1
     ax.imshow(test, interpolation=None, aspect='auto')
     ax.invert_yaxis()
-    ax.set_title('PMP')
+    ax.set_title('Pan-MatrixProfile')
     ax.set_xlabel('Profile Index')
     ax.set_ylabel('Window Size')
     
@@ -112,30 +109,30 @@ def plot_pmp(obj):
     return fig
 
 
-def plot_mp(obj):
+def plot_mp(profile):
 	"""
-	Plots a matrix profile object.
+	Plots the matrix profile given the appropriate data structure.
 
 	Parameters
 	----------
-	obj : dict_like
-		The matrix profile object to plot.
+	profile : dict_like
+		The matrix profile to plot.
 
 	Returns
 	-------
 	The matplotlib figure object.
 	"""
 	plot_count = 0
-	data = obj.get('data', None)
+	data = profile.get('data', None)
 	ts = None
 	query = None
 	if data:
 		ts = data.get('ts', None)
 		query = data.get('query', None)
 
-	mp = obj.get('mp', None)
-	lmp = obj.get('lmp', None)
-	rmp = obj.get('rmp', None)
+	mp = profile.get('mp', None)
+	lmp = profile.get('lmp', None)
+	rmp = profile.get('rmp', None)
 
 	for val in [ts, query, mp, lmp, rmp]:
 		if core.is_array_like(val):
@@ -144,7 +141,7 @@ def plot_mp(obj):
 	if plot_count < 1:
 		raise ValueError("Object passed has nothing to plot!")
 
-	w = obj.get('w', None)
+	w = profile.get('w', None)
 	if not isinstance(w, int):
 		raise ValueError("Expecting window size!")
 
@@ -158,34 +155,37 @@ def plot_mp(obj):
 	# plot the original ts
 	if core.is_array_like(ts):
 		axes[current].plot(np.arange(len(ts)), ts)
-		axes[current].set_ylabel('Data', size=14)
+		axes[current].set_ylabel('Data')
 		current += 1
 
 	# plot the original query
 	if core.is_array_like(query):
 		axes[current].plot(np.arange(len(query)), query)
-		axes[current].set_ylabel('Query', size=14)
+		axes[current].set_ylabel('Query')
 		current += 1
 
 	# plot matrix profile
 	if core.is_array_like(mp):
 		mp_adj = np.append(mp, np.zeros(w - 1) + np.nan)
 		axes[current].plot(np.arange(len(mp_adj)), mp_adj)
-		axes[current].set_ylabel('Matrix Profile', size=14)
+		axes[current].set_ylabel('Matrix Profile')
+		axes[current].set_title('Window Size {}'.format(w))
 		current += 1
 
 	# plot left matrix profile
 	if core.is_array_like(lmp):
 		mp_adj = np.append(lmp, np.zeros(w - 1) + np.nan)
 		axes[current].plot(np.arange(len(mp_adj)), mp_adj)
-		axes[current].set_ylabel('Left Matrix Profile', size=14)
+		axes[current].set_ylabel('Left Matrix Profile')
+		axes[current].set_title('Window Size {}'.format(w))
 		current += 1
 
 	# plot left matrix profile
 	if core.is_array_like(rmp):
 		mp_adj = np.append(rmp, np.zeros(w - 1) + np.nan)
 		axes[current].plot(np.arange(len(mp_adj)), mp_adj)
-		axes[current].set_ylabel('Right Matrix Profile', size=14)
+		axes[current].set_ylabel('Right Matrix Profile')
+		axes[current].set_title('Window Size {}'.format(w))
 		current += 1
 
 	fig.tight_layout()
@@ -193,23 +193,23 @@ def plot_mp(obj):
 	return fig
 
 
-def plot_discords_mp(obj):
+def plot_discords_mp(profile):
 	"""
-	Plot discords.
+	Plot discords for a MatrixProfile data structure.
 
 	Parameters
 	----------
-	obj : dict_like
+	profile : dict_like
 		The matrix profile object to plot.
 
 	Returns
 	-------
 	The matplotlib figure object.
 	"""
-	mp = obj['mp']
-	w = obj['w']
-	discords = obj['discords']
-	data = obj.get('data', None)
+	mp = profile['mp']
+	w = profile['w']
+	discords = profile['discords']
+	data = profile.get('data', None)
 	if data:
 		ts = data.get('ts', None)
 
@@ -220,10 +220,11 @@ def plot_discords_mp(obj):
 	pos = axes[1].imshow([mp_adjusted,], aspect='auto', cmap='coolwarm')
 	axes[1].set_yticks([])
 	axes[0].plot(np.arange(len(ts)), ts)
-	axes[0].set_ylabel('Data', size=14)
+	axes[0].set_ylabel('Data')
 
 	axes[2].plot(np.arange(len(mp_adjusted)), mp_adjusted)
-	axes[2].set_ylabel('Matrix Profile', size=14)
+	axes[2].set_ylabel('Matrix Profile')
+	axes[2].set_title('Window Size {}'.format(w))
 
 	for idx in discords:
 	    axes[2].plot(idx, mp_adjusted[idx], c='r', marker='*', lw=0, markersize=10)
@@ -243,13 +244,71 @@ def plot_discords_mp(obj):
 	return fig
 
 
-def plot_motifs_mp(obj):
+def plot_discords_pmp(profile):
 	"""
-	Plot motifs.
+	Plot discords for the given Pan-MatrixProfile data structure.
 
 	Parameters
 	----------
-	obj : dict_like
+	profile : dict_like
+		The pmp object to plot.
+
+	Returns
+	-------
+	The matplotlib figure object.
+	"""
+	discord_figures = []
+
+	for discord in profile['discords']:
+		mp_idx = discord[0]
+		idx = discord[1]
+		w = profile['windows'][mp_idx]
+
+		data = profile.get('data', None)
+		if data:
+			ts = data.get('ts', None)
+		
+		mp_adjusted = profile['pmp'][mp_idx]
+		# mp_adjusted = np.append(mp, np.full(w + 1, np.nan))
+
+		fig, axes = plt.subplots(3, 1, sharex=True, figsize=(15, 7), gridspec_kw={'height_ratios': [25, 5, 25]})
+
+		pos = axes[1].imshow([mp_adjusted,], aspect='auto', cmap='coolwarm')
+		axes[1].set_yticks([])
+		axes[0].plot(np.arange(len(ts)), ts)
+		axes[0].set_ylabel('Data')
+
+		axes[2].plot(np.arange(len(mp_adjusted)), mp_adjusted)
+		axes[2].set_ylabel('Matrix Profile')
+
+		# for idx in discords:
+		axes[2].plot(idx, mp_adjusted[idx], c='r', marker='*', lw=0, markersize=10)
+		axes[2].set_title('Window Size = {}'.format(w))
+
+		fig.subplots_adjust(right=0.8)
+		cbar_ax = fig.add_axes([1, 0.46, 0.01, 0.1])
+		fig.colorbar(pos, orientation='vertical', cax=cbar_ax, use_gridspec=True)
+
+		lines = [
+			Line2D([0], [0], color='red', marker='*', lw=0),
+			Line2D([0], [0], color='blue'),
+		]
+		fig.legend(lines, ['Discord', 'MP'], bbox_to_anchor=(1.07, 0.44))
+
+		fig.tight_layout()
+
+		discord_figures.append(fig)
+
+	return discord_figures
+
+
+def plot_motifs_mp(profile):
+	"""
+	Plot motifs given a MatrixProfile data structure.
+
+	Parameters
+	----------
+	profile : dict_like
 		The matrix profile object to plot.
 
 	Returns
@@ -258,10 +317,9 @@ def plot_motifs_mp(obj):
 	"""
 	figures = []
 
-	mp = obj['mp']
-	w = obj['w']
-	motifs = obj['motifs']
-	data = obj.get('data', None)
+	w = profile['w']
+	motifs = profile['motifs']
+	data = profile.get('data', None)
 	if data:
 		ts = data.get('ts', None)
 
@@ -317,3 +375,85 @@ def plot_motifs_mp(obj):
 	figures.append(fig)
 
 	return figures
+
+
+def plot_motifs_pmp(profile):
+	"""
+	Plot motifs given a Pan-MatrixProfile data structure.
+
+	Parameters
+	----------
+	profile : dict_like
+		The pan matrix profile object to plot.
+
+	Returns
+	-------
+	list :
+		A list of matplotlib figure objects.
+	"""
+	motif_figures = []
+	motifs = profile.get('motifs')
+	data = profile.get('data', None)
+	windows = profile.get('windows', None)
+	if data:
+		ts = data.get('ts', None)
+
+	fig, axes = plt.subplots(len(motifs), 2, figsize=(15, 7), sharey='row', sharex='col')
+	if len(motifs) == 1:
+		axes = [axes,]
+
+	pair_num = 1
+	for ax_row, motif in zip(axes, motifs):
+		first = True
+		for ax, motif_loc in zip(ax_row, motif['motifs']):
+			w = windows[motif_loc[0]]
+			idx = motif_loc[1]
+			subquery = ts[idx:idx + w]
+			indices = np.arange(len(subquery))
+			ax.plot(indices, subquery)
+			ax.set_title('Index Start {}, Window Size {}'.format(idx, w))
+			if first:
+				ax.set_ylabel('Motif {}'.format(pair_num))
+				first = False
+		
+		pair_num += 1
+
+	fig.tight_layout()
+	motif_figures.append(fig)
+
+	fig, axes = plt.subplots(len(motifs), 1, figsize=(15, 7), sharey='row', sharex='col')
+	if len(motifs) == 1:
+		axes = [axes,]
+
+	pair_num = 1
+	for ax, motif in zip(axes, motifs):
+		ax.plot(np.arange(len(ts)), ts)
+		for motif_loc in motif['motifs']:
+			w = windows[motif_loc[0]]
+			idx = motif_loc[1]
+			subquery = ts[idx:idx + w]
+			indices = np.arange(idx, idx + w)
+			ax.plot(indices, subquery, c='r')
+			ax.set_title('Window Size {}'.format(w))
+			ax.set_ylabel('Motif {}'.format(pair_num))
+		
+		for neigh_loc in motif['neighbors']:
+			w = windows[neigh_loc[0]]
+			idx = neigh_loc[1]
+			subquery = ts[idx:idx + w]
+			indices = np.arange(idx, idx + w)
+			ax.plot(indices, subquery, c='black')
+		
+		pair_num += 1
+
+	lines = [
+		Line2D([0], [0], color='blue'),
+		Line2D([0], [0], color='red'),
+		Line2D([0], [0], color='black')
+	]
+	fig.legend(lines, ['Data', 'Motif', 'Neighbor'], bbox_to_anchor=(1.08, 0.975))
+	fig.tight_layout()
+
+	motif_figures.append(fig)
+
+	return motif_figures
