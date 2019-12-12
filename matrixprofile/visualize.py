@@ -61,20 +61,20 @@ def visualize(profile):
 	if cls == 'MatrixProfile':
 		figures = __combine(figures, plot_mp(profile))
 	
-		if 'motifs' in profile:
+		if 'motifs' in profile and len(profile['motifs']) > 0:
 			figures = __combine(figures, plot_motifs_mp(profile))
 		
-		if 'discords' in profile:
+		if 'discords' in profile and len(profile['discords']) > 0:
 			figures = __combine(figures, plot_discords_mp(profile))
 
 	# plot PMP
 	if cls == 'PMP':
 		figures = __combine(figures, plot_pmp(profile))
 
-		if 'motifs' in profile:
+		if 'motifs' in profile and len(profile['motifs']) > 0:
 			figures = __combine(figures, plot_motifs_pmp(profile))
 		
-		if 'discords' in profile:
+		if 'discords' in profile and len(profile['discords']) > 0:
 			figures = __combine(figures, plot_discords_pmp(profile))
 
 	return figures

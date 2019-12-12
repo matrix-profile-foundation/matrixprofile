@@ -24,7 +24,6 @@ range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
 import math
-import time
 
 import warnings
 

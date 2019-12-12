@@ -302,7 +302,7 @@ def mp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=
             'neighbors': neighbors
         })
 
-        profile['motifs'] = motifs
+    profile['motifs'] = motifs
 
     return profile
 

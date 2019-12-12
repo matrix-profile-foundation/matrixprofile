@@ -62,7 +62,6 @@ def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
         # determine windows to be computed
         # from 8 in steps of 2 until upper w
         start = 8
-        end = int(math.floor(len(ts) / 2))
         windows = range(start, profile['upper_window'] + 1)
 
     # compute the pmp
@@ -150,7 +149,8 @@ def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=-1):
     ts = core.to_np_array(ts)
 
     # compute mp
-    profile = scrimp_plus_plus(ts, query, window, sample_pct=sample_pct, n_jobs=n_jobs)
+    profile = scrimp_plus_plus(ts, window, query=query, sample_pct=sample_pct,
+        n_jobs=n_jobs)
 
     # extract top motifs
     profile = top_k_motifs(profile)

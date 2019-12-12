@@ -51,7 +51,7 @@ def test_catch_all_visualize_mp_motifs():
     w = 4
 
     profile = stomp(ts, w, n_jobs=1)
-    profile['motifs'] = {}
+    profile['motifs'] = [{'motifs': [1, 1], 'neighbors': []}]
 
     figures = visualize(profile)
     assert(len(figures) == 3)
@@ -63,7 +63,7 @@ def test_catch_all_visualize_mp_motifs_discords():
 
     profile = stomp(ts, w, n_jobs=1)
     profile['discords'] = [0, 1]
-    profile['motifs'] = {}
+    profile['motifs'] = [{'motifs': [1, 1], 'neighbors': []}]
 
     figures = visualize(profile)
     assert(len(figures) == 4)
@@ -96,7 +96,7 @@ def test_catch_all_visualize_pmp_motifs():
     w = [4, 5, 6]
 
     profile = skimp(ts, w, n_jobs=1)
-    profile['motifs'] = {}
+    profile['motifs'] = [{'motifs': [(1, 1)], 'neighbors': []}]
 
     figures = visualize(profile)
     assert(len(figures) == 3)
@@ -107,7 +107,7 @@ def test_catch_all_visualize_pmp_motifs_discords():
 
     profile = skimp(ts, w, n_jobs=1)
     profile['discords'] = [(0, 1), (0, 2)]
-    profile['motifs'] = {}
+    profile['motifs'] = [{'motifs': [(1, 1)], 'neighbors': []}]
 
     figures = visualize(profile)
     assert(len(figures) == 5)
