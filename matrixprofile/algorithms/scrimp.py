@@ -251,6 +251,7 @@ def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
         'w': The window size used to compute the matrix profile,
         'ez': The exclusion zone used,
         'join': Flag indicating if a similarity join was computed,
+        'sample_pct': Percentage of samples used in computing the MP,
         'data': {
             'ts': Time series data,
             'query': Query data if supplied
@@ -391,10 +392,11 @@ def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
         'w': window_size,
         'ez': exclusion_zone,
         'join': is_join,
+        'sample_pct': sample_pct,
         'metric': 'euclidean',
         'data': {
             'ts': ts,
-            'query': query
+            'query': query if is_join else None
         },
         'class': 'MatrixProfile',
         'algorithm': 'prescrimp',
@@ -451,6 +453,7 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
         'w': The window size used to compute the matrix profile,
         'ez': The exclusion zone used,
         'join': Flag indicating if a similarity join was computed,
+        'sample_pct': Percentage of samples used in computing the MP,
         'data': {
             'ts': Time series data,
             'query': Query data if supplied
@@ -485,6 +488,8 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
     # data conversion to np.array
     ts = profile['data']['ts']
     query = profile['data']['query']
+    if isinstance(query, type(None)):
+        query = ts
 
     # precompute some common values - profile length, query length etc.
     step_size = int(math.floor(window_size * step_size))
@@ -550,5 +555,6 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
 
 
     profile['algorithm'] = 'scrimp++'
+    profile['sample_pct'] = sample_pct
 
     return profile

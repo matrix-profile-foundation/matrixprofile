@@ -52,6 +52,7 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=1):
         'w': The window size used to compute the matrix profile,
         'ez': The exclusion zone used,
         'join': Flag indicating if a similarity join was computed,
+        'sample_pct': Percentage of samples used in computing the MP,
         'data': {
             'ts': Time series data,
             'query': Query data if supplied
@@ -96,6 +97,7 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=1):
         'w': w,
         'ez': int(np.floor(w / 4)),
         'join': is_join,
+        'sample_pct': 1,
         'data': {
             'ts': ts,
             'query': query

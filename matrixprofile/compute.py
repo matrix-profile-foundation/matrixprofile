@@ -80,7 +80,6 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
 		# determine windows to be computed
 		# from 8 in steps of 2 until upper w
 		start = 8
-		end = int(math.floor(len(ts) / 2))
 		windows = range(start, profile['upper_window'] + 1)
 
 		# compute the pmp
@@ -92,7 +91,7 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
 		if core.is_array_like(query):
 			logger.warn('Computing PMP - query is ignored!')
 
-		result = skimp(ts, windows=windows, sample_pct=sample_pct,
+		result = skimp(ts, windows=windows, sample_pct=1,
 			n_jobs=n_jobs)
 	
 	# compute exact mp
@@ -101,6 +100,7 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
 	
 	# compute approximate mp
 	else:
-		result = scrimp_plus_plus(ts, windows, query=query, n_jobs=n_jobs)
+		result = scrimp_plus_plus(ts, windows, query=query, n_jobs=n_jobs,
+			sample_pct=sample_pct)
 
 	return result

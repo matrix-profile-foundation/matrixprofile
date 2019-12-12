@@ -149,12 +149,10 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     n = len(ts)
     
     # Argument validation
-    if not isinstance(windows, (Iterable, np.ndarray)):
+    if isinstance(windows, type(None)):
         start = 8
         end = int(math.floor(len(ts) / 2))
         windows = range(start, end + 1)
-    else:
-        sample_pct = 1
         
     if not isinstance(show_progress, bool):
         raise ValueError('show_progress must be a boolean!')
