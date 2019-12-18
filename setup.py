@@ -1,15 +1,12 @@
 import setuptools
+
+from setuptools import dist
+dist.Distribution().fetch_build_eggs(['cython>=0.x', 'numpy>=1.16.2'])
+
 from distutils.extension import Extension
 
-try:
-    from Cython.Build import cythonize
-except:
-    raise RuntimeError('cython is required for matrixprofile-ts installation!')
-
-try:
-    import numpy
-except:
-    raise RuntimeError('numpy is required for matrixprofile-ts installation!')
+from Cython.Build import cythonize
+import numpy
 
 import os
 from glob import glob
@@ -22,6 +19,7 @@ extensions.append(Extension(
     'matrixprofile.algorithms.cympx',
     ['matrixprofile/algorithms/cympx.pyx'],
     extra_compile_args = ["-O3", "-march=native", "-fopenmp" ],
+    extra_link_args = ['-fopenmp']
 ))
 
 extensions.append(Extension(
