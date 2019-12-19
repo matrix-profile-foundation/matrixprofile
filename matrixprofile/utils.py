@@ -91,7 +91,7 @@ def pick_mp(profile, window):
     mp_profile['metric'] = profile['metric']
     mp_profile['data']['ts'] = profile['data']['ts']
     mp_profile['join'] = False
-    mp_profile['w'] = w
+    mp_profile['w'] = int(w)
     mp_profile['ez'] = int(np.floor(windows[window_index] / 4))
     mp_profile['algorithm'] = 'mpx'
     

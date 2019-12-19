@@ -66,3 +66,13 @@ matrixprofile.algorithms.scrimp_plus_plus
 =========================================
 
 .. autofunction:: matrixprofile.algorithms.scrimp_plus_plus
+
+matrixprofile.utils.empty_mp
+============================
+
+.. autofunction:: matrixprofile.utils.empty_mp
+
+matrixprofile.utils.pick_mp
+===========================
+
+.. autofunction:: matrixprofile.utils.pick_mp
