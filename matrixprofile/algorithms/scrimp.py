@@ -304,7 +304,6 @@ def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
     step_size = int(math.floor(window_size * step_size))
     profile_length = core.get_profile_length(ts, query, window_size)
     data_length = len(ts)
-    query_length = len(query)
     exclusion_zone = int(np.ceil(window_size / 4.0))
 
     matrix_profile = np.zeros(profile_length)
@@ -494,7 +493,6 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
     step_size = int(math.floor(window_size * step_size))
     profile_length = core.get_profile_length(ts, query, window_size)
     data_length = len(ts)
-    query_length = len(query)
     exclusion_zone = profile['ez']
     window_size = profile['w']
 

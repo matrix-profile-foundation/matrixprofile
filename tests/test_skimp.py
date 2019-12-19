@@ -15,18 +15,20 @@ import pytest
 import numpy as np
 
 from matrixprofile.algorithms import skimp
+from matrixprofile.algorithms.skimp import binary_split
+from matrixprofile.algorithms.skimp import maximum_subsequence
 
 
 def test_binary_split_1():
     desired = [0]
-    actual = skimp.binary_split(1)
+    actual = binary_split(1)
 
     np.testing.assert_equal(actual, desired)
 
 
 def test_binary_split_many():
     desired = [0, 5, 2, 7, 1, 3, 6, 8, 4, 9]
-    actual = skimp.binary_split(10)
+    actual = binary_split(10)
 
     np.testing.assert_equal(actual, desired)
 
@@ -39,7 +41,7 @@ def test_maximum_subsequence_36():
     ts[0:w] = subq
     ts[w+100:w+100+w] = subq
 
-    upper = skimp.maximum_subsequence(ts, 0.98)
+    upper = maximum_subsequence(ts, 0.98)
 
     assert(upper == 36)
 
@@ -52,6 +54,6 @@ def test_maximum_subsequence_68():
     ts[0:w] = subq
     ts[w+100:w+100+w] = subq
 
-    upper = skimp.maximum_subsequence(ts, 0.98)
+    upper = maximum_subsequence(ts, 0.98)
 
     assert(upper == 68)

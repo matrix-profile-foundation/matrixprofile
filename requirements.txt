@@ -3,3 +3,5 @@ matplotlib>=3.0.3
 pytest>=3.5.1
 setuptools>=39.1.0
 sphinx
+nbsphinx
+sphinx_rtd_theme

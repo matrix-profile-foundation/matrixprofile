@@ -11,11 +11,12 @@ import math
 
 from matrixprofile import core
 
-from matrixprofile.algorithms.top_k_discords import top_k_discords
-from matrixprofile.algorithms.top_k_motifs import top_k_motifs
+from matrixprofile.discover import discords
+from matrixprofile.discover import motifs
 from matrixprofile.algorithms import skimp
-from matrixprofile.algorithms.mpx import mpx
-from matrixprofile.algorithms.scrimp import scrimp_plus_plus
+from matrixprofile.algorithms import maximum_subsequence
+from matrixprofile.algorithms import mpx
+from matrixprofile.algorithms import scrimp_plus_plus
 from matrixprofile import visualize
 
 
@@ -57,7 +58,7 @@ def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
     # when a threshold is passed, we compute the upper window
     profile = None
     if isinstance(windows, type(None)):
-        profile = skimp.maximum_subsequence(ts, threshold, include_pmp=True)
+        profile = maximum_subsequence(ts, threshold, include_pmp=True)
 
         # determine windows to be computed
         # from 8 in steps of 2 until upper w
@@ -65,14 +66,14 @@ def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
         windows = range(start, profile['upper_window'] + 1)
 
     # compute the pmp
-    profile = skimp.skimp(ts, windows=windows, sample_pct=sample_pct,
+    profile = skimp(ts, windows=windows, sample_pct=sample_pct,
                           pmp_obj=profile)
 
     # extract top motifs
-    profile = top_k_motifs(profile)
+    profile = motifs(profile)
 
     # extract top discords
-    profile = top_k_discords(profile)
+    profile = discords(profile)
 
     # plot pmp
     figures = visualize(profile)
@@ -109,10 +110,10 @@ def analyze_mp_exact(ts, query, window, n_jobs=-1):
     profile = mpx(ts, window, query=query, n_jobs=n_jobs)
 
     # extract top motifs
-    profile = top_k_motifs(profile)
+    profile = motifs(profile)
 
     # extract top discords
-    profile = top_k_discords(profile)
+    profile = discords(profile)
 
     # plot mp
     figures = visualize(profile)
@@ -153,10 +154,10 @@ def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=-1):
         n_jobs=n_jobs)
 
     # extract top motifs
-    profile = top_k_motifs(profile)
+    profile = motifs(profile)
 
     # extract top discords
-    profile = top_k_discords(profile)
+    profile = discords(profile)
 
     # plot mp
     figures = visualize(profile)
