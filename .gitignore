@@ -52,4 +52,4 @@ MANIFEST
 # Jetbrains IDE project files
 /.idea
 /*.iml
-
+.DS_Store
