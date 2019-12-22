@@ -67,13 +67,11 @@ cpdef mpx(double[:] ts, int w, int cross_correlation):
     
     # this is where we compute the diagonals and later the matrix profile
     df[0] = 0
-    for i in range(w, n):
-        df[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
-    
     dg[0] = 0
     for i in range(w, n):
+        df[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
         dg[i - w + 1] = (ts[i] - mu[i - w + 1]) + (ts[i - w] - mu[i - w])    
-    
+
     for diag in range(minlag, profile_len):
         c = 0
         for i in range(diag, diag + w):
@@ -153,13 +151,11 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
     
     # this is where we compute the diagonals and later the matrix profile
     df[0] = 0
-    for i in prange(w, n, num_threads=n_jobs, nogil=True):
-        df[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
-    
     dg[0] = 0
     for i in prange(w, n, num_threads=n_jobs, nogil=True):
+        df[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
         dg[i - w + 1] = (ts[i] - mu[i - w + 1]) + (ts[i - w] - mu[i - w])    
-    
+
     for diag in prange(minlag, profile_len, num_threads=n_jobs, nogil=True):
         c = 0
         for i in range(diag, diag + w):
@@ -250,22 +246,17 @@ cpdef mpx_ab(double[:] ts, double[:] query, int w, int cross_correlation):
     cdef np.ndarray[np.int_t, ndim=1] mpib = np.full(profile_lenb, np.nan, dtype='int')
     
     # # this is where we compute the diagonals and later the matrix profile
-    diff_fa[0] = 0    
-    for i in range(w, n):
-        diff_fa[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
-
-    diff_fb[0] = 0    
-    for i in range(w, qn):
-        diff_fb[i - w + 1] = (0.5 * (query[i] - query[i - w]))
-    
+    diff_fa[0] = 0
     diff_ga[0] = 0
     for i in range(w, n):
+        diff_fa[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
         diff_ga[i - w + 1] = (ts[i] - mua[i - w + 1]) + (ts[i - w] - mua[i - w])
 
+    diff_fb[0] = 0
     diff_gb[0] = 0
     for i in range(w, qn):
+        diff_fb[i - w + 1] = (0.5 * (query[i] - query[i - w]))
         diff_gb[i - w + 1] = (query[i] - mub[i - w + 1]) + (query[i - w] - mub[i - w])
-
 
     # AB JOIN
     for i in range(profile_len):
@@ -400,22 +391,17 @@ cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, int cross_correlatio
     cdef np.int_t[:,:] tmp_mpib = np.full((profile_lenb, n_jobs), np.nan, dtype='int')
     
     # # this is where we compute the diagonals and later the matrix profile
-    diff_fa[0] = 0    
-    for i in prange(w, n, num_threads=n_jobs, nogil=True):
-        diff_fa[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
-
-    diff_fb[0] = 0    
-    for i in prange(w, qn, num_threads=n_jobs, nogil=True):
-        diff_fb[i - w + 1] = (0.5 * (query[i] - query[i - w]))
-    
+    diff_fa[0] = 0
     diff_ga[0] = 0
     for i in prange(w, n, num_threads=n_jobs, nogil=True):
+        diff_fa[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
         diff_ga[i - w + 1] = (ts[i] - mua[i - w + 1]) + (ts[i - w] - mua[i - w])
 
+    diff_fb[0] = 0
     diff_gb[0] = 0
     for i in prange(w, qn, num_threads=n_jobs, nogil=True):
+        diff_fb[i - w + 1] = (0.5 * (query[i] - query[i - w]))
         diff_gb[i - w + 1] = (query[i] - mub[i - w + 1]) + (query[i - w] - mub[i - w])
-
 
     # AB JOIN
     for i in prange(profile_len, num_threads=n_jobs, nogil=True):
