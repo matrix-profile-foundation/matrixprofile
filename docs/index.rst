@@ -1,6 +1,3 @@
-MatrixProfile-TS Documentation
-==============================
-
 .. toctree::
    :hidden:
    :maxdepth: 4
@@ -10,11 +7,15 @@ MatrixProfile-TS Documentation
    Quickstart.ipynb
    api
    examples
+   algorithms
    help
-   Code Repository <https://github.com/target/matrixprofile-ts>
+   contributing
+   code_of_conduct
+   citations
+   Code Repository (Github) <https://github.com/target/matrixprofile-ts>
    Website <https://matrixprofile.org>
 
-.. include:: ../README.md
+.. include:: ../README.rst
 
 Indices and tables
 ==================
