@@ -62,10 +62,22 @@ Algorithms
 ----------
 For details about the algorithms implemented, including performance characteristics, please refer to the `documentation <http://matrixprofile-ts.docs.matrixprofile.org/Algorithms.html>`_.
             
-.. include:: help.rst
+------------
+Getting Help
+------------
+We provide a dedicated `Discord channel <https://discordapp.com/invite/sBhDNXT>`_ where practitioners can discuss applications and ask questions about the Matrix Profile Foundation libraries. If you rather not join Discord, then please open a `Github issue <https://github.com/target/matrixprofile-ts/issues>`_.
 
-.. include:: contributing.rst
+------------
+Contributing
+------------
+TODO
 
-.. include:: code_of_conduct.rst
+---------------
+Code of Conduct
+---------------
+TODO
 
-.. include:: citations.rst
+---------
+Citations
+---------
+TODO

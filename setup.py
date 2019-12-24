@@ -1,7 +1,7 @@
 import setuptools
 
 from setuptools import dist
-dist.Distribution().fetch_build_eggs(['cython>=0.x', 'numpy>=1.16.2'])
+dist.Distribution().fetch_build_eggs(['cython>=0.x', 'numpy>=1.16.2', 'wheel'])
 
 from distutils.extension import Extension
 
@@ -30,7 +30,7 @@ extensions.append(Extension(
     include_dirs=[numpy.get_include()],
 ))
 
-with open('README.md', 'r', encoding='utf-8') as fh:
+with open('README.rst', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
 
 setuptools.setup(
@@ -40,14 +40,14 @@ setuptools.setup(
     author_email="avbs89@gmail.com, tylerwmarrs@gmail.com",
     description="An Open Source Python Time Series Library For Motif Discovery using Matrix Profile",
     long_description=long_description,
-    long_description_content_type="text/markdown",
+    long_description_content_type="text/x-rst",
     url=SOURCE_URL,
     project_urls={
         'Matrix Profile Foundation': 'https://matrixprofile.org',
         'Source Code': SOURCE_URL,
     },
     packages = setuptools.find_packages(),
-    setup_requires=['cython>=0.x',],
+    setup_requires=['cython>=0.x', 'wheel'],
     install_requires=['numpy>=1.16.2', 'matplotlib>=3.0.3'],
     ext_modules=cythonize(extensions),
     include_dirs=[numpy.get_include()],
