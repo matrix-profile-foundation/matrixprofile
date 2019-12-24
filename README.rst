@@ -60,7 +60,7 @@ Our documentation provides a `quick start guide <http://matrixprofile-ts.docs.ma
 
 Algorithms
 ----------
-For details about the algorithms implemented, including performance characteristics, please refer to the `documentation <http://matrixprofile-ts.docs.matrixprofile.org/Algorithms.html>`_.
+For details about the algorithms implemented, including performance characteristics, please refer to the `documentation <http://matrixprofile-ts.docs.matrixprofile.org/algorithms.html>`_.
             
 ------------
 Getting Help
@@ -70,14 +70,14 @@ We provide a dedicated `Discord channel <https://discordapp.com/invite/sBhDNXT>`
 ------------
 Contributing
 ------------
-TODO
+Please review the `contributing guidelines <https://matrixprofile-ts.docs.matrixprofile.org/contributing.html>`_ located in our documentation.
 
 ---------------
 Code of Conduct
 ---------------
-TODO
+Please review our `Code of Conduct documentation <http://matrixprofile-ts.docs.matrixprofile.org/code_of_conduct.html>`_.
 
 ---------
 Citations
 ---------
-TODO
+All proper acknowledgements for works of others may be found in our `citaiton documentation <http://matrixprofile-ts.docs.matrixprofile.org/citations.html>`_.
