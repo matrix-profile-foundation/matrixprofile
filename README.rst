@@ -70,7 +70,7 @@ We provide a dedicated `Discord channel <https://discordapp.com/invite/sBhDNXT>`
 ------------
 Contributing
 ------------
-Please review the `contributing guidelines <https://matrixprofile-ts.docs.matrixprofile.org/contributing.html>`_ located in our documentation.
+Please review the `contributing guidelines <http://matrixprofile-ts.docs.matrixprofile.org/contributing.html>`_ located in our documentation.
 
 ---------------
 Code of Conduct
