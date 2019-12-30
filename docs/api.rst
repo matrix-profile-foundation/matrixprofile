@@ -76,3 +76,23 @@ matrixprofile.utils.pick_mp
 ===========================
 
 .. autofunction:: matrixprofile.utils.pick_mp
+
+matrixprofile.io.to_disk
+========================
+
+.. autofunction:: matrixprofile.io.to_disk
+
+matrixprofile.io.from_disk
+==========================
+
+.. autofunction:: matrixprofile.io.from_disk
+
+matrixprofile.io.to_json
+========================
+
+.. autofunction:: matrixprofile.io.to_json
+
+matrixprofile.io.from_json
+==========================
+
+.. autofunction:: matrixprofile.io.from_json
