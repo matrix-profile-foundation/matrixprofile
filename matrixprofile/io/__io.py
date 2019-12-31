@@ -53,14 +53,14 @@ def from_json(profile):
     Converts a given profile object into JSON format.
 
     Parameters
-	----------
+    ----------
     profile : str
         The profile as a JSON formatted string.
 
     Returns
     -------
     profile : dict_like
-		A MatrixProfile or Pan-MatrixProfile data structure.
+        A MatrixProfile or Pan-MatrixProfile data structure.
     """
     dct = json.load(profile)
 
@@ -80,15 +80,15 @@ def from_json(profile):
         has_l = has_l and isinstance(dct['lpi'], list)
 
         if has_l:
-            data['lmp'] = np.array(dct['lmp'], dtype='float64')
-            data['lpi'] = np.array(dct['lpi'], dtype=int)
+            dct['lmp'] = np.array(dct['lmp'], dtype='float64')
+            dct['lpi'] = np.array(dct['lpi'], dtype=int)
 
         has_r = isinstance(dct['rmp'], list)
         has_r = has_r and isinstance(dct['rpi'], list)
         
         if has_r:
-            data['rmp'] = np.array(dct['rmp'], dtype='float64')
-            data['rpi'] = np.array(dct['rpi'], dtype=int)
+            dct['rmp'] = np.array(dct['rmp'], dtype='float64')
+            dct['rpi'] = np.array(dct['rpi'], dtype=int)
         
         dct['data']['ts'] = np.array(dct['data']['ts'], dtype='float64')
 
@@ -105,9 +105,9 @@ def to_json(profile):
     Converts a given profile object into JSON format.
 
     Parameters
-	----------
-	profile : dict_like
-		A MatrixProfile or Pan-MatrixProfile data structure.
+    ----------
+    profile : dict_like
+        A MatrixProfile or Pan-MatrixProfile data structure.
 
     Returns
     -------
@@ -150,9 +150,9 @@ def to_disk(profile, file_path, format='json'):
     formatted file by default.
 
     Parameters
-	----------
-	profile : dict_like
-		A MatrixProfile or Pan-MatrixProfile data structure.
+    ----------
+    profile : dict_like
+        A MatrixProfile or Pan-MatrixProfile data structure.
     file_path : str
         The path to write the file to.
     format : str, default json
@@ -176,7 +176,7 @@ def from_disk(file_path, format='infer'):
     extension.
 
     Parameters
-	----------
+    ----------
     file_path : str
         The path to read the file from.
     format : str, default infer
@@ -186,7 +186,7 @@ def from_disk(file_path, format='infer'):
     Returns
     -------
     profile : dict_like, None
-		A MatrixProfile or Pan-MatrixProfile data structure.
+        A MatrixProfile or Pan-MatrixProfile data structure.
     """
     if format != 'infer':
         if format not in SUPPORTED_FORMATS:
