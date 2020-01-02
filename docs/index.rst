@@ -7,7 +7,7 @@
    Quickstart.ipynb
    api
    examples
-   algorithms
+   Algorithms.ipynb
    help
    contributing
    code_of_conduct
