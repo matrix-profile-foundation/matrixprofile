@@ -7,17 +7,22 @@ CIBW_TEST_COMMAND: pytest {project}/tests
 jobs:
   include:
     # perform a linux build
-    - os: linux
-      language: shell
+    # - services: docker
     # and a mac build
     - os: osx
       language: shell
-    # and a windows build
-    - os: windows
-      language: shell
       before_install:
-        - choco install python --version 3.8.0
-        - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
+        - brew install llvm libomp gcc@9.2.0
+        - export PATH="/usr/local/bin:/usr/local/opt/llvm/bin:$PATH"
+        - export LDFLAGS="-L/usr/local/opt/llvm/lib"
+        - export CPPFLAGS="-I/usr/local/opt/llvm/include"
+        - ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
+    # and a windows build
+    # - os: windows
+    #  language: shell
+    #  before_install:
+    #    - choco install python3
+    #    - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
 
 env:
   global:
