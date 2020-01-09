@@ -8,9 +8,6 @@ jobs:
   include:
     # perform a linux build
     - os: linux
-      language: shell
-      before_install:
-        - apt install build-essential
     # and a mac build
     - os: osx
       language: shell
