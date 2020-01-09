@@ -25,8 +25,13 @@ before_install:
   - |
     if [[ "$TRAVIS_OS_NAME" = osx ]]; then
         export PATH="/usr/local/bin:$PATH"
+        if [[ ! -f "/usr/local/bin/gcc-9"]]; then
+          brew install gcc@9
+        fi
+
         brew install libomp
         ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
+        export CC="/usr/local/bin/gcc"
     fi
 
 install:
@@ -48,17 +53,17 @@ stages:
 jobs:
   include:
     # Optional: run a test on Windows
-    - os: windows
-      language: shell
-      name: Test on Windows
+    # - os: windows
+    #   language: shell
+    #   name: Test on Windows
 
-    # Deploy on linux
-    - stage: deploy
-      name: Build and deploy Linux wheels
-      services: docker
-      install: python -m pip install twine cibuildwheel==1.0.0
-      script: python -m cibuildwheel --output-dir wheelhouse
-      after_success: python -m twine upload --skip-existing wheelhouse/*.whl
+    # # Deploy on linux
+    # - stage: deploy
+    #   name: Build and deploy Linux wheels
+    #   services: docker
+    #   install: python -m pip install twine cibuildwheel==1.0.0
+    #   script: python -m cibuildwheel --output-dir wheelhouse
+    #   after_success: python -m twine upload --skip-existing wheelhouse/*.whl
     # Deploy on mac
     - stage: deploy
       name: Build and deploy macOS wheels
@@ -66,15 +71,15 @@ jobs:
       language: shell
       install: python -m pip install twine cibuildwheel==1.0.0
       script: python -m cibuildwheel --output-dir wheelhouse
-      after_success: python -m twine upload --skip-existing wheelhouse/*.whl
+    #  after_success: python -m twine upload --skip-existing wheelhouse/*.whl
     # Deploy on windows
-    - stage: deploy
-      name: Build and deploy Windows wheels
-      os: windows
-      language: shell
-      install: python -m pip install twine cibuildwheel==1.0.0
-      script: python -m cibuildwheel --output-dir wheelhouse
-      after_success: python -m twine upload --skip-existing wheelhouse/*.whl
+    # - stage: deploy
+    #   name: Build and deploy Windows wheels
+    #   os: windows
+    #   language: shell
+    #   install: python -m pip install twine cibuildwheel==1.0.0
+    #   script: python -m cibuildwheel --output-dir wheelhouse
+    #   after_success: python -m twine upload --skip-existing wheelhouse/*.whl
 
 env:
   global:
