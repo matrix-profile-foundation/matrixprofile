@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'matrixprofile-ts'
-copyright = '2019, Matrix Profile Foundation'
+copyright = '2020, Matrix Profile Foundation'
 author = 'Matrix Profile Foundation'
 
 # The short X.Y version
