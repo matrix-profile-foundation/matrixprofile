@@ -13,7 +13,7 @@ env:
 jobs:
   include:
     # perform a linux build
-    - services: docker
+    - dist: xenial
       language: shell
       before_install:
         - pip install -r requirements.txt
