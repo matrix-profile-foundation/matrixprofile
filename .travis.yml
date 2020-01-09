@@ -13,6 +13,9 @@ python:
   - 3.7
   - 3.8
 
+env:
+  - MPLBACKEND="agg"
+
 before_install:
   - |
     if [[ "$TRAVIS_OS_NAME" = windows ]]; then
