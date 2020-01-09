@@ -8,10 +8,10 @@
 language: python
 python:
   - 2.7
-  - 3.5
-  - 3.6
-  - 3.7
-  - 3.8
+  # - 3.5
+  # - 3.6
+  # - 3.7
+  # - 3.8
 
 before_install:
   - |
@@ -28,6 +28,7 @@ install:
   - python -m pip install pytest
 
 script:
+  - echo "$TRAVIS_PYTHON_VERSION"
   - |
     if [[ "$TRAVIS_PYTHON_VERSION" = 2.7 ]]; then
         pip install -r python2-requirements.txt
