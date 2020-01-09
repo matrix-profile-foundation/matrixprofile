@@ -41,7 +41,7 @@ elif sys.version_info.major == 2:
 
 setuptools.setup(
     name="matrixprofile-ts",
-    version="0.1.0",
+    version="1.0.0",
     author="Andrew Van Benschoten, Tyler Marrs (Matrix Profile Foundation)",
     author_email="avbs89@gmail.com, tylerwmarrs@gmail.com",
     description="An Open Source Python Time Series Library For Motif Discovery using Matrix Profile",
