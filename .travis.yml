@@ -17,10 +17,10 @@ jobs:
     #     - ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
     # and a windows build
     - os: windows
-     language: shell
-     before_install:
-       - choco install python3
-       - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
+      language: shell
+      before_install:
+        - choco install python3
+        - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
 
 env:
   global:
