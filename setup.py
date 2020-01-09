@@ -8,7 +8,7 @@ from distutils.extension import Extension
 from Cython.Build import cythonize
 import numpy
 
-import os
+import os, sys
 from glob import glob
 
 SOURCE_URL = 'https://github.com/target/matrixprofile-ts'
@@ -30,8 +30,12 @@ extensions.append(Extension(
     include_dirs=[numpy.get_include()],
 ))
 
-with open('README.rst', 'r', encoding='utf-8') as fh:
-    long_description = fh.read()
+if sys.version_info.major == 3:
+    with open('README.rst', 'r', encoding='utf-8') as fh:
+        long_description = fh.read()
+elif sys.version_info.major == 2:
+    with open('README.rst', 'r') as fh:
+        long_description = fh.read()
 
 setuptools.setup(
     name="matrixprofile-ts",

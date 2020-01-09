@@ -1,14 +1,21 @@
 language: python
 
 CIBW_TEST_REQUIRES: pytest
+CIBW_BEFORE_BUILD: pip install -r requirements.txt
+CIBW_TEST_COMMAND: pytest {project}/tests
 
 jobs:
   include:
     # perform a linux build
-    - services: docker
+    - os: linux
+      language: shell
+      before_install:
+        - apt install build-essential
     # and a mac build
     - os: osx
       language: shell
+      before_install:
+        - brew install llvm libomp gcc
     # and a windows build
     - os: windows
       language: shell
@@ -20,6 +27,7 @@ env:
   global:
     - TWINE_USERNAME=joerick
       # Note: TWINE_PASSWORD is set in Travis settings
+    - CC="gcc"  
 
 install:
   - python -m pip install twine cibuildwheel==1.1.0
