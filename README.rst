@@ -15,12 +15,6 @@
 .. image:: https://travis-ci.org/target/matrixprofile-ts.svg
     :target: https://travis-ci.org/target/matrixprofile-ts
     :alt: Build Status
-.. image:: https://anaconda.org/conda-forge/matrixprofile-ts/badges/version.svg
-    :target: https://anaconda.org/conda-forge/matrixprofile-ts
-    :alt: Conda-forge Version
-.. image:: https://anaconda.org/conda-forge/matrixprofile-ts/badges/downloads.svg
-    :target: https://anaconda.org/conda-forge/matrixprofile-ts
-    :alt: Conda-forge Downloads
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
     :target: https://opensource.org/licenses/Apache-2.0
     :alt: License
