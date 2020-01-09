@@ -15,6 +15,8 @@ jobs:
     # perform a linux build
     - dist: xenial
       language: shell
+      apt:
+        - python3-pip
       before_install:
         - pip3 install -r requirements.txt
         - pip3 install -e .
@@ -25,7 +27,7 @@ jobs:
     - os: osx
       language: shell
       before_install:
-        - brew install libomp python
+        - brew install libomp
         - export PATH="/usr/local/bin:$PATH"
         - ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
         - pip3 install -r requirements.txt
