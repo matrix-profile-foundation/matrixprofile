@@ -30,10 +30,12 @@ extensions.append(Extension(
     include_dirs=[numpy.get_include()],
 ))
 
+matplot = 'matplotlib>=3.0.3'
 if sys.version_info.major == 3:
     with open('README.rst', 'r', encoding='utf-8') as fh:
         long_description = fh.read()
 elif sys.version_info.major == 2:
+    matplot = 'matplotlib'
     with open('README.rst', 'r') as fh:
         long_description = fh.read()
 
@@ -52,7 +54,7 @@ setuptools.setup(
     },
     packages = setuptools.find_packages(),
     setup_requires=['cython>=0.x', 'wheel'],
-    install_requires=['numpy>=1.16.2', 'matplotlib>=3.0.3'],
+    install_requires=['numpy>=1.16.2', matplot],
     ext_modules=cythonize(extensions),
     include_dirs=[numpy.get_include()],
     classifiers=[
