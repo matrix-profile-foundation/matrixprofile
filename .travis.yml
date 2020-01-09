@@ -5,8 +5,6 @@ env:
     - TWINE_USERNAME=UPDATEME
       # Note: TWINE_PASSWORD is set in Travis settings
     - CC="gcc"  
-    - CIBW_TEST_REQUIRES=pytest
-    - CIBW_BEFORE_BUILD="pip install -r requirements.txt"
     - CIBW_TEST_COMMAND="python -c 'import matrixprofile as mp'"
 
     # skip 32 bit builds and python 2.7 builds
@@ -31,13 +29,17 @@ jobs:
         - choco install python3
         - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
 
+before_install:
+  - pip install -r requirements.txt
+  - pip install -e .
+  - pytest tests
+  - pip uninstall -y matrixprofile-ts
+
+
 install:
   - python -m pip install twine cibuildwheel==1.1.0
 
 script:
-  - pip install -e .
-  - pytest tests/
-  - pip uninstall matrixprofile-ts
   # build the wheels, put them into './wheelhouse'
   - python -m cibuildwheel --output-dir wheelhouse
 
