@@ -13,7 +13,15 @@ try:
 except ImportError:
     from collections import Iterable
 
+import os
+
 import numpy as np
+
+import matplotlib
+# handle display issue with Matplotlib TravisCI
+if os.environ.get('DISPLAY', '') == '':
+	matplotlib.use('Agg')
+
 
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
