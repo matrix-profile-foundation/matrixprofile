@@ -9,18 +9,18 @@ jobs:
     # perform a linux build
     # - services: docker
     # and a mac build
-    - os: osx
-      language: shell
-      before_install:
-        - brew install libomp
-        - export PATH="/usr/local/bin:/usr/local/opt/llvm/bin:$PATH"
-        - ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
+    # - os: osx
+    #   language: shell
+    #   before_install:
+    #     - brew install libomp
+    #     - export PATH="/usr/local/bin:/usr/local/opt/llvm/bin:$PATH"
+    #     - ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
     # and a windows build
-    # - os: windows
-    #  language: shell
-    #  before_install:
-    #    - choco install python3
-    #    - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
+    - os: windows
+     language: shell
+     before_install:
+       - choco install python3
+       - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
 
 env:
   global:
