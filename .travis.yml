@@ -1,5 +1,8 @@
 language: python
 
+# Only build on Python 3.6
+CIBW_BUILD: cp36-*
+
 CIBW_TEST_REQUIRES: pytest
 CIBW_BEFORE_BUILD: pip install -r requirements.txt
 CIBW_TEST_COMMAND: pytest {project}/tests
@@ -10,15 +13,8 @@ jobs:
     - os: linux
     # and a mac build
     - os: osx
-      language: shell
-      before_install:
-        - brew install llvm libomp gcc
     # and a windows build
     - os: windows
-      language: shell
-      before_install:
-        - choco install python --version 3.8.0
-        - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
 
 env:
   global:
