@@ -8,7 +8,12 @@ range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
 
-from collections.abc import Iterable
+# handle Python 2/3 Iterable import
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
+
 import math
 
 import warnings
