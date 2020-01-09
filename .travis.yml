@@ -5,7 +5,6 @@ env:
     - TWINE_USERNAME=UPDATEME
       # Note: TWINE_PASSWORD is set in Travis settings
     - CC="gcc"  
-    - CIBW_TEST_COMMAND="python -c 'import matrixprofile as mp'"
 
     # skip 32 bit builds and python 2.7 builds
     - CIBW_SKIP="cp27-* *-win32 *-manylinux_i686"
@@ -14,6 +13,12 @@ jobs:
   include:
     # perform a linux build
     - services: docker
+      language: shell
+      before_install:
+        - pip install -r requirements.txt
+        - pip install -e .
+        - pytest tests
+        - pip uninstall -y matrixprofile-ts
     # and a mac build
     # gcc is already installed just have to link it and install libomp
     - os: osx
@@ -22,19 +27,20 @@ jobs:
         - brew install libomp
         - export PATH="/usr/local/bin:$PATH"
         - ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
+        - pip install -r requirements.txt
+        - pip install -e .
+        - pytest tests
+        - pip uninstall -y matrixprofile-ts
     # and a windows build
     - os: windows
       language: shell
       before_install:
         - choco install python3
         - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
-
-before_install:
-  - pip install -r requirements.txt
-  - pip install -e .
-  - pytest tests
-  - pip uninstall -y matrixprofile-ts
-
+        - pip install -r requirements.txt
+        - pip install -e .
+        - pytest tests
+        - pip uninstall -y matrixprofile-ts
 
 install:
   - python -m pip install twine cibuildwheel==1.1.0
