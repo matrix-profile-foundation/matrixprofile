@@ -4,17 +4,21 @@ CIBW_TEST_REQUIRES: pytest
 CIBW_BEFORE_BUILD: pip install -r requirements.txt
 CIBW_TEST_COMMAND: pytest {project}/tests
 
+# skip 32 bit builds
+CIBW_SKIP: "*-win32 *-manylinux_i686"
+
 jobs:
   include:
     # perform a linux build
-    # - services: docker
+    - services: docker
     # and a mac build
-    # - os: osx
-    #   language: shell
-    #   before_install:
-    #     - brew install libomp
-    #     - export PATH="/usr/local/bin:/usr/local/opt/llvm/bin:$PATH"
-    #     - ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
+    # gcc is already installed just have to link it and install libomp
+    - os: osx
+      language: shell
+      before_install:
+        - brew install libomp
+        - export PATH="/usr/local/bin:$PATH"
+        - ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
     # and a windows build
     - os: windows
       language: shell
