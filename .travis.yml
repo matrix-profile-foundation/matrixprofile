@@ -83,4 +83,5 @@ jobs:
 env:
   global:
     - TWINE_USERNAME=UPDATEME
+    - MPLBACKEND=agg
       # Note: TWINE_PASSWORD is set in Travis settings
