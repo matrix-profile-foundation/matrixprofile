@@ -1,5 +1,12 @@
 language: python
 
+CIBW_TEST_REQUIRES: pytest
+CIBW_BEFORE_BUILD: pip install -r requirements.txt
+CIBW_TEST_COMMAND=: python -c 'import matrixprofile as mp'
+
+# skip 32 bit builds and python 2.7 builds
+CIBW_SKIP: cp27-* *-win32 *-manylinux_i686
+
 env:
   global:
     - TWINE_USERNAME=UPDATEME
@@ -7,7 +14,7 @@ env:
     - CC="gcc"  
     - CIBW_TEST_REQUIRES=pytest
     - CIBW_BEFORE_BUILD="pip install -r requirements.txt"
-    - CIBW_TEST_COMMAND="pytest -m matrixprofile"
+    - CIBW_TEST_COMMAND="python -c 'import matrixprofile as mp'"
 
     # skip 32 bit builds and python 2.7 builds
     - CIBW_SKIP="cp27-* *-win32 *-manylinux_i686"
@@ -35,6 +42,7 @@ install:
   - python -m pip install twine cibuildwheel==1.1.0
 
 script:
+  - pytest tests/
   # build the wheels, put them into './wheelhouse'
   - python -m cibuildwheel --output-dir wheelhouse
 
