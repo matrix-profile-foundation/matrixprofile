@@ -25,7 +25,7 @@ before_install:
   - |
     if [[ "$TRAVIS_OS_NAME" = osx ]]; then
         export PATH="/usr/local/bin:$PATH"
-        if [[ ! -f "/usr/local/bin/gcc-9"]]; then
+        if [ ! -f "/usr/local/bin/gcc-9" ]; then
           brew install gcc@9
         fi
 
