@@ -30,12 +30,8 @@ extensions.append(Extension(
     include_dirs=[numpy.get_include()],
 ))
 
-if sys.version_info.major == 3:
-    with open('README.rst', 'r', encoding='utf-8') as fh:
-        long_description = fh.read()
-elif sys.version_info.major == 2:
-    with open('README.rst', 'r') as fh:
-        long_description = fh.read()
+with open('README.rst', 'r', encoding='utf-8') as fh:
+    long_description = fh.read()
 
 setuptools.setup(
     name="matrixprofile-ts",
@@ -56,7 +52,6 @@ setuptools.setup(
     ext_modules=cythonize(extensions),
     include_dirs=[numpy.get_include()],
     classifiers=[
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
