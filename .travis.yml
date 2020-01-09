@@ -12,10 +12,8 @@ jobs:
     - os: osx
       language: shell
       before_install:
-        - brew install llvm libomp gcc@9
+        - brew install libomp
         - export PATH="/usr/local/bin:/usr/local/opt/llvm/bin:$PATH"
-        - export LDFLAGS="-L/usr/local/opt/llvm/lib"
-        - export CPPFLAGS="-I/usr/local/opt/llvm/include"
         - ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
     # and a windows build
     # - os: windows
