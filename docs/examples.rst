@@ -7,3 +7,4 @@ Examples
    :glob:
 
    examples/NYC_Taxis.ipynb
+   examples/Plot_Discords_MP.ipynb
