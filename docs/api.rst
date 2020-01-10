@@ -96,3 +96,13 @@ matrixprofile.io.from_json
 ==========================
 
 .. autofunction:: matrixprofile.io.from_json
+
+matrixprofile.datasets.available
+================================
+
+.. autofunction:: matrixprofile.datasets.available
+
+matrixprofile.datasets.load
+================================
+
+.. autofunction:: matrixprofile.datasets.load

@@ -44,7 +44,7 @@ def create_dirs(path):
         raise OSError('Unable to create path: {}'.format(path))
 
 
-def available(category=None):
+def fetch_available(category=None):
     """
     Fetches the available datasets found in
     github.com/matrix-profile-foundation/mpf-datasets github repository.
@@ -130,8 +130,17 @@ def get_csv_dtypes_and_converters(fp, is_gzip=False):
 def load(name):
     """
     Loads a MPF dataset by name or file name. The match is case insensitive.
+
+    Note
+    ----
+    An internet connection is required to fetch the data.
+
+    Returns
+    -------
+    np.ndarray :
+        The dataset.
     """
-    datasets = available()
+    datasets = fetch_available()
     
     # find the filename in datasets matching either on filename provided or
     # the base name

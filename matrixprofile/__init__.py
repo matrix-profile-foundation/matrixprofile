@@ -8,3 +8,4 @@ from matrixprofile import discover
 from matrixprofile import utils
 from matrixprofile import io
 from matrixprofile import algorithms
+from matrixprofile import datasets
