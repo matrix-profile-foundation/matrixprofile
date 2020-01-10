@@ -97,10 +97,10 @@ matrixprofile.io.from_json
 
 .. autofunction:: matrixprofile.io.from_json
 
-matrixprofile.datasets.available
-================================
+matrixprofile.datasets.fetch_available
+======================================
 
-.. autofunction:: matrixprofile.datasets.available
+.. autofunction:: matrixprofile.datasets.fetch_available
 
 matrixprofile.datasets.load
 ================================

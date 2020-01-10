@@ -129,7 +129,8 @@ def get_csv_dtypes_and_converters(fp, is_gzip=False):
 
 def load(name):
     """
-    Loads a MPF dataset by name or file name. The match is case insensitive.
+    Loads a MPF dataset by base file name or file name. The match is case 
+    insensitive.
 
     Note
     ----
