@@ -6,4 +6,4 @@ Examples
    :maxdepth: 1
    :glob:
 
-   TODO
+   examples/NYC_Taxis.ipynb

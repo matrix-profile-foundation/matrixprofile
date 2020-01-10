@@ -90,10 +90,10 @@ def fetch_available(category=None):
     return datasets
 
 
-def get_csv_dtypes_and_converters(fp, is_gzip=False):
+def get_csv_indices(fp, is_gzip=False):
     """
-    Utility function to quickly read the first line of a csv file and determine
-    the appropriate dtypes and converters for reading into a numpy array.
+    Utility function to provide indices of the datetime dimension and the
+    real valued dimensions.
     
     Parameters
     ----------
@@ -104,8 +104,8 @@ def get_csv_dtypes_and_converters(fp, is_gzip=False):
     
     Returns
     -------
-    (dtypes, converters) :
-        The dtypes and converters.
+    (dt_index, real_indices) :
+        The datetime index and real valued indices.
     """
     first_line = None
     if is_gzip:
@@ -115,16 +115,15 @@ def get_csv_dtypes_and_converters(fp, is_gzip=False):
         with open(fp) as f:
             first_line = f.readline()
     
-    dtypes = []
-    converters = {}
+    dt_index = None
+    real_indices = []
     for index, label in enumerate(first_line.split(',')):
         if 'date' in label.lower() or 'time' in label.lower():
-            dtypes.append('object')
-            converters[0] = lambda s: np.datetime64(s)
+            dt_index = index
         else:
-            dtypes.append('float64')
+            real_indices.append(index)
     
-    return dtypes, converters
+    return dt_index, real_indices
 
 
 def load(name):
@@ -138,8 +137,15 @@ def load(name):
 
     Returns
     -------
-    np.ndarray :
-        The dataset.
+    dict :
+        The dataset and metadata.
+        {
+            'name': The file name loaded,
+            'category': The category the file came from,
+            'description': A description,
+            'data': The real valued data as an np.ndarray,
+            'datetime': The datetime as an np.ndarray
+        }
     """
     datasets = fetch_available()
     
@@ -147,12 +153,14 @@ def load(name):
     # the base name
     filename = None
     category = None
+    description = None
     for dataset in datasets:
         base_name = dataset['name'].split('.')[0]
         
         if name.lower() == base_name or name.lower() == dataset['name']:
             filename = dataset['name']
             category = dataset['category']
+            description = dataset['description']
     
     if not filename:
         raise ValueError('Could not find dataset {}'.format(name))
@@ -173,18 +181,34 @@ def load(name):
     is_csv_gunzip = filename.endswith('.csv.gz')
     
     data = None
+    dt_data = None
     if is_txt or is_txt_gunzip:
         data = np.loadtxt(output_path)
     elif is_csv or is_csv_gunzip:
-        dtypes, converters = get_csv_dtypes_and_converters(
+        dt_index, real_indices = get_csv_indices(
             output_path, is_gzip=is_csv_gunzip)
+
+        if isinstance(dt_index, int):
+            dt_data = np.genfromtxt(
+                output_path,
+                dtype='datetime64',
+                delimiter=',',
+                skip_header=True,
+                usecols=[dt_index,]
+            )
+
         data = np.genfromtxt(
             output_path,
             delimiter=',',
-            case_sensitive=True,
-            dtype=dtypes,
-            converters=converters,
-            skip_header=True
+            dtype='float64',
+            skip_header=True,
+            usecols=real_indices
         )
     
-    return data
+    return {
+        'name': filename,
+        'category': category,
+        'description': description,
+        'data': data,
+        'datetime': dt_data
+    }

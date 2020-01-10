@@ -17,8 +17,11 @@ from matrixprofile.datasets.datasets import fetch_available
 
 
 def test_load_valid():
-    data = load('motifs-discords-small')
-    assert(isinstance(data, np.ndarray) == True)
+    dataset = load('motifs-discords-small')
+    assert(isinstance(dataset['data'], np.ndarray) == True)
+    assert('description' in dataset)
+    assert('name' in dataset)
+    assert('category' in dataset)
 
 
 def test_load_not_found():  
