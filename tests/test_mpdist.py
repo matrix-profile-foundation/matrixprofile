@@ -60,6 +60,17 @@ def test_against_matlab():
     w = 32
 
     desired = 1.460009659995543e-07
+    actual = mpdist(ts, tsb, w, n_jobs=1)
+
+    np.testing.assert_almost_equal(actual, desired)
+
+
+def test_against_matlab_parallel():
+    ts = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'sampledata.txt'))
+    tsb = ts[199:300]
+    w = 32
+
+    desired = 1.460009659995543e-07
     actual = mpdist(ts, tsb, w, n_jobs=-1)
 
     np.testing.assert_almost_equal(actual, desired)
