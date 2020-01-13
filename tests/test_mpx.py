@@ -15,6 +15,10 @@ import pytest
 import numpy as np
 
 from matrixprofile.algorithms.mpx import mpx
+from matrixprofile.algorithms.cympx import mpx_ab, mpx_ab_parallel
+import matrixprofile
+
+MODULE_PATH = matrixprofile.__path__[0]
 
 
 def test_mpx_small_series_self_join_euclidean_single_threaded():
@@ -99,3 +103,31 @@ def test_mpx_small_series_similarity_join_multi_threaded():
 
     np.testing.assert_almost_equal(profile['mp'], desired, decimal=4)
     np.testing.assert_almost_equal(profile['pi'], desired_pi)
+
+
+def test_mpx_similarity_join_matlab():
+    ts = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'sampledata.txt'))
+    tsb = ts[199:300]
+    w = 32
+
+    ml_mpa = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'mpx_ab_mpa.txt'))
+    ml_mpb = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'mpx_ab_mpb.txt'))
+
+    mpa, mpia, mpb, mpib = mpx_ab(ts, tsb, w, 0)
+
+    np.testing.assert_almost_equal(ml_mpa, mpa, decimal=4)
+    np.testing.assert_almost_equal(ml_mpb, mpb, decimal=4)
+
+
+def test_mpx_similarity_join_parallel_matlab():
+    ts = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'sampledata.txt'))
+    tsb = ts[199:300]
+    w = 32
+
+    ml_mpa = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'mpx_ab_mpa.txt'))
+    ml_mpb = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'mpx_ab_mpb.txt'))
+
+    mpa, mpia, mpb, mpib = mpx_ab_parallel(ts, tsb, w, 0, 4)
+
+    np.testing.assert_almost_equal(ml_mpa, mpa, decimal=4)
+    np.testing.assert_almost_equal(ml_mpb, mpb, decimal=4)
