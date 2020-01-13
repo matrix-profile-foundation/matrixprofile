@@ -17,6 +17,9 @@ import pytest
 import numpy as np
 
 from matrixprofile import cycore
+import matrixprofile
+
+MODULE_PATH = matrixprofile.__path__[0]
 
 
 def test_moving_avg_std():
@@ -37,3 +40,16 @@ def test_moving_muinvn():
 
     np.testing.assert_almost_equal(mu, mu_desired)
     np.testing.assert_almost_equal(std, std_desired)
+
+
+def test_muinvn_vs_matlab():
+    ts = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'sampledata.txt'))
+    w = 32
+
+    ml_mu = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'muinvn_mua.txt'))
+    ml_std = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'muinvn_stda.txt'))
+
+    mu, std = cycore.muinvn(ts, w)
+
+    np.testing.assert_almost_equal(ml_mu, mu, decimal=4)
+    np.testing.assert_almost_equal(ml_std, std, decimal=4)
