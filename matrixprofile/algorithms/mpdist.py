@@ -44,6 +44,7 @@ def mpdist(ts, ts_b, w, n_jobs=1):
     """
 	ts = core.to_np_array(ts).astype('d')
 	ts_b = core.to_np_array(ts_b).astype('d')
+	n_jobs = core.valid_n_jobs(n_jobs)
 
 	if not core.is_one_dimensional(ts):
 		raise ValueError('ts must be one dimensional!')

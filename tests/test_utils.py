@@ -47,7 +47,7 @@ def test_empty_mp():
 
 
 def test_pick_mp():
-    ts = np.loadtxt(os.path.join(MODULE_PATH, '..', 'data', 'synthetic.txt'))
+    ts = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'sampledata.txt'))
     n = len(ts)
     pmp = compute(ts)
     mp = utils.pick_mp(pmp, 32)

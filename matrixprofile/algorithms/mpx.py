@@ -68,16 +68,10 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=1):
     if core.is_array_like(query):
         query = core.to_np_array(query).astype('d')
         is_join = True
-        if n_jobs > 1:
-            mp, mpi, mpb, mpib = cympx_ab_parallel(ts, query, w, 
-                int(cross_correlation), n_jobs)
-        else:
-            mp, mpi, mpb, mpib = cympx_ab(ts, query, w, int(cross_correlation))
+        mp, mpi, mpb, mpib = cympx_ab_parallel(ts, query, w, 
+            int(cross_correlation), n_jobs)
     else:
-        if n_jobs > 1:
-            mp, mpi = cympx_parallel(ts, w, int(cross_correlation), n_jobs)
-        else:
-            mp, mpi = cympx(ts, w, int(cross_correlation))
+        mp, mpi = cympx_parallel(ts, w, int(cross_correlation), n_jobs)
 
 
     mp = np.asarray(mp)

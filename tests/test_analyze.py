@@ -50,7 +50,7 @@ def test_analyze_mp_exact_with_query():
     assert(profile['class'] == 'MatrixProfile')
     assert('motifs' in profile)
     assert('discords' in profile)
-    assert(len(figures) == 2)
+    assert(len(figures) == 4)
 
 
 def test_analyze_mp_approximate():

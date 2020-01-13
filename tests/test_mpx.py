@@ -15,7 +15,7 @@ import pytest
 import numpy as np
 
 from matrixprofile.algorithms.mpx import mpx
-from matrixprofile.algorithms.cympx import mpx_ab, mpx_ab_parallel
+from matrixprofile.algorithms.cympx import mpx_ab_parallel
 import matrixprofile
 
 MODULE_PATH = matrixprofile.__path__[0]
@@ -113,7 +113,7 @@ def test_mpx_similarity_join_matlab():
     ml_mpa = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'mpx_ab_mpa.txt'))
     ml_mpb = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'mpx_ab_mpb.txt'))
 
-    mpa, mpia, mpb, mpib = mpx_ab(ts, tsb, w, 0)
+    mpa, mpia, mpb, mpib = mpx_ab_parallel(ts, tsb, w, 0, 1)
 
     np.testing.assert_almost_equal(ml_mpa, mpa, decimal=4)
     np.testing.assert_almost_equal(ml_mpb, mpb, decimal=4)
@@ -127,7 +127,7 @@ def test_mpx_similarity_join_parallel_matlab():
     ml_mpa = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'mpx_ab_mpa.txt'))
     ml_mpb = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'mpx_ab_mpb.txt'))
 
-    mpa, mpia, mpb, mpib = mpx_ab_parallel(ts, tsb, w, 0, 4)
+    mpa, mpia, mpb, mpib = mpx_ab_parallel(ts, tsb, w, 0, 2)
 
     np.testing.assert_almost_equal(ml_mpa, mpa, decimal=4)
     np.testing.assert_almost_equal(ml_mpb, mpb, decimal=4)

@@ -15,6 +15,9 @@ import pytest
 import numpy as np
 
 from matrixprofile.algorithms.mpdist import mpdist
+import matrixprofile
+
+MODULE_PATH = matrixprofile.__path__[0]
 
 
 def test_small_series_single_threaded():
@@ -47,5 +50,16 @@ def test_small_series_multi_threaded():
 
     desired = 0.437690617625298
     actual = mpdist(ts, query, w, n_jobs=-1)
+
+    np.testing.assert_almost_equal(actual, desired)
+
+
+def test_against_matlab():
+    ts = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'sampledata.txt'))
+    tsb = ts[199:300]
+    w = 32
+
+    desired = 1.460009659995543e-07
+    actual = mpdist(ts, tsb, w, n_jobs=-1)
 
     np.testing.assert_almost_equal(actual, desired)
