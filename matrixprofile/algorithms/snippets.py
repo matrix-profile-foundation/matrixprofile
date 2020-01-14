@@ -11,9 +11,10 @@ range = getattr(__builtins__, 'xrange', range)
 import numpy as np
 
 from matrixprofile import core
+from matrixprofile.algorithms.mpdist import mpdist_vector
 
 
-def snippets(ts, snippet_size, num_snippets=2, window_size=None, n_jobs=1):
+def snippets(ts, snippet_size, num_snippets=2, window_size=None):
 	"""
 	The snippets algorithm is used to summarize your time series by
 	identifying N number of representative subsequences. If you want to
@@ -30,8 +31,6 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None, n_jobs=1):
 		The number of snippets you would like to find.
 	window_size : int, Default (snippet_size / 2)
 		The window size.
-	n_jobs : int, Default 1
-		The number of cpu cores to use.
 
 	Returns
 	-------
@@ -40,11 +39,11 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None, n_jobs=1):
 		{
 			fraction: fraction of the snippet,
 			index: the index of the snippet,
+			snippet: the snippet values
 		}
 	"""
 	ts = core.to_np_array(ts).astype('d')
 	n = len(ts)
-	n_jobs = core.valid_n_jobs(n_jobs)
 
 	if not isinstance(snippet_size, int) or snippet_size < 4:
 		raise ValueError('snippet_size must be an integer >= 4')
@@ -58,44 +57,57 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None, n_jobs=1):
 	if window_size >= snippet_size:
 		raise ValueError('window_size must be smaller than snippet_size')
 
+	used_window = int(np.round(snippet_size * window_size / 100))
+
 	# pad end of time series with zeros
 	num_zeros = int(snippet_size * np.ceil(n / snippet_size) - n)
 	ts = np.append(ts, np.zeros(num_zeros))
 
 	# compute all profiles
-	indices = np.arange(0, n, snippet_size, dtype=int)
-	distances = np.full((len(indices), n - snippet_size + 1), np.nan)
-	distances_snippet = np.full((len(indices), n - snippet_size + 1), np.nan)
+	indices = np.arange(0, len(ts) - snippet_size, snippet_size)
+	distances = []
 
 	for j, i in enumerate(indices):
-		distance = mpdist(ts, ts[i:(i + snippet_size)], window_size, n_jobs=n_jobs)
-		distances[j] = distance
+		distance = mpdist_vector(ts, ts[i:(i + snippet_size)], used_window)
+		distances.append(distance)
 
-	print(distances)
+	distances = np.array(distances)	
 
-	# # compute the Nth snippets
-	# minis = np.inf
-	# snippet_index = np.nan
+	# find N snippets
+	snippets = []
+	minis = np.inf
+	total_min = None
+	for n in range(num_snippets):
+		minims = np.inf
 
-	# for z in range(num_snippets):
-	# 	minims = np.inf
-	# 	index = np.nan
+		for i in range(len(indices)):
+			s = np.sum(np.minimum(distances[i, :], minis))
 
-	# 	for i in range(distances.shape[0]):
-	# 		# compute area under the profile (maximize converage)
-	# 		mask = distances[i] < minis
-	# 		s = np.sum(distances[i][mask])
+			if minims > s:
+				minims = s
+				index = i
 
-	# 		if minims > s:
-	# 			minims = s
-	# 			index = i
+		minis = np.minimum(distances[index, :], minis)
+		actual_index = indices[index]
+		snippet = ts[actual_index:actual_index + snippet_size]
+		snippet_distance = distances[index]
+		snippets.append({
+			'index': actual_index,
+			'snippet': snippet,
+			'distance': snippet_distance
+		})
 
-	# 	mask = distances[index] < minis
-	# 	minis = distances[index][mask]
-	# 	if np.isnan(snippet_index):
-	# 		snippet_index = np.array([snippet_index])
-	# 	else:
-	# 		snippet_index = np.append(snippet_index, [indices[index],])
-	# 	distances_snippet[z] = distances[index]
+		if isinstance(total_min, type(None)):
+			total_min = snippet_distance
+		else:
+			total_min = np.minimum(total_min, snippet_distance)
 
-	# return snippet_index
+	# compute the fraction of each snippet
+	a = 0
+	for snippet in snippets:
+		mask = (snippet['distance'] <= total_min)
+		snippet['fraction'] = mask.sum() / (len(ts) - snippet_size)
+		total_min = total_min - mask
+		del snippet['distance']
+
+	return snippets
