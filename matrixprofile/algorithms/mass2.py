@@ -14,7 +14,7 @@ from matrixprofile import core
 def mass2(ts, query, extras=False):
     """
     Compute the distance profile for the given query over the given time 
-    series. Optionally, the correlation coefficient can be returned.
+    series.
 
     Parameters
     ----------
