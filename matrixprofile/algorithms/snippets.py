@@ -103,7 +103,6 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
 			total_min = np.minimum(total_min, snippet_distance)
 
 	# compute the fraction of each snippet
-	a = 0
 	for snippet in snippets:
 		mask = (snippet['distance'] <= total_min)
 		snippet['fraction'] = mask.sum() / (len(ts) - snippet_size)
