@@ -242,6 +242,22 @@ def nan_inf_indices(a):
     return (np.isnan(a)) | (np.isinf(a))
 
 
+def not_nan_inf_indices(a):
+    """
+    Helper method to obtain the non-nan/inf indices of an array.
+
+    Parameters
+    ----------
+    a : array_like
+        The array to test.
+
+    Returns
+    -------
+    Masked array of indices containing not nan/inf.
+    """
+    return (~nan_inf_indices(a))
+
+
 def rolling_window(a, window):
     """
     Provides a rolling window on a numpy array given an array and window size.
@@ -319,6 +335,26 @@ def moving_avg_std(a, window=3):
     mu, sig = cycore.moving_avg_std(a, window)
 
     return (np.asarray(mu), np.asarray(sig))
+
+
+def moving_min(a, window=3):
+    """
+    Computes the moving minimum over an array given a window size.
+
+    Parameters
+    ----------
+    a : array_like
+        The array to compute the moving std. on.
+    window : int
+        The window size.
+
+    Returns
+    -------
+    array_like :
+        The array of moving minimums.
+    """
+    return np.min(rolling_window(a, window), axis=1)
+
 
 
 def fft_convolve(ts, query):

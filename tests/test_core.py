@@ -304,3 +304,23 @@ def test_is_mp_or_pmp_obj():
     assert(True == core.is_mp_or_pmp_obj({'class': 'MatrixProfile'}))
     assert(False == core.is_mp_or_pmp_obj('s'))
     assert(False == core.is_mp_or_pmp_obj({}))
+
+
+def test_moving_min():
+    a = np.array([1, 1, 1, 2, 0, 2])
+    desired = np.array([1, 0, 0])
+    actual = core.moving_min(a, window=4)
+
+    np.testing.assert_equal(desired, actual)
+
+    a = np.array([1, 0, 1, 2, 0, 2])
+    desired = np.array([0, 0, 0])
+    actual = core.moving_min(a, window=4)
+
+    np.testing.assert_equal(desired, actual)
+
+    a = np.array([1, 1, 1, 2, 0, 2])
+    desired = np.array([1, 1, 1, 0, 0])
+    actual = core.moving_min(a, window=2)
+
+    np.testing.assert_equal(desired, actual)
