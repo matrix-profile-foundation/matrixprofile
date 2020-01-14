@@ -32,6 +32,11 @@ matrixprofile.discover.snippets
 
 .. autofunction:: matrixprofile.discover.snippets
 
+matrixprofile.discover.regimes
+==============================
+
+.. autofunction:: matrixprofile.discover.regimes
+
 matrixprofile.algorithms.stomp
 ==============================
 
