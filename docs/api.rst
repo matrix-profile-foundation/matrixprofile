@@ -27,6 +27,11 @@ matrixprofile.discover.discords
 
 .. autofunction:: matrixprofile.discover.discords
 
+matrixprofile.discover.snippets
+===============================
+
+.. autofunction:: matrixprofile.discover.snippets
+
 matrixprofile.algorithms.stomp
 ==============================
 
