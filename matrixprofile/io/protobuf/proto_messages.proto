@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+package mpf;
+
+// Workaround to store a 2D array courtesy of:
+// https://stackoverflow.com/a/15179330
+
+// NOTE: with numpy you can simply flatten and reshape the array
+message DoubleMatrix {
+	uint64 rows = 1;
+	uint64 cols = 2;
+	repeated double data = 3 [packed=true];
+}
+
+message IntMatrix {
+	uint64 rows = 1;
+	uint64 cols = 2;
+	repeated int64 data = 3 [packed=true];
+}
+
+// Data structure to specify a location in a matrix (row, col)
+message Location {
+	uint64 row = 1;
+	uint64 col = 2;
+}
+
+// Store Motif for any dimensions
+message Motif {
+	repeated Location motifs = 1;
+	repeated Location neighbors = 2;
+}
+
+// Store Matrix Profile specific attributes
+message MatrixProfile {
+	// matrix profile distances
+	DoubleMatrix mp = 1;
+
+	// matrix profile indices
+	IntMatrix pi = 2;
+
+	// left matrix profile distances
+	DoubleMatrix lmp = 3;
+
+	// left matrix profile indices
+	IntMatrix lpi = 4;
+
+	// right matrix profile distances
+	DoubleMatrix rmp = 5;
+
+	// right matrix profile indices
+	IntMatrix rpi = 6;
+
+	// exclusion zone used to calculate the matrix profile
+	uint64 ez = 9;
+
+	// boolean to determine if a similarity join compuation happened
+	bool join = 10;
+}
+
+// Store Pan-MatrixProfile specific attributes
+message PanMatrixProfile {
+	// Pan-MatrixProfile distances
+	DoubleMatrix pmp = 1;
+
+	// Pan-MatrixProfile indices
+	IntMatrix pmpi = 2;
+}
+
+message MPFOutput {
+	// the class of the data structure written (MatrixProfile or PMP)
+	string klass = 1;
+
+	// the algorithm used to compute the MP/PMP
+	string algorithm = 2;
+
+	// the distance metric stored in the MP/PMP
+	string metric = 3;
+
+	// the percetage of samples computed for the MP/PMP
+	double sample_pct = 4;
+
+	// the window(s) used in the computation
+	repeated uint64 windows = 5 [packed=true];
+
+	// the time series - original data
+	DoubleMatrix ts = 6;
+	
+	// optionally the query when provided - original data
+	DoubleMatrix query = 7;
+	
+	// the matrix profile envelope
+	MatrixProfile mp = 8;
+
+	// the pan-matrixprofile envelope
+	PanMatrixProfile pmp = 9;
+
+	// the motifs for the MP/PMP
+	repeated Motif motifs = 10;
+
+	// the discords for the MP/PMP
+	repeated Location discords = 11;
+}
