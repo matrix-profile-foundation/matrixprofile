@@ -3,6 +3,7 @@ matplotlib
 pytest>=3.5.1
 setuptools>=39.1.0
 cython>=0.x
+protobuf==3.11.2
 sphinx
 nbsphinx
 sphinx_rtd_theme

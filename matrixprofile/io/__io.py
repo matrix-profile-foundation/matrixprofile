@@ -19,16 +19,22 @@ import json.tool
 import numpy as np
 
 from matrixprofile import core
+from matrixprofile.io.protobuf.protobuf_utils import (
+    to_mpf,
+    from_mpf
+)
 
 
 # Supported file extensions
 SUPPORTED_EXTS = set([
     'json',
+    'mpf',
 ])
 
 # Supported file formats
 SUPPORTED_FORMATS = set([
     'json',
+    'mpf',
 ])
 
 def JSONSerializer(obj):
@@ -50,7 +56,7 @@ def JSONSerializer(obj):
 
 def from_json(profile):
     """
-    Converts a given profile object into JSON format.
+    Converts a JSON formatted string into a profile data structure.
 
     Parameters
     ----------
@@ -120,6 +126,30 @@ def to_json(profile):
     return json.dumps(profile, default=JSONSerializer)
 
 
+def add_extension_to_path(file_path, extension):
+    """
+    Utility function to add the file extension when it is not provided by the
+    user in the file path.
+
+    Parameters
+    ----------
+    file_path : str
+        The file path.
+
+    Returns
+    -------
+    str :
+        The file path with the extension appended.
+    str :
+        The file format extension.
+    """
+    end = '.{}'.format(extension)
+    if not file_path.endswith(end):
+        file_path = '{}{}'.format(file_path, end)
+
+    return file_path
+
+
 def infer_file_format(file_path):
     """
     Attempts to determine the file type based on the extension. The extension
@@ -149,6 +179,12 @@ def to_disk(profile, file_path, format='json'):
     Writes a profile object of type MatrixProfile or PMP to disk as a JSON
     formatted file by default.
 
+    Note
+    ----
+    The JSON format is human readable where as the mpf format is binary and
+    cannot be read when opened in a text editor. When the file path does not
+    include the extension, it is appended for you.
+
     Parameters
     ----------
     profile : dict_like
@@ -156,7 +192,7 @@ def to_disk(profile, file_path, format='json'):
     file_path : str
         The path to write the file to.
     format : str, default json
-        The format of the file to be written.
+        The format of the file to be written. Options include json, mpf
     """
     if not core.is_mp_or_pmp_obj(profile):
         raise ValueError('profile is expected to be of type MatrixProfile or PMP')
@@ -164,9 +200,14 @@ def to_disk(profile, file_path, format='json'):
     if format not in SUPPORTED_FORMATS:
         raise ValueError('Unsupported file format {} given.'.format(format))
 
-    with open(file_path, 'w') as out:
-        if format == 'json':
+    file_path = add_extension_to_path(file_path, format)
+
+    if format == 'json':
+        with open(file_path, 'w') as out:
             out.write(to_json(profile))
+    elif format == 'mpf':
+        with open(file_path, 'wb') as out:
+            out.write(to_mpf(profile))
 
 
 def from_disk(file_path, format='infer'):
@@ -181,7 +222,7 @@ def from_disk(file_path, format='infer'):
         The path to read the file from.
     format : str, default infer
         The file format type to read from disk. Options include:
-        infer, json
+        infer, json, mpf
     
     Returns
     -------
@@ -198,5 +239,8 @@ def from_disk(file_path, format='infer'):
     if format == 'json':
         with open(file_path) as f:
             profile = from_json(f)
+    elif format == 'mpf':
+        with open(file_path, 'rb') as f:
+            profile = from_mpf(f.read())
     
     return profile
