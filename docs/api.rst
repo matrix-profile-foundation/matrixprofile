@@ -107,6 +107,16 @@ matrixprofile.io.from_json
 
 .. autofunction:: matrixprofile.io.from_json
 
+matrixprofile.io.to_mpf
+========================
+
+.. autofunction:: matrixprofile.io.to_mpf
+
+matrixprofile.io.from_mpf
+==========================
+
+.. autofunction:: matrixprofile.io.from_mpf
+
 matrixprofile.datasets.fetch_available
 ======================================
 
