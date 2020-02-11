@@ -375,6 +375,25 @@ def moving_max(a, window=3):
     return np.max(rolling_window(a, window), axis=1)
 
 
+def moving_median(a, window=3):
+    """
+    Computes the moving median over an array given a window size.
+
+    Parameters
+    ----------
+    a : array_like
+        The array to compute the moving median on.
+    window : int
+        The window size.
+
+    Returns
+    -------
+    array_like :
+        The array of moving medians.
+    """
+    return np.median(rolling_window(a, window), axis=1)
+
+
 def fft_convolve(ts, query):
     """
     Computes the sliding dot product for query over the time series using
