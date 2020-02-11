@@ -324,3 +324,23 @@ def test_moving_min():
     actual = core.moving_min(a, window=2)
 
     np.testing.assert_equal(desired, actual)
+
+
+def test_moving_max():
+    a = np.array([1, 1, 1, 2, 0, 2])
+    desired = np.array([2, 2, 2])
+    actual = core.moving_max(a, window=4)
+
+    np.testing.assert_equal(desired, actual)
+
+    a = np.array([1, 0, 1, 2, 0, 2])
+    desired = np.array([2, 2, 2])
+    actual = core.moving_max(a, window=4)
+
+    np.testing.assert_equal(desired, actual)
+
+    a = np.array([1, 1, 1, 2, 0, 2])
+    desired = np.array([1, 1, 2, 2, 2])
+    actual = core.moving_max(a, window=2)
+
+    np.testing.assert_equal(desired, actual)

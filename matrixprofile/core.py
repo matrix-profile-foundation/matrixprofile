@@ -344,7 +344,7 @@ def moving_min(a, window=3):
     Parameters
     ----------
     a : array_like
-        The array to compute the moving std. on.
+        The array to compute the moving min on.
     window : int
         The window size.
 
@@ -355,6 +355,24 @@ def moving_min(a, window=3):
     """
     return np.min(rolling_window(a, window), axis=1)
 
+
+def moving_max(a, window=3):
+    """
+    Computes the moving maximum over an array given a window size.
+
+    Parameters
+    ----------
+    a : array_like
+        The array to compute the moving max on.
+    window : int
+        The window size.
+
+    Returns
+    -------
+    array_like :
+        The array of moving maximums.
+    """
+    return np.max(rolling_window(a, window), axis=1)
 
 
 def fft_convolve(ts, query):
