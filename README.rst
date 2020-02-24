@@ -3,7 +3,7 @@
    <br />
 
 ===============================
- matrixprofile Documentation
+ MatrixProfile Documentation
 ===============================
 
 .. image:: https://img.shields.io/pypi/v/matrixprofile.svg
@@ -30,7 +30,7 @@
     :scale: 50%
     :alt: MPF Logo
 
-matrixprofile
+MatrixProfile
 ----------------
 MatrixProfile is a Python 2 and 3 library, brought to you by the `Matrix Profile Foundation <https://matrixprofile.org>`_, for mining time series data. The Matrix Profile is a novel data structure developed by the `Keogh <https://www.cs.ucr.edu/~eamonn/MatrixProfile.html>`_ and `Mueen <https://www.cs.unm.edu/~mueen/>`_ research groups at UC-Riverside and the University of New Mexico. The goal of this library is to make these algorithms accessible to both the novice and expert.
 |br|
