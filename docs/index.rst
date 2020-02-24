@@ -12,7 +12,7 @@
    contributing
    code_of_conduct
    citations
-   Code Repository (Github) <https://github.com/target/matrixprofile-ts>
+   Code Repository (Github) <https://github.com/matrix-profile-foundation/matrixprofile>
    Website <https://matrixprofile.org>
 
 .. include:: ../README.rst

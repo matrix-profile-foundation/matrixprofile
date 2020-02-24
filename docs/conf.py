@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'matrixprofile-ts'
+project = 'matrixprofile'
 copyright = '2020, Matrix Profile Foundation'
 author = 'Matrix Profile Foundation'
 
@@ -106,7 +106,7 @@ html_theme_options = {
 }
 
 html_logo = 'images/mpf-logo.png'
-html_title = 'MatrixProfile-TS'
+html_title = 'MatrixProfile'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -127,7 +127,7 @@ html_css_files = ["css/custom.css"]
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'matrixprofile-tsdoc'
+htmlhelp_basename = 'matrixprofiledoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -154,7 +154,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'matrixprofile-ts.tex', 'matrixprofile-ts Documentation',
+    (master_doc, 'matrixprofile.tex', 'matrixprofile Documentation',
      'Matrix Profile Foundation', 'manual'),
 ]
 
@@ -164,7 +164,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'matrixprofile-ts', 'matrixprofile-ts Documentation',
+    (master_doc, 'matrixprofile', 'matrixprofile Documentation',
      [author], 1)
 ]
 
@@ -175,8 +175,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'matrixprofile-ts', 'matrixprofile-ts Documentation',
-     author, 'matrixprofile-ts', 'One line description of project.',
+    (master_doc, 'matrixprofile', 'matrixprofile Documentation',
+     author, 'matrixprofile', 'One line description of project.',
      'Miscellaneous'),
 ]
 

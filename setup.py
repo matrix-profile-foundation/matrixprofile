@@ -11,7 +11,7 @@ import numpy
 import os, sys
 from glob import glob
 
-SOURCE_URL = 'https://github.com/target/matrixprofile-ts'
+SOURCE_URL = 'https://github.com/matrix-profile-foundation/matrixprofile'
 
 # manual list of files to be compiled
 extensions = []
@@ -40,11 +40,11 @@ elif sys.version_info.major == 2:
         long_description = fh.read()
 
 setuptools.setup(
-    name="matrixprofile-ts",
+    name="matrixprofile",
     version="1.0.0",
     author="Matrix Profile Foundation",
-    author_email="avbs89@gmail.com, tylerwmarrs@gmail.com",
-    description="An Open Source Python Time Series Library For Motif Discovery using Matrix Profile",
+    author_email="tylerwmarrs@gmail.com",
+    description="An open source time series data mining library based on Matrix Profile algorithms.",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     url=SOURCE_URL,

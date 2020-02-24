@@ -91,4 +91,4 @@ This Code of Conduct applies both within project spaces and in public spaces whe
 Attribution
 -----------
 
-Parts of this Code of Conduct have been adapted from the `Target Contributor Covenant <#>`_ and the `sunpy Code of Conduct <https://github.com/sunpy/sunpy/blob/master/CODE_OF_CONDUCT.rst#code-of-conduct>`_.
+Parts of this Code of Conduct have been adapted from the the `sunpy Code of Conduct <https://github.com/sunpy/sunpy/blob/master/CODE_OF_CONDUCT.rst#code-of-conduct>`_.
