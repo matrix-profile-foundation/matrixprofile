@@ -54,7 +54,7 @@ Our documentation provides a `quick start guide <http://matrixprofile.docs.matri
 
 Algorithms
 ----------
-For details about the algorithms implemented, including performance characteristics, please refer to the `documentation <http://matrixprofile.docs.matrixprofile.org/algorithms.html>`_.
+For details about the algorithms implemented, including performance characteristics, please refer to the `documentation <http://matrixprofile.docs.matrixprofile.org/Algorithms.html>`_.
             
 ------------
 Getting Help
