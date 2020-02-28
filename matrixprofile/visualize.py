@@ -105,24 +105,12 @@ def plot_pmp(profile):
     test = np.ceil(pmp * depth) / depth
     test[test > 1] = 1
 
-    # reshape to reduce the amount of empty space shown
-    last_index = test.shape[0]
-    for row_index in range(test.shape[0] - 1, 0, -1):
-        if np.all(test[row_index][0] == test[row_index]):
-            last_index = row_index
-        else:
-            break
-
-    if test.shape[0] > last_index + 2:
-        last_index = last_index + 2
-    else:
-        last_index = test.shape[0] - 1
-
-    ax.imshow(test[0:last_index, :], interpolation=None, aspect='auto')
+    ax.imshow(test, interpolation=None, aspect='auto')
     ax.invert_yaxis()
     ax.set_title('Pan-MatrixProfile')
     ax.set_xlabel('Profile Index')
     ax.set_ylabel('Window Size')
+    ax.set_aspect(1, 'box')
 
     fig.tight_layout()
 
