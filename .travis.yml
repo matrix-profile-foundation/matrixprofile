@@ -60,7 +60,7 @@ jobs:
       install: python -m pip install twine cibuildwheel==1.0.0
       script: python -m cibuildwheel --output-dir wheelhouse
       after_success:
-        - if [[ $TWINE_PASSWORD ]]; then python -m twine upload wheelhouse/*.whl; fi
+        - if [[ $TWINE_PASSWORD ]]; then python -m twine upload wheelhouse/*.whl --verbose; fi
         - ls wheelhouse/*.whl
     # Deploy on mac
     - stage: deploy
@@ -70,7 +70,7 @@ jobs:
       install: python -m pip install twine cibuildwheel==1.0.0
       script: python -m cibuildwheel --output-dir wheelhouse
       after_success:
-        - if [[ $TWINE_PASSWORD ]]; then python -m twine upload wheelhouse/*.whl; fi
+        - if [[ $TWINE_PASSWORD ]]; then python -m twine upload wheelhouse/*.whl --verbose; fi
         - ls wheelhouse/*.whl
     # Deploy on windows
     - stage: deploy
