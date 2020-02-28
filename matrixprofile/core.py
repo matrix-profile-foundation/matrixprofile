@@ -643,6 +643,24 @@ def is_pearson_array(a):
     return min_val >= 0 and max_val <= 1
 
 
+def is_stats_obj(obj):
+    """
+    Helper function to determine if the current object matches the structure
+    that the library enforices for Statistics.
+
+    Parameters
+    ----------
+    obj : object
+        The object to test.
+    
+    Returns
+    -------
+    bool :
+        True or false respectively.
+    """
+    return isinstance(obj, dict) and obj.get('class') == 'Statistics'
+
+
 def is_mp_obj(obj):
     """
     Helper function to determine if the current object matches the structure

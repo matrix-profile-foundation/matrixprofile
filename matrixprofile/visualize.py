@@ -40,6 +40,23 @@ def __combine(a, b):
     return output
 
 
+def is_visualizable(obj):
+    """
+    Helper function to determine if the passed in object can be visualized or
+    not based on the data structure.
+
+    Parameters
+    ----------
+    obj : Object
+        The object to test.
+
+    Returns
+    -------
+    A list of matplotlib figures.
+    """
+    return core.is_mp_obj(obj) or core.is_pmp_obj(obj) or core.is_stats_obj(obj)
+
+
 def visualize(profile):
     """
     Automatically creates plots for the provided data structure. In some cases
@@ -50,7 +67,7 @@ def visualize(profile):
     Parameters
     ----------
     profile : dict_like
-        A MatrixProfile or Pan-MatrixProfile data structure.
+        A MatrixProfile, Pan-MatrixProfile or Statistics data structure.
 
     Returns
     -------
@@ -58,13 +75,11 @@ def visualize(profile):
     """
     figures = []
 
-    if not core.is_mp_or_pmp_obj(profile):
-        raise ValueError('MatrixProfile or Pan-MatrixProfile data structure expected!')
-
-    cls = profile.get('class', None)
+    if not is_visualizable(profile):
+        raise ValueError('MatrixProfile, Pan-MatrixProfile or Statistics data structure expected!')
 
     # plot MP
-    if cls == 'MatrixProfile':
+    if core.is_mp_obj(profile):
         figures = __combine(figures, plot_mp(profile))
     
         if 'motifs' in profile and len(profile['motifs']) > 0:
@@ -74,7 +89,7 @@ def visualize(profile):
             figures = __combine(figures, plot_discords_mp(profile))
 
     # plot PMP
-    if cls == 'PMP':
+    if core.is_pmp_obj(profile):
         figures = __combine(figures, plot_pmp(profile))
 
         if 'motifs' in profile and len(profile['motifs']) > 0:
@@ -83,7 +98,39 @@ def visualize(profile):
         if 'discords' in profile and len(profile['discords']) > 0:
             figures = __combine(figures, plot_discords_pmp(profile))
 
+    # plot stats
+    if core.is_stats_obj(profile):
+        figures = __combine(figures, plot_stats(profile))
+
+
     return figures
+
+
+def plot_stats(profile):
+    """
+    Plots the given Statistics data structure provided.
+
+    Parameters
+    ----------
+    profile : dict
+        The dict structure from a Statistics algorithm.
+
+    Returns
+    -------
+    The matplotlib figure object.
+    """
+    fig, ax = plt.subplots(2, 1, figsize=(15, 7))
+    ts = profile.get('ts')
+    ax[0].plot(ts, label='Time Series', c='black')
+
+    for k, v in profile.items():
+        if k.startswith('moving'):
+            ax[1].plot(v, label=k)
+
+    fig.legend(loc="upper right", bbox_to_anchor=(1.11, 0.97))
+    fig.tight_layout()
+
+    return fig
 
 
 def plot_pmp(profile):

@@ -20,8 +20,10 @@ from matrixprofile.visualize import visualize
 
 
 def test_catch_all_visualize_invalid_structure():
+    data = {}
     with pytest.raises(Exception) as e:
-        assert('MatrixProfile or Pan-MatrixProfile data structure expected!' == str(e.value))
+        visualize(data)
+        assert('MatrixProfile, Pan-MatrixProfile or Statistics data structure expected!' == str(e.value))
 
 
 def test_catch_all_visualize_mp_only():
@@ -111,3 +113,14 @@ def test_catch_all_visualize_pmp_motifs_discords():
 
     figures = visualize(profile)
     assert(len(figures) == 5)
+
+
+def test_catch_all_stats():
+    profile = {
+        'class': 'Statistics',
+        'ts': np.array([]),
+        'window_size': 100
+    }
+
+    figures = visualize(profile)
+    assert(len(figures) == 1)

@@ -37,6 +37,11 @@ matrixprofile.discover.regimes
 
 .. autofunction:: matrixprofile.discover.regimes
 
+matrixprofile.discover.statistics
+==============================
+
+.. autofunction:: matrixprofile.discover.statistics
+
 matrixprofile.algorithms.stomp
 ==============================
 
