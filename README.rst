@@ -8,8 +8,8 @@
 .. image:: https://pepy.tech/badge/matrixprofile
     :target: https://pepy.tech/project/matrixprofile
     :alt: PyPI Downloads
-.. image:: https://travis-ci.org/matrix-profile-foundation/matrixprofile.svg
-    :target: https://travis-ci.org/matrix-profile-foundation/matrixprofile
+.. image:: https://travis-ci.com/matrix-profile-foundation/matrixprofile.svg
+    :target: https://travis-ci.com/matrix-profile-foundation/matrixprofile
     :alt: Build Status
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
     :target: https://opensource.org/licenses/Apache-2.0
