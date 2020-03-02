@@ -8,6 +8,9 @@
 .. image:: https://pepy.tech/badge/matrixprofile
     :target: https://pepy.tech/project/matrixprofile
     :alt: PyPI Downloads
+.. image:: https://codecov.io/gh/matrix-profile-foundation/matrixprofile/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/matrix-profile-foundation/matrixprofile
+    :alt: Code Coverage
 .. image:: https://travis-ci.com/matrix-profile-foundation/matrixprofile.svg
     :target: https://travis-ci.com/matrix-profile-foundation/matrixprofile
     :alt: Build Status
@@ -29,9 +32,8 @@
 MatrixProfile
 ----------------
 MatrixProfile is a Python 2 and 3 library, brought to you by the `Matrix Profile Foundation <https://matrixprofile.org>`_, for mining time series data. The Matrix Profile is a novel data structure developed by the `Keogh <https://www.cs.ucr.edu/~eamonn/MatrixProfile.html>`_ and `Mueen <https://www.cs.unm.edu/~mueen/>`_ research groups at UC-Riverside and the University of New Mexico. The goal of this library is to make these algorithms accessible to both the novice and expert.
-|
-|
-In addition to this Python library, the Matrix Profile Foundation, provides implementations in other languages. These languages have a pretty consistent API allowing you to easily switch between them without a huge learning curve. For more information, check out our  `Medium article <https://towardsdatascience.com/how-to-painlessly-analyze-your-time-series-f52dab7ea80d>`_
+
+In addition to this Python library, the Matrix Profile Foundation, provides implementations in other languages. These languages have a pretty consistent API allowing you to easily switch between them without a huge learning curve.
 
 * `tsmp <https://github.com/matrix-profile-foundation/tsmp>`_ - an R implementation
 * `go-matrixprofile <https://github.com/matrix-profile-foundation/go-matrixprofile>`_ - a Golang implementation
@@ -46,6 +48,13 @@ The easiest way to install this library is using pip. If you would like to insta
 
 Getting Started
 ---------------
+This article provides introductory material on the Matrix Profile:
+
+
+
+This article provides details about core concepts introduced in this library:
+`How To Painlessly Analyze Your Time Series  <https://towardsdatascience.com/how-to-painlessly-analyze-your-time-series-f52dab7ea80d>`_
+
 Our documentation provides a `quick start guide <http://matrixprofile.docs.matrixprofile.org/Quickstart.html>`_, `examples <http://matrixprofile.docs.matrixprofile.org/examples.html>`_ and `api <http://matrixprofile.docs.matrixprofile.org/api.html>`_ documentation. It is the source of truth for getting up and running.
 
 Algorithms
