@@ -49,7 +49,7 @@ The easiest way to install this library is using pip. If you would like to insta
 Getting Started
 ---------------
 This article provides introductory material on the Matrix Profile:
-
+`Introduction to Matrix Profiles  <https://towardsdatascience.com/introduction-to-matrix-profiles-5568f3375d90>`_
 
 
 This article provides details about core concepts introduced in this library:
