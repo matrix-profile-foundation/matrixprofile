@@ -37,7 +37,7 @@ install:
 script:
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then pip install -r python2-requirements.txt; else pip install -r requirements.txt; fi
   - pip install -e .
-  - pytest
+  - pytest tests/
 
 stages:
   - test
