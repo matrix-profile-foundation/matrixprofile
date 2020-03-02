@@ -61,6 +61,7 @@ jobs:
       install:
         - pip install codecov
         - pip install pytest-cov
+        - pip install -e .
       script:
         - pytest --cov=matrixprofile tests/
         - codecov
