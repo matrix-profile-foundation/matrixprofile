@@ -31,7 +31,7 @@ MatrixProfile
 MatrixProfile is a Python 2 and 3 library, brought to you by the `Matrix Profile Foundation <https://matrixprofile.org>`_, for mining time series data. The Matrix Profile is a novel data structure developed by the `Keogh <https://www.cs.ucr.edu/~eamonn/MatrixProfile.html>`_ and `Mueen <https://www.cs.unm.edu/~mueen/>`_ research groups at UC-Riverside and the University of New Mexico. The goal of this library is to make these algorithms accessible to both the novice and expert.
 |
 |
-In addition to this Python library, the Matrix Profile Foundation, provides implementations in other languages. These languages have a pretty consistent API allowing you to easily switch between them without a huge learning curve.
+In addition to this Python library, the Matrix Profile Foundation, provides implementations in other languages. These languages have a pretty consistent API allowing you to easily switch between them without a huge learning curve. For more information, check out our  `Medium article <https://towardsdatascience.com/how-to-painlessly-analyze-your-time-series-f52dab7ea80d>`_
 
 * `tsmp <https://github.com/matrix-profile-foundation/tsmp>`_ - an R implementation
 * `go-matrixprofile <https://github.com/matrix-profile-foundation/go-matrixprofile>`_ - a Golang implementation
