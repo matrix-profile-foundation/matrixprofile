@@ -70,5 +70,5 @@ setuptools.setup(
         "Topic :: Software Development",
         "Topic :: Scientific/Engineering",
     ],
-    "keywords": "matrix profile time series discord motif analysis data science anomaly pattern",
+    keywords="matrix profile time series discord motif analysis data science anomaly pattern",
 )
