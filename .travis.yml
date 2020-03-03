@@ -70,28 +70,37 @@ jobs:
     - stage: deploy
       name: Build and deploy Linux wheels
       services: docker
-      install: python -m pip install twine cibuildwheel==1.0.0
-      script: python -m cibuildwheel --output-dir wheelhouse
+      install: 
+        - pip install twine
+        - pip install cibuildwheel==1.0.0
+      script:
+        - cibuildwheel --output-dir wheelhouse
       after_success:
-        - python -m twine upload wheelhouse/*.whl --verbose
+        - twine upload wheelhouse/*.whl --verbose
     # Deploy on mac
     - stage: deploy
       name: Build and deploy macOS wheels
       os: osx
       language: shell
-      install: python -m pip install twine cibuildwheel==1.0.0
-      script: python -m cibuildwheel --output-dir wheelhouse
+      install: 
+        - pip install twine
+        - pip install cibuildwheel==1.0.0
+      script:
+        - cibuildwheel --output-dir wheelhouse
       after_success:
-        - python -m twine upload wheelhouse/*.whl --verbose
+        - twine upload wheelhouse/*.whl --verbose
     # Deploy on windows
     - stage: deploy
       name: Build and deploy Windows wheels
       os: windows
       language: shell
-      install: python -m pip install twine cibuildwheel==1.0.0
-      script: python -m cibuildwheel --output-dir wheelhouse
+      install: 
+        - pip install twine
+        - pip install cibuildwheel==1.0.0
+      script:
+        - cibuildwheel --output-dir wheelhouse
       after_success:
-        - python -m twine upload wheelhouse/*.whl --verbose
+        - twine upload wheelhouse/*.whl --verbose
 
 env:
   global:
