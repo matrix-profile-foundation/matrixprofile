@@ -41,7 +41,7 @@ elif sys.version_info.major == 2:
 
 setuptools.setup(
     name="matrixprofile",
-    version="1.0.0",
+    version="1.0.1",
     author="Matrix Profile Foundation",
     author_email="tylerwmarrs@gmail.com",
     description="An open source time series data mining library based on Matrix Profile algorithms.",
