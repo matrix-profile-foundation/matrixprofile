@@ -79,4 +79,4 @@ Please review our `Code of Conduct documentation <http://matrixprofile.docs.matr
 ---------
 Citations
 ---------
-All proper acknowledgements for works of others may be found in our `citaiton documentation <http://matrixprofile.docs.matrixprofile.org/citations.html>`_.
+All proper acknowledgements for works of others may be found in our `citation documentation <http://matrixprofile.docs.matrixprofile.org/citations.html>`_.
