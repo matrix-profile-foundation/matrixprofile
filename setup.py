@@ -18,7 +18,7 @@ extensions = []
 extensions.append(Extension(
     'matrixprofile.algorithms.cympx',
     ['matrixprofile/algorithms/cympx.pyx'],
-    extra_compile_args = ["-O3", "-march=native", "-fopenmp" ],
+    extra_compile_args = ["-O2", "-fopenmp" ],
     extra_link_args = ['-fopenmp'],
     include_dirs=[numpy.get_include()],
 ))
@@ -26,7 +26,7 @@ extensions.append(Extension(
 extensions.append(Extension(
     'matrixprofile.cycore',
     ['matrixprofile/cycore.pyx'],
-    extra_compile_args = ["-O3", "-march=native"],
+    extra_compile_args = ["-O2",],
     include_dirs=[numpy.get_include()],
 ))
 
