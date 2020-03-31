@@ -34,6 +34,7 @@ def create_dirs(path):
     ----------
     path : str
         The path to create directories for.
+
     """
     try:
         os.makedirs(path)
@@ -64,6 +65,7 @@ def fetch_available(category=None):
     ------
     ValueError:
         When a category is provided, but is not found in the listing.
+
     """
     # download the file and load it
     create_dirs(DATA_DIR)
@@ -106,6 +108,7 @@ def get_csv_indices(fp, is_gzip=False):
     -------
     (dt_index, real_indices) :
         The datetime index and real valued indices.
+
     """
     first_line = None
     if is_gzip:
@@ -139,13 +142,15 @@ def load(name):
     -------
     dict :
         The dataset and metadata.
-        {
-            'name': The file name loaded,
-            'category': The category the file came from,
-            'description': A description,
-            'data': The real valued data as an np.ndarray,
-            'datetime': The datetime as an np.ndarray
-        }
+
+        >>> {
+        >>>     'name': The file name loaded,
+        >>>     'category': The category the file came from,
+        >>>     'description': A description,
+        >>>     'data': The real valued data as an np.ndarray,
+        >>>     'datetime': The datetime as an np.ndarray
+        >>> }
+
     """
     datasets = fetch_available()
     

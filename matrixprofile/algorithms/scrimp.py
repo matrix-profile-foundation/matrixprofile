@@ -55,6 +55,7 @@ def calc_distance_profile(X, y, n, m, meanx, sigmax):
     -------
     array_like :
         The distance profile.
+
     """
     # reverse the query
     y = np.flip(y, 0)
@@ -198,6 +199,7 @@ def compute_indices(profile_len, step_size, sample_pct):
     -------
     array_like :
         The indices to compute.
+
     """
     compute_order = np.arange(0, profile_len, step=step_size)
     sample_size = int(np.ceil(len(compute_order) * sample_pct))
@@ -238,26 +240,28 @@ def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
 
     Returns
     -------
-    A dict of key data points computed.
-    {
-        'mp': The matrix profile,
-        'pi': The matrix profile 1NN indices,
-        'rmp': The right matrix profile,
-        'rpi': The right matrix profile 1NN indices,
-        'lmp': The left matrix profile,
-        'lpi': The left matrix profile 1NN indices,
-        'metric': The distance metric computed for the mp,
-        'w': The window size used to compute the matrix profile,
-        'ez': The exclusion zone used,
-        'join': Flag indicating if a similarity join was computed,
-        'sample_pct': Percentage of samples used in computing the MP,
-        'data': {
-            'ts': Time series data,
-            'query': Query data if supplied
-        }
-        'class': "MatrixProfile"
-        'algorithm': "prescrimp"
-    }
+    dict : profile
+        A MatrixProfile data structure.
+        
+        >>> {
+        >>>    'mp': The matrix profile,
+        >>>    'pi': The matrix profile 1NN indices,
+        >>>    'rmp': The right matrix profile,
+        >>>    'rpi': The right matrix profile 1NN indices,
+        >>>    'lmp': The left matrix profile,
+        >>>    'lpi': The left matrix profile 1NN indices,
+        >>>    'metric': The distance metric computed for the mp,
+        >>>    'w': The window size used to compute the matrix profile,
+        >>>    'ez': The exclusion zone used,
+        >>>    'join': Flag indicating if a similarity join was computed,
+        >>>    'sample_pct': Percentage of samples used in computing the MP,
+        >>>    'data': {
+        >>>        'ts': Time series data,
+        >>>        'query': Query data if supplied
+        >>>    }
+        >>>    'class': "MatrixProfile"
+        >>>    'algorithm': "prescrimp"
+        >>>}
 
     Raises
     ------
@@ -268,6 +272,7 @@ def prescrimp(ts, window_size, query=None, step_size=0.25, sample_pct=0.1,
         If query is not a list or np.array.
         If ts or query is not one dimensional.
         If sample_pct is not between 0 and 1.
+
     """
     is_join = core.is_similarity_join(ts, query)
     if not is_join:
@@ -439,26 +444,28 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
 
     Returns
     -------
-    A dict of key data points computed.
-    {
-        'mp': The matrix profile,
-        'pi': The matrix profile 1NN indices,
-        'rmp': The right matrix profile,
-        'rpi': The right matrix profile 1NN indices,
-        'lmp': The left matrix profile,
-        'lpi': The left matrix profile 1NN indices,
-        'metric': The distance metric computed for the mp,
-        'w': The window size used to compute the matrix profile,
-        'ez': The exclusion zone used,
-        'join': Flag indicating if a similarity join was computed,
-        'sample_pct': Percentage of samples used in computing the MP,
-        'data': {
-            'ts': Time series data,
-            'query': Query data if supplied
-        }
-        'class': "MatrixProfile"
-        'algorithm': "scrimp++"
-    }
+    dict : profile
+        A MatrixProfile data structure.
+
+        >>> {
+        >>>    'mp': The matrix profile,
+        >>>    'pi': The matrix profile 1NN indices,
+        >>>    'rmp': The right matrix profile,
+        >>>    'rpi': The right matrix profile 1NN indices,
+        >>>    'lmp': The left matrix profile,
+        >>>    'lpi': The left matrix profile 1NN indices,
+        >>>    'metric': The distance metric computed for the mp,
+        >>>    'w': The window size used to compute the matrix profile,
+        >>>    'ez': The exclusion zone used,
+        >>>    'join': Flag indicating if a similarity join was computed,
+        >>>    'sample_pct': Percentage of samples used in computing the MP,
+        >>>    'data': {
+        >>>        'ts': Time series data,
+        >>>        'query': Query data if supplied
+        >>>    }
+        >>>    'class': "MatrixProfile"
+        >>>    'algorithm': "scrimp++"
+        >>> }
 
     Raises
     ------
@@ -469,6 +476,7 @@ def scrimp_plus_plus(ts, window_size, query=None, step_size=0.25, sample_pct=0.1
         If query is not a list or np.array.
         If ts or query is not one dimensional.
         If sample_pct is not between 0 and 1.
+
     """
     # validate random_state
     if random_state is not None:

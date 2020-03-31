@@ -37,19 +37,20 @@ def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius
 
     Returns
     -------
-    The original input obj with the addition of the "motifs" key. The motifs
-    key consists of the following structure.
+    profile : dict
+        The original input obj with the addition of the "motifs" key. The
+        motifs key consists of the following structure.
 
-    A list of dicts containing motif indices and their corresponding neighbor
-    indices. Note that each index is a (row, col) index corresponding to the
-    pan matrix profile.
+        A list of dicts containing motif indices and their corresponding
+        neighbor indices. Note that each index is a (row, col) index 
+        corresponding to the pan matrix profile.
+        >>> [
+        >>>     {
+        >>>         'motifs': [first_index, second_index],
+        >>>         'neighbors': [index, index, index ...max_neighbors]
+        >>>     }
+        >>> ]
 
-    [
-        {
-            'motifs': [first_index, second_index],
-            'neighbors': [index, index, index ...max_neighbors]
-        }
-    ]
     """
     if not core.is_pmp_obj(profile):
         raise ValueError('Expecting PMP data structure!')
@@ -194,18 +195,20 @@ def mp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=
 
     Returns
     -------
-    The original input obj with the addition of the "motifs" key. The motifs
-    key consists of the following structure.
+    dict : profile
+        The original input obj with the addition of the "motifs" key. The
+        motifs key consists of the following structure.
 
-    A list of dicts containing motif indices and their corresponding neighbor
-    indices.
+        A list of dicts containing motif indices and their corresponding
+        neighbor indices.
 
-    [
-        {
-            'motifs': [first_index, second_index],
-            'neighbors': [index, index, index ...max_neighbors]
-        }
-    ]
+        >>> [
+        >>>    {
+        >>>        'motifs': [first_index, second_index],
+        >>>        'neighbors': [index, index, index ...max_neighbors]
+        >>>    }
+        >>> ]
+
     """
     if not core.is_mp_obj(profile):
         raise ValueError('Expecting MP data structure!')
@@ -331,18 +334,23 @@ def top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
 
     Returns
     -------
-    The original input profile with the addition of the "motifs" key. The motifs
-    key consists of the following structure.
+    dict : profile
+        The original input profile with the addition of the "motifs" key. The
+        motifs key consists of the following structure.
 
-    A list of dicts containing motif indices and their corresponding neighbor
-    indices.
+        A list of dicts containing motif indices and their corresponding
+        neighbor indices.
 
-    [
-        {
-            'motifs': [first_index, second_index],
-            'neighbors': [index, index, index ...max_neighbors]
-        }
-    ]
+        >>> [
+        >>>     {
+        >>>         'motifs': [first_index, second_index],
+        >>>         'neighbors': [index, index, index ...max_neighbors]
+        >>>     }
+        >>> ]
+
+        The index is a single value when a MatrixProfile is passed in otherwise
+        the index contains a row and column index for Pan-MatrixProfile.
+
     """
     if not core.is_mp_or_pmp_obj(profile):
         raise ValueError('Expecting MP or PMP data structure!')

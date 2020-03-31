@@ -20,87 +20,88 @@ from matrixprofile.algorithms.skimp import maximum_subsequence
 
 
 def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
-	n_jobs=1):
-	"""
-	Computes the exact or approximate MatrixProfile based on the sample percent
-	specified. Currently, MPX and SCRIMP++ is used for the exact and
-	approximate algorithms respectively. When multiple windows are passed, the
-	Pan-MatrixProfile is computed and returned. 
+    n_jobs=1):
+    """
+    Computes the exact or approximate MatrixProfile based on the sample percent
+    specified. Currently, MPX and SCRIMP++ is used for the exact and
+    approximate algorithms respectively. When multiple windows are passed, the
+    Pan-MatrixProfile is computed and returned. 
 
-	By default, only passing in a time series (ts), the Pan-MatrixProfile is 
-	computed based on the maximum upper window algorithm with a correlation
-	threshold of 0.98.
+    By default, only passing in a time series (ts), the Pan-MatrixProfile is 
+    computed based on the maximum upper window algorithm with a correlation
+    threshold of 0.98.
 
-	Note
-	----
-	When multiple windows are passed and the Pan-MatrixProfile is computed, the
-	query is ignored!
+    Notes
+    -----
+    When multiple windows are passed and the Pan-MatrixProfile is computed, the
+    query is ignored!
 
-	Parameters
+    Parameters
     ----------
     ts : array_like
         The time series to analyze.
-	windows : int or array_like
+    windows : int, array_like
         The window(s) to compute the MatrixProfile. Note that it may be an int
-		for a single matrix profile computation or an array of ints for
-		computing the pan matrix profile.
-    query : array_like, Optional
+        for a single matrix profile computation or an array of ints for
+        computing the pan matrix profile.
+    query : array_like, optional
         The query to analyze. Note that when computing the PMP the query is
-		ignored!
-	sample_pct : float, default = 1
+        ignored!
+    sample_pct : float, default 1
         A float between 0 and 1 representing how many samples to compute for
         the MP or PMP. When it is 1, the exact algorithm is used.
-	threshold : float, Default 0.98
+    threshold : float, default 0.98
         The correlation coefficient used as the threshold. It should be between
         0 and 1. This is used to compute the upper window size when no 
         window(s) is given.
-    n_jobs : int, Default = 1
+    n_jobs : int, default = 1
         Number of cpu cores to use.
-	
-	Returns
-	-------
-	dict : profile
-		The profile computed.
-	"""
-	result = None
-	multiple_windows = core.is_array_like(windows) and len(windows) > 1
-	no_windows = isinstance(windows, type(None))
-	has_threshold = isinstance(threshold, float)
+    
+    Returns
+    -------
+    dict : profile
+        The profile computed.
 
-	if no_windows and not has_threshold:
-		raise ValueError('compute requires a threshold or window(s) to be set!')
-	
-	if core.is_array_like(windows) and len(windows) == 1:
-		windows = windows[0]
+    """
+    result = None
+    multiple_windows = core.is_array_like(windows) and len(windows) > 1
+    no_windows = isinstance(windows, type(None))
+    has_threshold = isinstance(threshold, float)
 
-	# compute the upper window and pmp
-	if no_windows and has_threshold:
-		profile = maximum_subsequence(ts, threshold, include_pmp=True)
+    if no_windows and not has_threshold:
+        raise ValueError('compute requires a threshold or window(s) to be set!')
+    
+    if core.is_array_like(windows) and len(windows) == 1:
+        windows = windows[0]
 
-		# determine windows to be computed
-		# from 8 in steps of 2 until upper w
-		start = 8
-		windows = range(start, profile['upper_window'] + 1)
+    # compute the upper window and pmp
+    if no_windows and has_threshold:
+        profile = maximum_subsequence(ts, threshold, include_pmp=True)
 
-		# compute the pmp
-		result = skimp(ts, windows=windows, sample_pct=sample_pct,
-						pmp_obj=profile)
+        # determine windows to be computed
+        # from 8 in steps of 2 until upper w
+        start = 8
+        windows = range(start, profile['upper_window'] + 1)
 
-	# compute the pmp
-	elif multiple_windows:
-		if core.is_array_like(query):
-			logger.warn('Computing PMP - query is ignored!')
+        # compute the pmp
+        result = skimp(ts, windows=windows, sample_pct=sample_pct,
+                        pmp_obj=profile)
 
-		result = skimp(ts, windows=windows, sample_pct=1,
-			n_jobs=n_jobs)
-	
-	# compute exact mp
-	elif sample_pct >= 1:
-		result = mpx(ts, windows, query=query, n_jobs=n_jobs)
-	
-	# compute approximate mp
-	else:
-		result = scrimp_plus_plus(ts, windows, query=query, n_jobs=n_jobs,
-			sample_pct=sample_pct)
+    # compute the pmp
+    elif multiple_windows:
+        if core.is_array_like(query):
+            logger.warn('Computing PMP - query is ignored!')
 
-	return result
+        result = skimp(ts, windows=windows, sample_pct=1,
+            n_jobs=n_jobs)
+    
+    # compute exact mp
+    elif sample_pct >= 1:
+        result = mpx(ts, windows, query=query, n_jobs=n_jobs)
+    
+    # compute approximate mp
+    else:
+        result = scrimp_plus_plus(ts, windows, query=query, n_jobs=n_jobs,
+            sample_pct=sample_pct)
+
+    return result

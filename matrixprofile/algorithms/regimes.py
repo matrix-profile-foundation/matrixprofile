@@ -20,15 +20,16 @@ def idealized_arc_curve(width, index):
 
     Parameters
     ----------
-    width: int
-    	Length of the time series to calculate the parabola for.
-    index: int
-    	location to compute the parabola value at.
+    width : int
+        Length of the time series to calculate the parabola for.
+    index : int
+        location to compute the parabola value at.
 
     Returns
     -------
-    float :
-    	The value at index for the parabola.
+    float : y
+        The value at index for the parabola.
+
     """
     height = width / 2
     c = width / 2
@@ -47,15 +48,16 @@ def fluss(profile):
     Parameters
     ----------
     profile : dict
-    	Data structure from a MatrixProfile algorithm.
+        Data structure from a MatrixProfile algorithm.
 
     Returns
     -------
-    array_like :
-    	The corrected arc curve for the profile.
+    array_like : corrected_arc_curve
+        The corrected arc curve for the profile.
+
     """
     if not core.is_mp_obj(profile):
-    	raise ValueError('profile must be a MatrixProfile structure')
+        raise ValueError('profile must be a MatrixProfile structure')
 
     mpi = profile.get('pi')
     w = profile.get('w')
@@ -96,29 +98,31 @@ def extract_regimes(profile, num_regimes=3):
     zone of 5 * window size per the authors. 
 
     The author states:
-    	This exclusion zone is based on an assumption that regimes will have
-    	multiple repetitions; FLUSS is not able to segment single gesture 
-    	patterns.
+        This exclusion zone is based on an assumption that regimes will have
+        multiple repetitions; FLUSS is not able to segment single gesture 
+        patterns.
 
     Parameters
     ----------
     profile : dict
-    	Data structure from a MatrixProfile algorithm.
+        Data structure from a MatrixProfile algorithm.
     num_regimes : int
-    	The desired number of regimes to find.
+        The desired number of regimes to find.
 
     Returns
     -------
-    dict :
-    	The original MatrixProfile object with additional keys containing.
-    	{
-    		'cac': The corrected arc curve
-    		'cac_ez': The exclusion zone used
-    		'regimes': Array of starting indices indicating a regime.
-    	}
+    dict : profile
+        The original MatrixProfile object with additional keys containing.
+
+        >>> {
+        >>> 	'cac': The corrected arc curve
+        >>> 	'cac_ez': The exclusion zone used
+        >>> 	'regimes': Array of starting indices indicating a regime.
+        >>> }
+
     """
     if not core.is_mp_obj(profile):
-    	raise ValueError('profile must be a MatrixProfile structure')
+        raise ValueError('profile must be a MatrixProfile structure')
 
     cac = profile.get('cac')
     window_size = profile.get('w')
@@ -126,8 +130,8 @@ def extract_regimes(profile, num_regimes=3):
 
     # compute the CAC if needed
     if isinstance(cac, type(None)):
-    	cac = fluss(profile)
-    	profile['cac'] = cac
+        cac = fluss(profile)
+        profile['cac'] = cac
 
     regimes = []
     tmp = np.copy(cac)

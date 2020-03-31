@@ -18,8 +18,8 @@ def pmp_top_k_discords(profile, exclusion_zone=None, k=3):
     Computes the top K discords for the given Pan-MatrixProfile. The return
     values is a list of row by col indices.
 
-    Note
-    ----
+    Notes
+    -----
     This algorithm is written to work with Euclidean distance. If you submit
     a PMP of Pearson metrics, then it is first converted to Euclidean.
 
@@ -35,9 +35,12 @@ def pmp_top_k_discords(profile, exclusion_zone=None, k=3):
 
     Returns
     -------
-    A 2D array of indices. The first column corresponds to the row index and 
-    the second column corresponds to the column index of the submitted PMP. It
-    is placed back on the original object passed in as 'discords' key.
+    dict : profile
+        A 2D array of indices. The first column corresponds to the row index
+        and the second column corresponds to the column index of the 
+        submitted PMP. It is placed back on the original object passed in as
+        'discords' key.
+
     """
     if not core.is_pmp_obj(profile):
         raise ValueError('Expecting PMP data structure!')
@@ -100,7 +103,7 @@ def mp_top_k_discords(profile, exclusion_zone=None, k=3):
     Parameters
     ----------
     profile : dict
-        The output of a matrix profile algorithm.
+        The MatrixProfile data structure.
     exclusion_zone : int, Default mp algorithm ez
         Desired number of values to exclude on both sides of the anomaly.
     k : int
@@ -108,10 +111,10 @@ def mp_top_k_discords(profile, exclusion_zone=None, k=3):
 
     Returns
     -------
-    The original input profile with an additional "discords" key containing the
-    following.
+    dict : profile
+        The original input profile with an additional "discords" key containing
+        the a np.ndarray of discord indices.
 
-    List of indices where the discords were found in the matrix profile.
     """
     if not core.is_mp_obj(profile):
         raise ValueError('Expecting MP data structure!')
@@ -164,7 +167,7 @@ def top_k_discords(profile, exclusion_zone=None, k=3):
     Parameters
     ----------
     profile : dict
-        The output of a matrix profile algorithm.
+        A MatrixProfile or Pan-MatrixProfile structure.
     exclusion_zone : int, Default mp algorithm ez
         Desired number of values to exclude on both sides of the anomaly.
     k : int
@@ -172,10 +175,11 @@ def top_k_discords(profile, exclusion_zone=None, k=3):
 
     Returns
     -------
-    The original input profile with an additional "discords" key containing the
-    following.
+    dict : profile
+        The original profile object with an additional 'discords' key. Take
+        note that a MatrixProfile discord contains a single value while the
+        Pan-MatrixProfile contains a row and column index.
 
-    List of indices where the discords were found in the matrix profile.
     """
     if not core.is_mp_or_pmp_obj(profile):
         raise ValueError('Expecting MP or PMP data structure!')

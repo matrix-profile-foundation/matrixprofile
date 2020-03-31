@@ -18,8 +18,9 @@ def empty_mp():
 
     Returns
     -------
-    dict :
+    dict : profile
         An empty MatrixProfile data structure.
+
     """
     return {
         'mp': None,
@@ -55,7 +56,7 @@ def pick_mp(profile, window):
     
     Returns
     -------
-    dict :
+    dict : profile
         A MatrixProfile data structure.
     
     Raises
@@ -64,6 +65,7 @@ def pick_mp(profile, window):
         If profile is not a Pan-MatrixProfile data structure.
         If window is not an integer.
         If desired MatrixProfile is not found based on window.
+
     """
 
     if not core.is_pmp_obj(profile):
