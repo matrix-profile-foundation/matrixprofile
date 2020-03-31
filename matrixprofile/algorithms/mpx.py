@@ -37,26 +37,29 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=1):
     
     Returns
     -------
-    A dict of key data points computed.
-    {
-        'mp': The matrix profile,
-        'pi': The matrix profile 1NN indices,
-        'rmp': The right matrix profile,
-        'rpi': The right matrix profile 1NN indices,
-        'lmp': The left matrix profile,
-        'lpi': The left matrix profile 1NN indices,
-        'metric': The distance metric computed for the mp,
-        'w': The window size used to compute the matrix profile,
-        'ez': The exclusion zone used,
-        'join': Flag indicating if a similarity join was computed,
-        'sample_pct': Percentage of samples used in computing the MP,
-        'data': {
-            'ts': Time series data,
-            'query': Query data if supplied
-        }
-        'class': "MatrixProfile"
-        'algorithm': "mpx"
-    }
+    dict : profile
+        A MatrixProfile data structure.
+        
+        >>> {
+        >>>     'mp': The matrix profile,
+        >>>     'pi': The matrix profile 1NN indices,
+        >>>     'rmp': The right matrix profile,
+        >>>     'rpi': The right matrix profile 1NN indices,
+        >>>     'lmp': The left matrix profile,
+        >>>     'lpi': The left matrix profile 1NN indices,
+        >>>     'metric': The distance metric computed for the mp,
+        >>>     'w': The window size used to compute the matrix profile,
+        >>>     'ez': The exclusion zone used,
+        >>>     'join': Flag indicating if a similarity join was computed,
+        >>>     'sample_pct': Percentage of samples used in computing the MP,
+        >>>     'data': {
+        >>>         'ts': Time series data,
+        >>>         'query': Query data if supplied
+        >>>     }
+        >>>     'class': "MatrixProfile"
+        >>>     'algorithm': "mpx"
+        >>> }
+
     """
     ts = core.to_np_array(ts).astype('d')
     n_jobs = core.valid_n_jobs(n_jobs)

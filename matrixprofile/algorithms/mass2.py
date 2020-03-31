@@ -27,17 +27,19 @@ def mass2(ts, query, extras=False):
 
     Returns
     -------
-    An array of distances np.array() or dict with extras.
+    np.array, dict : distance_profile
+        An array of distances np.array() or dict with extras.
 
-    Extras:
-    {
-        'distance_profile': The distance profile,
-        'product': The FFT product between ts and query,
-        'data_mean': The moving average of the ts over len(query),
-        'query_mean': The mean of the query,
-        'data_std': The moving std. of the ts over len(query),
-        'query_std': The std. of the query
-    }
+        With extras:
+        
+        >>> {
+        >>>     'distance_profile': The distance profile,
+        >>>     'product': The FFT product between ts and query,
+        >>>     'data_mean': The moving average of the ts over len(query),
+        >>>     'query_mean': The mean of the query,
+        >>>     'data_std': The moving std. of the ts over len(query),
+        >>>     'query_std': The std. of the query
+        >>> }
 
     Raises
     ------
@@ -45,6 +47,7 @@ def mass2(ts, query, extras=False):
         If ts is not a list or np.array.
         If query is not a list or np.array.
         If ts or query is not one dimensional.
+
     """
     ts, query = core.precheck_series_and_query_1d(ts, query)
 

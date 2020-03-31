@@ -38,6 +38,7 @@ def muinvn(double[:] a, unsigned int w):
     -------
     (array_like, array_like) :
         The (mu, sigma) arrays respectively.
+
     """
     cdef Py_ssize_t i, j
     cdef Py_ssize_t n = a.shape[0]
@@ -114,6 +115,7 @@ def moving_avg_std(double[:] a, unsigned int w):
     -------
     (array_like, array_like) :
         The (mu, sigma) arrays respectively.
+
     """
     cdef Py_ssize_t i
     cdef Py_ssize_t n = a.shape[0]

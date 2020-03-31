@@ -52,7 +52,9 @@ def is_visualizable(obj):
 
     Returns
     -------
-    A list of matplotlib figures.
+    list : figures
+        A list of matplotlib figures.
+
     """
     return core.is_mp_obj(obj) or core.is_pmp_obj(obj) or core.is_stats_obj(obj)
 
@@ -71,7 +73,9 @@ def visualize(profile):
 
     Returns
     -------
-    A list of matplotlib figures.
+    list : figures
+        A list of matplotlib figures.
+
     """
     figures = []
 
@@ -117,7 +121,9 @@ def plot_stats(profile):
 
     Returns
     -------
-    The matplotlib figure object.
+    matplotlib.Figure : figure
+        The matplotlib figure object.
+
     """
     fig, ax = plt.subplots(2, 1, figsize=(15, 7))
     ts = profile.get('ts')
@@ -144,7 +150,9 @@ def plot_pmp(profile):
 
     Returns
     -------
-    The matplotlib figure object.
+    matplotlib.Figure : figure
+        The matplotlib figure object.
+
     """
     pmp = profile.get('pmp', None)
     fig, ax = plt.subplots(1, 1, figsize=(10, 10))
@@ -175,7 +183,9 @@ def plot_mp(profile):
 
     Returns
     -------
-    The matplotlib figure object.
+    matplotlib.Figure : figure
+        The matplotlib figure object.
+
     """
     plot_count = 0
     data = profile.get('data', None)
@@ -259,7 +269,9 @@ def plot_discords_mp(profile):
 
     Returns
     -------
-    The matplotlib figure object.
+    matplotlib.Figure : figure
+        The matplotlib figure object.
+
     """
     mp = profile['mp']
     w = profile['w']
@@ -310,7 +322,9 @@ def plot_discords_pmp(profile):
 
     Returns
     -------
-    The matplotlib figure object.
+    matplotlib.Figure : figure
+        The matplotlib figure object.
+
     """
     discord_figures = []
 
@@ -368,7 +382,9 @@ def plot_motifs_mp(profile):
 
     Returns
     -------
-    A list of matplotlib figure objects.
+    list : figures
+        A list of matplotlib figure objects.
+
     """
     figures = []
 
@@ -443,8 +459,9 @@ def plot_motifs_pmp(profile):
 
     Returns
     -------
-    list :
+    list : figures
         A list of matplotlib figure objects.
+
     """
     motif_figures = []
     motifs = profile.get('motifs')

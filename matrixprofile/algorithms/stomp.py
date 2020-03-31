@@ -60,16 +60,19 @@ def _batch_compute(args):
 
     Returns
     -------
-    The matrix profile, left and right matrix profiles and their respective
-    profile indices.
-    {
-        'mp': The matrix profile,
-        'pi': The matrix profile 1NN indices,
-        'rmp': The right matrix profile,
-        'rpi': The right matrix profile 1NN indices,
-        'lmp': The left matrix profile,
-        'lpi': The left matrix profile 1NN indices,
-    }
+    dict : profile
+        The matrix profile, left and right matrix profiles and their respective
+        profile indices.
+
+        >>> {
+        >>>     'mp': The matrix profile,
+        >>>     'pi': The matrix profile 1NN indices,
+        >>>     'rmp': The right matrix profile,
+        >>>     'rpi': The right matrix profile 1NN indices,
+        >>>     'lmp': The left matrix profile,
+        >>>     'lpi': The left matrix profile 1NN indices,
+        >>> }
+
     """
     batch_start, batch_end, ts, query, window_size, data_length, \
     profile_length, exclusion_zone, is_join, data_mu, data_sig, \
@@ -205,26 +208,28 @@ def stomp(ts, window_size, query=None, n_jobs=1):
 
     Returns
     -------
-    A dict of key data points computed.
-    {
-        'mp': The matrix profile,
-        'pi': The matrix profile 1NN indices,
-        'rmp': The right matrix profile,
-        'rpi': The right matrix profile 1NN indices,
-        'lmp': The left matrix profile,
-        'lpi': The left matrix profile 1NN indices,
-        'metric': The distance metric computed for the mp,
-        'w': The window size used to compute the matrix profile,
-        'ez': The exclusion zone used,
-        'join': Flag indicating if a similarity join was computed,
-        'sample_pct': Percentage of samples used in computing the MP,
-        'data': {
-            'ts': Time series data,
-            'query': Query data if supplied
-        }
-        'class': "MatrixProfile"
-        'algorithm': "stomp_parallel"
-    }
+    dict : profile
+        A MatrixProfile data structure.
+        
+        >>> {
+        >>>     'mp': The matrix profile,
+        >>>     'pi': The matrix profile 1NN indices,
+        >>>     'rmp': The right matrix profile,
+        >>>     'rpi': The right matrix profile 1NN indices,
+        >>>     'lmp': The left matrix profile,
+        >>>     'lpi': The left matrix profile 1NN indices,
+        >>>     'metric': The distance metric computed for the mp,
+        >>>     'w': The window size used to compute the matrix profile,
+        >>>     'ez': The exclusion zone used,
+        >>>     'join': Flag indicating if a similarity join was computed,
+        >>>     'sample_pct': Percentage of samples used in computing the MP,
+        >>>     'data': {
+        >>>         'ts': Time series data,
+        >>>         'query': Query data if supplied
+        >>>     }
+        >>>     'class': "MatrixProfile"
+        >>>     'algorithm': "stomp_parallel"
+        >>> }
 
     Raises
     ------
@@ -234,6 +239,7 @@ def stomp(ts, window_size, query=None, n_jobs=1):
         If ts is not a list or np.array.
         If query is not a list or np.array.
         If ts or query is not one dimensional.
+
     """
     is_join = core.is_similarity_join(ts, query)
     if not is_join:

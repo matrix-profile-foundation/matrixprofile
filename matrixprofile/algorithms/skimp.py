@@ -55,6 +55,7 @@ def binary_split(n):
     -------
     array_like :
         The indices to iterate to perform BFS.
+
     """
     # having length of 1 causes infinite loop and it just doesn't really
     # make much sense.
@@ -127,19 +128,21 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
 
     Returns
     -------
-    A dict with the following:
-    {
-        'pmp': the pan matrix profile as a 2D array,
-        'pmpi': the pmp indices,
-        'data': {
-            'ts': time series used,
-        },
-        'windows': the windows used to compute the pmp,
-        'sample_pct': the sample percent used,
-        'metric':The distance metric computed for the pmp,
-        'algorithm': the algorithm used,
-        'class': PMP
-    }
+    dict : profile
+        A Pan-MatrixProfile data structure.
+        
+        >>> {
+        >>>     'pmp': the pan matrix profile as a 2D array,
+        >>>     'pmpi': the pmp indices,
+        >>>     'data': {
+        >>>         'ts': time series used,
+        >>>     },
+        >>>     'windows': the windows used to compute the pmp,
+        >>>     'sample_pct': the sample percent used,
+        >>>     'metric':The distance metric computed for the pmp,
+        >>>     'algorithm': the algorithm used,
+        >>>     'class': PMP
+        >>> }
 
     Raises
     ------
@@ -149,6 +152,7 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
         3. show_progress is not a boolean.
         4. cross_correlation is not a boolean.
         5. sample_pct is not between 0 and 1.
+
     """
     ts = core.to_np_array(ts)
     n = len(ts)
@@ -265,19 +269,20 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
     
     Returns
     -------
-    With include_pmp=False (default)
-    int :
-        The maximum subsequence length based on the threshold provided.
-    
-    With include_pmp=True
-    dict :
-        A dict containing the upper window, windows and pmp.
-    {
-        'upper_window': The upper window,
-        'windows': array_like windows used to compute the pmp,
-        'pmp': the pan matrix profile as a 2D array,
-        'pmpi': the pmp indices,
-    }
+    obj :
+        With include_pmp=False (default)
+        int : The maximum subsequence length based on the threshold provided.
+        
+        With include_pmp=True
+        dict : A dict containing the upper window, windows and pmp.
+
+        >>> {
+        >>>     'upper_window': The upper window,
+        >>>     'windows': array_like windows used to compute the pmp,
+        >>>     'pmp': the pan matrix profile as a 2D array,
+        >>>     'pmpi': the pmp indices,
+        >>> }
+
     """
     windows = np.array([], dtype='int')
     pearson = np.array([], dtype='d')

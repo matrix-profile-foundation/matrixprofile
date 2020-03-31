@@ -39,8 +39,9 @@ def mpdist(ts, ts_b, w, n_jobs=1):
     
     Returns
     -------
-    float :
+    float : mpdist
         The MPDist.
+
     """
     ts = core.to_np_array(ts).astype('d')
     ts_b = core.to_np_array(ts_b).astype('d')
@@ -82,8 +83,9 @@ def mass_distance_matrix(ts, query, w):
     
     Returns
     -------
-    array_like :
+    array_like : dist_matrix
         The MASS distance matrix.
+
     """
     subseq_num = len(query) - w + 1
     distances = []
@@ -110,8 +112,9 @@ def calculate_mpdist(profile, threshold, data_length):
 
     Returns
     -------
-    float :
+    float : mpdist
         The MPDist.
+
     """
     dist_loc = int(np.ceil(threshold * data_length))
     profile_sorted = np.sort(profile)
@@ -144,8 +147,9 @@ def mpdist_vector(ts, ts_b, w):
     
     Returns
     -------
-    array_like :
+    array_like : mpdist_vector
         The MPDist vector.
+
     """
     matrix = mass_distance_matrix(ts, ts_b, w)
     rows, cols = matrix.shape

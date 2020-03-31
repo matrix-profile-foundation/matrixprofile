@@ -48,6 +48,7 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
     -------
     (array_like, array_like) :
         The matrix profile (distance profile, profile index).
+
     """
     cdef int i, j, diag, offset
     cdef int n = ts.shape[0]
@@ -142,6 +143,7 @@ cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, int cross_correlatio
     -------
     (array_like, array_like, array_like, array_like) :
         The matrix profile (distance profile, profile index, dist..b, prof..b).
+
     """
     cdef int i, j, k, mx
     cdef int n = ts.shape[0]

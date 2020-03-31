@@ -49,6 +49,7 @@ def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
     tuple : (profile, figures)
         A tuple with the first item being the profile and the second being an
         array of matplotlib figures.
+
     """
     ts = core.to_np_array(ts)
 
@@ -103,6 +104,7 @@ def analyze_mp_exact(ts, query, window, n_jobs=-1):
     tuple : (profile, figures)
         A tuple with the first item being the profile and the second being an
         array of matplotlib figures.
+
     """
     ts = core.to_np_array(ts)
 
@@ -146,6 +148,7 @@ def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=-1):
     tuple : (profile, figures)
         A tuple with the first item being the profile and the second being an
         array of matplotlib figures.
+
     """
     ts = core.to_np_array(ts)
 
@@ -192,12 +195,12 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs
         The time series to analyze.
     query : array_like, Optional
         The query to analyze. Note that when computing the PMP the query is
-		ignored!
+        ignored!
     windows : int or array_like, Optional
         The window(s) to compute the MatrixProfile. Note that it may be an int
-		for a single matrix profile computation or an array of ints for
-		computing the pan matrix profile.
-	sample_pct : float, default = 1
+        for a single matrix profile computation or an array of ints for
+        computing the pan matrix profile.
+    sample_pct : float, default = 1
         A float between 0 and 1 representing how many samples to compute for
         the MP or PMP. When it is 1, the exact algorithm is used.
     threshold : float, Default 0.98
@@ -211,6 +214,7 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs
     -------
     tuple : (profile, figures)
         The appropriate PMP or MP profile object and associated figures.
+
     """
     result = None
 
