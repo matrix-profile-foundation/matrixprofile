@@ -27,6 +27,7 @@ git checkout master
 git rm -rf .
 git clean -fxd
 echo "matrixprofile.docs.matrixprofile.org" > CNAME
+touch .nojekyll
 cp -R "${HTMLDIR}"/* .
 git add .
 git commit -am "${MSG}"
