@@ -60,7 +60,7 @@ def apply_av(profile, av="default", custom_av=None):
         profile['av_cmp'] = av
     elif av == "custom":
         try:
-            profile['av'] = to_np_array(custom_av)
+            profile['av'] = core.to_np_array(custom_av)
         except ValueError:
             raise ValueError('apply_av expects custom_av to be array-like')
 
@@ -106,10 +106,12 @@ def make_default_av(ts, window):
         If window is not an integer.
 
     """
-    if not is_array_like(ts):
+    try:
+        ts = core.to_np_array(ts)
+    except ValueError:
         raise ValueError('make_default_av expects ts to be array-like')
 
-    if not is_one_dimensional(ts):
+    if not core.is_one_dimensional(ts):
         raise ValueError('make_default_av expects ts to be one-dimensional')
 
     if not isinstance(window, int):
@@ -145,11 +147,13 @@ def make_complexity_av(ts, window):
         If window is not an integer.
 
     """
-    if not is_array_like(ts):
+    try:
+        ts = core.to_np_array(ts)
+    except ValueError:
         raise ValueError('make_default_av expects ts to be array-like')
 
-    if not is_one_dimensional(ts):
-        raise ValueError('make_default_av expects ts to be one-dimensional')
+    if not core.is_one_dimensional(ts):
+        raise ValueError('make_default_av expects ts to be array-like')
 
     if not isinstance(window, int):
         raise ValueError('make_default_av expects window to be an integer')
@@ -195,10 +199,12 @@ def make_meanstd_av(ts, window):
         If window is not an integer.
 
     """
-    if not is_array_like(ts):
+    try:
+        ts = core.to_np_array(ts)
+    except ValueError:
         raise ValueError('make_default_av expects ts to be array-like')
 
-    if not is_one_dimensional(ts):
+    if not core.is_one_dimensional(ts):
         raise ValueError('make_default_av expects ts to be one-dimensional')
 
     if not isinstance(window, int):
@@ -240,10 +246,12 @@ def make_clipping_av(ts, window):
         If window is not an integer.
 
     """
-    if not is_array_like(ts):
+    try:
+        ts = core.to_np_array(ts)
+    except ValueError:
         raise ValueError('make_default_av expects ts to be array-like')
 
-    if not is_one_dimensional(ts):
+    if not core.is_one_dimensional(ts):
         raise ValueError('make_default_av expects ts to be one-dimensional')
 
     if not isinstance(window, int):
