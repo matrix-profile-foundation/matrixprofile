@@ -52,7 +52,7 @@ def apply_av(profile, av="default", custom_av=None):
     elif av == "complexity":
         profile['av'] = make_complexity_av(profile['data']['ts'], profile['w'])
         profile['av_cmp'] = av
-    elif av == "mean_std":
+    elif av == "meanstd":
         profile['av'] = make_meanstd_av(profile['data']['ts'], profile['w'])
         profile['av_cmp'] = av
     elif av == "clipping":
@@ -64,7 +64,6 @@ def apply_av(profile, av="default", custom_av=None):
         except ValueError:
             raise ValueError('apply_av expects custom_av to be array-like')
 
-        profile['av'] = custom_av
         profile['av_cmp'] = av
     else:
         raise ValueError("av parameter is invalid")
@@ -150,13 +149,13 @@ def make_complexity_av(ts, window):
     try:
         ts = core.to_np_array(ts)
     except ValueError:
-        raise ValueError('make_default_av expects ts to be array-like')
+        raise ValueError('make_complexity_av expects ts to be array-like')
 
     if not core.is_one_dimensional(ts):
-        raise ValueError('make_default_av expects ts to be array-like')
+        raise ValueError('make_complexity_av expects ts to be array-like')
 
     if not isinstance(window, int):
-        raise ValueError('make_default_av expects window to be an integer')
+        raise ValueError('make_complexity_av expects window to be an integer')
 
     av = np.zeros(len(ts) - window + 1)
 
@@ -202,13 +201,13 @@ def make_meanstd_av(ts, window):
     try:
         ts = core.to_np_array(ts)
     except ValueError:
-        raise ValueError('make_default_av expects ts to be array-like')
+        raise ValueError('make_meanstd_av expects ts to be array-like')
 
     if not core.is_one_dimensional(ts):
-        raise ValueError('make_default_av expects ts to be one-dimensional')
+        raise ValueError('make_meanstd_av expects ts to be one-dimensional')
 
     if not isinstance(window, int):
-        raise ValueError('make_default_av expects window to be an integer')
+        raise ValueError('make_meanstd_av expects window to be an integer')
 
     av = np.zeros(len(ts) - window + 1)
 
@@ -249,13 +248,13 @@ def make_clipping_av(ts, window):
     try:
         ts = core.to_np_array(ts)
     except ValueError:
-        raise ValueError('make_default_av expects ts to be array-like')
+        raise ValueError('make_clipping_av expects ts to be array-like')
 
     if not core.is_one_dimensional(ts):
-        raise ValueError('make_default_av expects ts to be one-dimensional')
+        raise ValueError('make_clipping_av expects ts to be one-dimensional')
 
     if not isinstance(window, int):
-        raise ValueError('make_default_av expects window to be an integer')
+        raise ValueError('make_clipping_av expects window to be an integer')
 
     av = np.zeros(len(ts) - window + 1)
 
