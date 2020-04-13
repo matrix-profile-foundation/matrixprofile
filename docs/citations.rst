@@ -7,6 +7,8 @@ Matrix Profile I: All Pairs Similarity Joins for Time Series: A Unifying View th
 
 Matrix Profile II: Exploiting a Novel Algorithm and GPUs to break the one Hundred Million Barrier for Time Series Motifs and Joins.  Yan Zhu, Zachary Zimmerman, Nader Shakibay Senobari, Chin-Chia Michael Yeh, Gareth Funning, Abdullah Mueen, Philip Berisk and Eamonn Keogh (2016). EEE ICDM 2016.
 
+Matrix Profile V: A Generic Technique to Incorporate Domain Knowledge into Motif Discovery. Hoang Anh Dau and Eamonn Keogh. KDD'17, Halifax, Canada.
+
 Matrix Profile VIII: Domain Agnostic Online Semantic Segmentation at Superhuman Performance Levels. Shaghayegh Gharghabi, Yifei Ding, Chin-Chia Michael Yeh, Kaveh Kamgar, Liudmila Ulanova, and Eamonn Keogh. ICDM 2017.
 
 Matrix Proﬁle XI: SCRIMP++: Time Series Motif Discovery at Interactive Speed. Yan Zhu, Chin-Chia Michael Yeh, Zachary Zimmerman, Kaveh Kamgar and Eamonn Keogh, ICDM 2018.
