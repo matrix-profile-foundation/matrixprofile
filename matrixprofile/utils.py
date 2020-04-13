@@ -345,7 +345,7 @@ def pick_mp(profile, window):
 
     # find the window index
     windows = profile.get('windows')
-    window_index = np.argwindowhere(windows == window)
+    window_index = np.argwhere(windows == window)
 
     if len(window_index) < 1:
         raise RuntimeError('Unable to find window {} in the provided PMP!'.format(window))
