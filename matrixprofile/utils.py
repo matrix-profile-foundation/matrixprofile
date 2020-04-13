@@ -153,7 +153,7 @@ def make_complexity_av(ts, window):
         raise ValueError('make_default_av expects ts to be array-like')
 
     if not core.is_one_dimensional(ts):
-        raise ValueError('make_default_av expects ts to be one-dimensional')
+        raise ValueError('make_default_av expects ts to be array-like')
 
     if not isinstance(window, int):
         raise ValueError('make_default_av expects window to be an integer')

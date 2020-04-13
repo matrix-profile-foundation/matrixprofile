@@ -65,7 +65,7 @@ def test_meanstd():
 
         np.testing.assert_almost_equal(av, expect[i])
 
-
+        
 def test_clipping():
     ts_arr = [[3., 3., 3., 3., 3., 3.],
               [0., 1., 2., 3., 4., 5.],
@@ -94,3 +94,4 @@ def test_apply_av():
     profile = utils.apply_av(profile, "custom", av)
 
     np.testing.assert_almost_equal(profile['mp'], expect)
+
