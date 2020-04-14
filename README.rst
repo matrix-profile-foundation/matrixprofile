@@ -20,6 +20,9 @@
 .. image:: https://img.shields.io/twitter/follow/matrixprofile.svg?style=social
     :target: https://twitter.com/matrixprofile
     :alt: Twitter
+.. image:: https://img.shields.io/discord/589321741277462559?logo=discord
+    :target: https://discordapp.com/invite/sBhDNXT
+    :alt: Discord
 
 |
 
