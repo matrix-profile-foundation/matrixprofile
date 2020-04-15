@@ -213,24 +213,22 @@ def profile_to_proto(profile):
     if not isinstance(cmp, type(None)):
         rows, cols, data = get_matrix_attributes(cmp)
 
-        if rows and cols and core.is_array_like(data):
-            output.cmp.rows = rows
-            output.cmp.cols = cols
-            output.cmp.data.extend(data)
+        output.cmp.rows = rows
+        output.cmp.cols = cols
+        output.cmp.data.extend(data)
 
     # add av
     av = profile.get('av')
     if not isinstance(av, type(None)):
         rows, cols, data = get_matrix_attributes(av)
 
-        if rows and cols and core.is_array_like(data):
-            output.av.rows = rows
-            output.av.cols = cols
-            output.av.data.extend(data)
+        output.av.rows = rows
+        output.av.cols = cols
+        output.av.data.extend(data)
 
     # add av_type
     av_type = profile.get('av_type')
-    if not isinstance(av_type, type(None)) and isinstance(av_type, str):
+    if not isinstance(av_type, type(None)):
         output.av_type = av_type
 
     # add the matrix profile specific attributes
@@ -472,7 +470,7 @@ def from_mpf(profile):
     if not isinstance(obj.av, type(None)) and len(obj.av.data) > 0:
         out['av'] = from_proto_to_array(obj.av)
 
-    if not isinstance(obj.av_type, type(None)) and len(obj.av_type) > 0:
+    if not isinstance(obj.av_type, type(None)):
         out['av_type'] = obj.av_type
 
     return out
