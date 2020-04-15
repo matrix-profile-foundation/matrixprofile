@@ -466,13 +466,13 @@ def from_mpf(profile):
         out['motifs'] = motifs_from_proto(
             obj.motifs, is_one_dimensional=is_one_dimensional)
 
-    if not isinstance(obj.cmp, type(None)) and len(obj.cmp) > 0:
+    if not isinstance(obj.cmp, type(None)):
         out['cmp'] = from_proto_to_array(obj.cmp)
 
-    if not isinstance(obj.av, type(None)) and len(obj.av) > 0:
+    if not isinstance(obj.av, type(None)):
         out['av'] = from_proto_to_array(obj.av)
 
-    if not isinstance(obj.av_type, type(None)) and isinstance(obj.av_type, str):
+    if not isinstance(obj.av_type, type(None)):
         out['av_type'] = obj.av_type
 
     return out
