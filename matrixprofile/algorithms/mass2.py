@@ -11,7 +11,7 @@ import numpy as np
 
 from matrixprofile import core
 
-def mass2(ts, query, extras=False):
+def mass2(ts, query, extras=False, threshold=1e-10):
     """
     Compute the distance profile for the given query over the given time 
     series.
@@ -72,8 +72,15 @@ def mass2(ts, query, extras=False):
     Z = X * Y
     z = np.fft.ifft(Z)
     
-    dist = 2 * (m - (z[m - 1:n] - m * meanx[m - 1:n] * meany) / 
-                    (sigmax[m - 1:n] * sigmay))
+    # do not allow divide by zero
+    tmp = (sigmax[m - 1:n] * sigmay)
+    tmp[tmp == 0] = 1e-12
+
+    dist = 2 * (m - (z[m - 1:n] - m * meanx[m - 1:n] * meany) / tmp)
+
+    # fix to handle constant values
+    dist[sigmax[m - 1:n] < threshold] = m
+    dist[(sigmax[m - 1:n] < threshold) & (sigmay < threshold)] = 0
     dist = np.sqrt(dist)
     
     if extras:
