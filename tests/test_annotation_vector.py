@@ -15,14 +15,15 @@ import pytest
 
 import numpy as np
 
-from matrixprofile import transform
+#from matrixprofile import transform
+import transform
 from matrixprofile import compute
 from matrixprofile import io
 
 import matrixprofile
 
 
-def test_av_io():
+def test_av_io_json():
     ts = np.random.uniform(size=1024)
     w = 32
 
@@ -31,6 +32,36 @@ def test_av_io():
 
     out = os.path.join(tempfile.gettempdir(), 'mp.json')
     io.to_disk(profile, out)
+
+    dprofile = io.from_disk(out)
+
+    keys = set(profile.keys())
+    keysb = set(dprofile.keys())
+
+    assert(keys == keysb)
+
+    # check values same
+    for k, v in profile.items():
+        if isinstance(v, np.ndarray):
+            np.testing.assert_equal(v, dprofile[k])
+        elif k == 'data':
+            pass
+        else:
+            assert(v == dprofile[k])
+
+    np.testing.assert_equal(profile['data']['ts'], dprofile['data']['ts'])
+    np.testing.assert_equal(profile['data']['query'], dprofile['data']['query'])
+
+
+def test_av_io_MPF():
+    ts = np.random.uniform(size=1024)
+    w = 32
+
+    profile = compute(ts, w)
+    profile = transform.apply_av(profile, "default")
+
+    out = os.path.join(tempfile.gettempdir(), 'mp.mpf')
+    io.to_disk(profile, out, format='mpf')
 
     dprofile = io.from_disk(out)
 
