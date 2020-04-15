@@ -5,6 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 range = getattr(__builtins__, 'xrange', range)
+str = getattr(__builtins__, 'basestring', str)
 # end of py2 compatability boilerplate
 
 
