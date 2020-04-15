@@ -210,7 +210,6 @@ def profile_to_proto(profile):
 
     # add cmp
     cmp = profile.get('cmp')
-    breakpoint()
     if not isinstance(cmp, type(None)):
         rows, cols, data = get_matrix_attributes(cmp)
 
