@@ -17,7 +17,7 @@ from matrixprofile.algorithms.cympx import mpx_ab_parallel as cympx_ab_parallel
 from matrixprofile.algorithms.mass2 import mass2
 
 
-def mpdist(ts, ts_b, w, n_jobs=1):
+def mpdist(ts, ts_b, w, threshold=0.05, n_jobs=1):
     """
     Computes the MPDist between the two series ts and ts_b. For more details
     refer to the paper:
@@ -34,6 +34,11 @@ def mpdist(ts, ts_b, w, n_jobs=1):
         The time series to compare against.
     w : int
         The window size.
+    threshold : float, Default 0.05
+        The percentile in which the distance is taken from. By default it is
+        set to 0.05 based on empircal research results. Generally, you should
+        not change this unless you know what you are doing! This value must be
+        a float greater than 0 and less than 1.
     n_jobs : int, Default = 1
         Number of cpu cores to use.
     
@@ -53,6 +58,10 @@ def mpdist(ts, ts_b, w, n_jobs=1):
     if not core.is_one_dimensional(ts_b):
         raise ValueError('ts_b must be one dimensional!')
 
+    if not isinstance(threshold, float) or threshold <= 0 or threshold >= 1:
+        raise ValueError('threshold must be a float greater than 0 and less'\
+            ' than 1')
+
     mp, mpi, mpb, mpib = cympx_ab_parallel(ts, ts_b, w, 0, n_jobs)
 
     mp_abba = np.append(mp, mpb)
@@ -61,7 +70,8 @@ def mpdist(ts, ts_b, w, n_jobs=1):
 
     distance = np.inf
     if len(abba_sorted) > 0:
-        idx = np.min([len(abba_sorted) - 1, int(np.ceil(0.05 * data_len)) - 1])
+        upper_idx = int(np.ceil(threshold * data_len)) - 1
+        idx = np.min([len(abba_sorted) - 1, upper_idx])
         distance = abba_sorted[idx]
 
     return distance

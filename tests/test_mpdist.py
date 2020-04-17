@@ -74,3 +74,45 @@ def test_against_matlab_parallel():
     actual = mpdist(ts, tsb, w, n_jobs=-1)
 
     np.testing.assert_almost_equal(actual, desired)
+
+
+def test_ts_not_one_dimensional():
+    ts = np.array([[1, 1], [2, 2]])
+    tsb = np.arange(10)
+    w = 32
+
+    with pytest.raises(ValueError) as excinfo:
+        mpdist(ts, tsb, w)
+        assert('ts must be one dimensional!' == str(excinfo.value))
+
+
+def test_tsb_not_one_dimensional():
+    tsb = np.array([[1, 1], [2, 2]])
+    ts = np.arange(10)
+    w = 32
+
+    with pytest.raises(ValueError) as excinfo:
+        mpdist(ts, tsb, w)
+        assert('ts_b must be one dimensional!' == str(excinfo.value))
+
+
+def test_invalid_threshold():
+    ts = np.arange(100)
+    tsb = np.arange(100)
+    w = 32
+    threshold = -1
+    error = 'threshold must be a float greater than 0 and less than 1'
+
+    with pytest.raises(ValueError) as excinfo:
+        mpdist(ts, tsb, w, threshold=threshold)
+        assert(error == str(excinfo.value))
+
+    threshold = 'str'
+    with pytest.raises(ValueError) as excinfo:
+        mpdist(ts, tsb, w, threshold=threshold)
+        assert(error == str(excinfo.value))
+
+    threshold = 1
+    with pytest.raises(ValueError) as excinfo:
+        mpdist(ts, tsb, w, threshold=threshold)
+        assert(error == str(excinfo.value))
