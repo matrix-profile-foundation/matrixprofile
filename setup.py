@@ -54,7 +54,7 @@ setuptools.setup(
     },
     packages = setuptools.find_packages(),
     setup_requires=['cython>=0.x', 'wheel'],
-    install_requires=['numpy>=1.16.2', matplot, 'protobuf==3.11.2'],
+    install_requires=['numpy>=1.16.2', matplot, 'protobuf==3.11.2', 'scipy==1.2.3'],
     ext_modules=cythonize(extensions),
     include_dirs=[numpy.get_include()],
     classifiers=[
