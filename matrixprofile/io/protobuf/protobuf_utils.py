@@ -5,7 +5,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 range = getattr(__builtins__, 'xrange', range)
-str = getattr(__builtins__, 'basestring', str)
 # end of py2 compatability boilerplate
 
 
@@ -229,7 +228,7 @@ def profile_to_proto(profile):
 
     # add av_type
     av_type = profile.get('av_type')
-    if not isinstance(av_type, type(None)) and isinstance(av_type, str):
+    if not isinstance(av_type, type(None)):
         output.av_type = av_type
 
     # add the matrix profile specific attributes
@@ -471,7 +470,7 @@ def from_mpf(profile):
     if not isinstance(obj.av, type(None)) and len(obj.av.data) > 0:
         out['av'] = from_proto_to_array(obj.av)
 
-    if not isinstance(obj.av_type, type(None)) and len(obj.av_type) > 0:
+    if not isinstance(obj.av_type, type(None)):
         out['av_type'] = obj.av_type
 
     return out
