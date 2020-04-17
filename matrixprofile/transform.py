@@ -22,9 +22,9 @@ def apply_av(profile, av="default", custom_av=None):
     ----------
     profile : dict
         A MatrixProfile structure.
-    av : str
+    av : str, Default = "default"
         The type of annotation vector to apply.
-    custom_av : array_like, Optional
+    custom_av : array_like, Default = None
         Custom annotation vector (will only be applied if av is "custom").
 
     Returns

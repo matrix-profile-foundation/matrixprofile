@@ -85,10 +85,16 @@ def visualize(profile):
     # plot MP
     if core.is_mp_obj(profile):
         figures = __combine(figures, plot_mp(profile))
-    
+
+        if 'cmp' in profile and len(profile['cmp']) > 0:
+            figures = __combine(figures, plot_cmp_mp(profile))
+
+        if 'av' in profile and len(profile['av']) > 0:
+            figures = __combine(figures, plot_av_mp(profile))
+
         if 'motifs' in profile and len(profile['motifs']) > 0:
             figures = __combine(figures, plot_motifs_mp(profile))
-        
+
         if 'discords' in profile and len(profile['discords']) > 0:
             figures = __combine(figures, plot_discords_mp(profile))
 
@@ -98,7 +104,7 @@ def visualize(profile):
 
         if 'motifs' in profile and len(profile['motifs']) > 0:
             figures = __combine(figures, plot_motifs_pmp(profile))
-        
+
         if 'discords' in profile and len(profile['discords']) > 0:
             figures = __combine(figures, plot_discords_pmp(profile))
 
@@ -258,6 +264,66 @@ def plot_mp(profile):
     return fig
 
 
+def plot_cmp_mp(profile):
+    """
+    Plot corrected matrix profile for a MatrixProfile data structure.
+
+    Parameters
+    ----------
+    profile : dict_like
+        The matrix profile object to plot.
+
+    Returns
+    -------
+    matplotlib.Figure : figure
+        The matplotlib figure object.
+
+    """
+    cmp = profile['cmp']
+    w = profile['w']
+
+    fig, ax = plt.subplots(1, 1, figsize=(15, 7))
+
+    cmp_adj = np.append(cmp, np.zeros(w - 1) + np.nan)
+    ax.plot(np.arange(len(cmp_adj)), cmp_adj)
+    ax.set_ylabel('Corrected Matrix Profile')
+    ax.set_title('Window Size {}'.format(w))
+
+    fig.tight_layout()
+
+    return fig
+
+
+def plot_av_mp(profile):
+    """
+    Plot the annotation vector for a MatrixProfile data structure.
+
+    Parameters
+    ----------
+    profile : dict_like
+        The matrix profile object to plot.
+
+    Returns
+    -------
+    matplotlib.Figure : figure
+        The matplotlib figure object.
+
+    """
+    av = profile['av']
+    w = profile['w']
+
+    fig, ax = plt.subplots(1, 1, figsize=(15, 7))
+
+    av_adj = np.append(av, np.zeros(w - 1) + np.nan)
+    ax.plot(np.arange(len(av_adj)), av_adj)
+    ax.set_ylabel('Annotation Vector')
+    ax.set_title('Window Size {}'.format(w))
+
+    fig.tight_layout()
+
+    return fig
+
+
 def plot_discords_mp(profile):
     """
     Plot discords for a MatrixProfile data structure.
@@ -336,7 +402,7 @@ def plot_discords_pmp(profile):
         data = profile.get('data', None)
         if data:
             ts = data.get('ts', None)
-        
+
         mp_adjusted = profile['pmp'][mp_idx]
         # mp_adjusted = np.append(mp, np.full(w + 1, np.nan))
 
@@ -409,7 +475,7 @@ def plot_motifs_mp(profile):
             if first:
                 ax.set_ylabel('Motif {}'.format(pair_num))
                 first = False
-        
+
         pair_num += 1
 
     fig.tight_layout()
@@ -427,12 +493,12 @@ def plot_motifs_mp(profile):
             indices = np.arange(idx, idx + w)
             ax.plot(indices, subquery, c='r')
             ax.set_ylabel('Motif {}'.format(pair_num))
-        
+
         for idx in motif['neighbors']:
             subquery = ts[idx:idx + w]
             indices = np.arange(idx, idx + w)
             ax.plot(indices, subquery, c='black')
-        
+
         pair_num += 1
 
     lines = [
@@ -487,7 +553,7 @@ def plot_motifs_pmp(profile):
             if first:
                 ax.set_ylabel('Motif {}'.format(pair_num))
                 first = False
-        
+
         pair_num += 1
 
     fig.tight_layout()
@@ -508,14 +574,14 @@ def plot_motifs_pmp(profile):
             ax.plot(indices, subquery, c='r')
             ax.set_title('Window Size {}'.format(w))
             ax.set_ylabel('Motif {}'.format(pair_num))
-        
+
         for neigh_loc in motif['neighbors']:
             w = windows[neigh_loc[0]]
             idx = neigh_loc[1]
             subquery = ts[idx:idx + w]
             indices = np.arange(idx, idx + w)
             ax.plot(indices, subquery, c='black')
-        
+
         pair_num += 1
 
     lines = [

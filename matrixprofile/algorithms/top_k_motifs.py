@@ -13,11 +13,11 @@ from matrixprofile import core
 from matrixprofile.algorithms.mass2 import mass2
 
 
-def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
+def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3, use_cmp=False):
     """
     Find the top K number of motifs (patterns) given a pan matrix profile. By
     default the algorithm will find up to 3 motifs (k) and up to 10 of their
-    neighbors with a radius of 3 * min_dist.
+    neighbors with a radius of 3 * min_dist using the regular matrix profile.
 
     Parameters
     ----------
@@ -34,6 +34,8 @@ def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius
     radius : int, Default = 3
         The radius is used to associate a neighbor by checking if the
         neighbor's distance is less than or equal to dist * radius
+    use_cmp : bool, Default = False
+        Use the Corrected Matrix Profile to compute the motifs.
 
     Returns
     -------
@@ -42,7 +44,7 @@ def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius
         motifs key consists of the following structure.
 
         A list of dicts containing motif indices and their corresponding
-        neighbor indices. Note that each index is a (row, col) index 
+        neighbor indices. Note that each index is a (row, col) index
         corresponding to the pan matrix profile.
         >>> [
         >>>     {
@@ -58,56 +60,56 @@ def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius
     data = profile.get('data', None)
     ts = data.get('ts', None)
     data_len = len(ts)
-    
+
     pmp = profile.get('pmp', None)
-    profile_len = pmp.shape[1]   
+    profile_len = pmp.shape[1]
     pmpi = profile.get('pmpi', None)
     windows = profile.get('windows', None)
-    
+
     # make sure we are working with Euclidean distances
     tmp = None
     if core.is_pearson_array(pmp):
         tmp = core.pearson_to_euclidean(pmp, windows)
     else:
         tmp = np.copy(pmp).astype('d')
-    
+
     # replace nan and infs with infinity
     tmp[core.nan_inf_indices(tmp)] = np.inf
-    
+
     motifs = []
     for _ in range(k):
         min_idx = np.unravel_index(np.argmin(tmp), tmp.shape)
         min_dist = tmp[min_idx]
-        
+
         # nothing else to find...
         if core.is_nan_inf(min_dist):
             break
-        
+
         # create the motif pair
         min_row_idx = min_idx[0]
         min_col_idx = min_idx[1]
-        
+
         # motif pairs are respective to the column of the matching row
         first_idx = np.min([min_col_idx, pmpi[min_row_idx][min_col_idx]])
         second_idx = np.max([min_col_idx, pmpi[min_row_idx][min_col_idx]])
-        
+
         # compute distance profile for first appearance
         window_size = windows[min_row_idx]
         query = ts[first_idx:first_idx + window_size]
         distance_profile = mass2(ts, query)
-        
+
         # extend the distance profile to be as long as the original
         infs = np.full(profile_len - len(distance_profile), np.inf)
         distance_profile = np.append(distance_profile, infs)
-        
+
         # exclude already picked motifs and neighbors
-        mask = core.nan_inf_indices(pmp[min_row_idx])        
+        mask = core.nan_inf_indices(pmp[min_row_idx])
         distance_profile[mask] = np.inf
-        
+
         # determine the exclusion zone if not set
         if not exclusion_zone:
             exclusion_zone = int(np.floor(window_size / 2))
-        
+
         # apply exclusion zone for motif pair
         for j in (first_idx, second_idx):
             distance_profile = core.apply_exclusion_zone(
@@ -127,7 +129,7 @@ def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius
                 tmp[min_row_idx]
             )
             tmp[min_row_idx] = tmp2
-        
+
         # find up to max_neighbors
         neighbors = []
         for j in range(max_neighbors):
@@ -158,24 +160,24 @@ def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius
                 tmp[min_row_idx]
             )
             tmp[min_row_idx] = tmp2
-        
+
         # add the motifs and neighbors
         # note that they are (row, col) indices
         motifs.append({
             'motifs': [(min_row_idx, first_idx), (min_row_idx, second_idx)],
             'neighbors': neighbors
         })
-    
+
     profile['motifs'] = motifs
 
     return profile
 
 
-def mp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
+def mp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3, use_cmp=False):
     """
     Find the top K number of motifs (patterns) given a matrix profile. By
     default the algorithm will find up to 3 motifs (k) and up to 10 of their
-    neighbors with a radius of 3 * min_dist.
+    neighbors with a radius of 3 * min_dist using the regular matrix profile.
 
     Parameters
     ----------
@@ -192,6 +194,8 @@ def mp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=
     radius : int, Default = 3
         The radius is used to associate a neighbor by checking if the
         neighbor's distance is less than or equal to dist * radius
+    use_cmp : bool, Default = False
+        Use the Corrected Matrix Profile to compute the motifs.
 
     Returns
     -------
@@ -221,6 +225,8 @@ def mp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=
     data_len = len(ts)
     motifs = []
     mp = np.copy(profile['mp'])
+    if use_cmp:
+        mp = np.copy(profile['cmp'])
     mpi = profile['pi']
 
     # TODO: this is based on STOMP standards when this motif finding algorithm
@@ -247,7 +253,7 @@ def mp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=
         distance_profile = mass2(ts, query)
 
         # exclude already picked motifs and neighbors
-        mask = core.nan_inf_indices(mp)    
+        mask = core.nan_inf_indices(mp)
         distance_profile[mask] = np.inf
 
         # apply exclusion zone for motif pair
@@ -310,11 +316,12 @@ def mp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=
     return profile
 
 
-def top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
+def top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3, use_cmp=False):
     """
     Find the top K number of motifs (patterns) given a matrix profile or a pan
     matrix profile. By default the algorithm will find up to 3 motifs (k) and
-    up to 10 of their neighbors with a radius of 3 * min_dist.
+    up to 10 of their neighbors with a radius of 3 * min_dist using the
+    regular matrix profile.
 
     Parameters
     ----------
@@ -331,6 +338,8 @@ def top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
     radius : int, Default = 3
         The radius is used to associate a neighbor by checking if the
         neighbor's distance is less than or equal to dist * radius
+    use_cmp : bool, Default = False
+        Use the Corrected Matrix Profile to compute the motifs.
 
     Returns
     -------
@@ -370,5 +379,6 @@ def top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
         exclusion_zone=exclusion_zone,
         k=k,
         max_neighbors=max_neighbors,
-        radius=radius
+        radius=radius,
+        use_cmp=use_cmp
     )

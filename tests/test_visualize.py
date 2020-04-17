@@ -37,6 +37,40 @@ def test_catch_all_visualize_mp_only():
     assert(len(figures) == 1)
 
 
+def test_catch_all_visualize_mp_cmp():
+    ts = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    w = 4
+
+    profile = stomp(ts, w, n_jobs=1)
+    profile['cmp'] = np.arange(len(ts) - w + 1)
+
+    figures = visualize(profile)
+    assert(len(figures) == 2)
+
+
+def test_catch_all_visualize_mp_av():
+    ts = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    w = 4
+
+    profile = stomp(ts, w, n_jobs=1)
+    profile['av'] = np.arange(len(ts) - w + 1)
+
+    figures = visualize(profile)
+    assert(len(figures) == 2)
+
+
+def test_catch_all_visualize_mp_cmp_av():
+    ts = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    w = 4
+
+    profile = stomp(ts, w, n_jobs=1)
+    profile['cmp'] = np.arange(len(ts) - w + 1)
+    profile['av'] = np.arange(len(ts) - w + 1)
+
+    figures = visualize(profile)
+    assert(len(figures) == 3)
+
+
 def test_catch_all_visualize_mp_discords():
     ts = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
     w = 4
