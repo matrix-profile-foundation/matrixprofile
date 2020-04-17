@@ -36,9 +36,9 @@ def mpdist(ts, ts_b, w, threshold=0.05, n_jobs=1):
         The window size.
     threshold : float, Default 0.05
         The percentile in which the distance is taken from. By default it is
-        set to 0.05 based on empircal research results. Generally, you should
-        not change this unless you know what you are doing! This value must be
-        a float greater than 0 and less than 1.
+        set to 0.05 based on empircal research results from the paper. 
+        Generally, you should not change this unless you know what you are
+        doing! This value must be a float greater than 0 and less than 1.
     n_jobs : int, Default = 1
         Number of cpu cores to use.
     
@@ -171,7 +171,7 @@ def mpdist_vector(ts, ts_b, w):
     # recreate the matrix profile and compute MPDist
     mpdist_length = len(ts) - len(ts_b) + 1
     right_hist_length = len(ts_b) - w + 1
-    mp_dist_array = np.zeros(mpdist_length)
+    mpdist_array = np.zeros(mpdist_length)
     left_hist = np.zeros(right_hist_length)
     
     mpdist_array = []
