@@ -13,11 +13,11 @@ from matrixprofile import core
 from matrixprofile.algorithms.mass2 import mass2
 
 
-def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3, use_cmp=False):
+def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3):
     """
     Find the top K number of motifs (patterns) given a pan matrix profile. By
     default the algorithm will find up to 3 motifs (k) and up to 10 of their
-    neighbors with a radius of 3 * min_dist using the regular matrix profile.
+    neighbors with a radius of 3 * min_dist.
 
     Parameters
     ----------
@@ -34,8 +34,6 @@ def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius
     radius : int, Default = 3
         The radius is used to associate a neighbor by checking if the
         neighbor's distance is less than or equal to dist * radius
-    use_cmp : bool, Default = False
-        Use the Corrected Matrix Profile to compute the motifs.
 
     Returns
     -------
@@ -321,7 +319,8 @@ def top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3, 
     Find the top K number of motifs (patterns) given a matrix profile or a pan
     matrix profile. By default the algorithm will find up to 3 motifs (k) and
     up to 10 of their neighbors with a radius of 3 * min_dist using the
-    regular matrix profile.
+    regular matrix profile. If the profile is a Matrix Profile data structure,
+    you can also use a Corrected Matrix Profile to compute the motifs.
 
     Parameters
     ----------
@@ -339,7 +338,8 @@ def top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3, 
         The radius is used to associate a neighbor by checking if the
         neighbor's distance is less than or equal to dist * radius
     use_cmp : bool, Default = False
-        Use the Corrected Matrix Profile to compute the motifs.
+        Use the Corrected Matrix Profile to compute the motifs (only for
+        a Matrix Profile data structure).
 
     Returns
     -------
@@ -374,6 +374,15 @@ def top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3, 
     else:
         raise ValueError('Unsupported data structure!')
 
+    if cls == 'PMP':
+        return func(
+            profile,
+            exclusion_zone=exclusion_zone,
+            k=k,
+            max_neighbors=max_neighbors,
+            radius=radius
+        )
+        
     return func(
         profile,
         exclusion_zone=exclusion_zone,
