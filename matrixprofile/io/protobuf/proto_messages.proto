@@ -84,10 +84,10 @@ message MPFOutput {
 
 	// the time series - original data
 	DoubleMatrix ts = 6;
-	
+
 	// optionally the query when provided - original data
 	DoubleMatrix query = 7;
-	
+
 	// the matrix profile envelope
 	MatrixProfile mp = 8;
 
@@ -99,4 +99,13 @@ message MPFOutput {
 
 	// the discords for the MP/PMP
 	repeated Location discords = 11;
+
+	// the corrected matrix profile for the MP
+	DoubleMatrix cmp = 12;
+
+	// the AV used to compute the CMP for the MP
+	DoubleMatrix av = 13;
+
+	// the type of AV applied to the MP
+	string av_type = 14;
 }

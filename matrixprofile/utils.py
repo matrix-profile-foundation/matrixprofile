@@ -53,12 +53,12 @@ def pick_mp(profile, window):
         A Pan-MatrixProfile data structure.
     window : int
         The specific window size used to compute the desired MatrixProfile.
-    
+
     Returns
     -------
     dict : profile
         A MatrixProfile data structure.
-    
+
     Raises
     ------
     ValueError
@@ -70,31 +70,31 @@ def pick_mp(profile, window):
 
     if not core.is_pmp_obj(profile):
         raise ValueError('pluck_mp expects profile as a PMP data structure!')
-    
+
     if not isinstance(window, int):
         raise ValueError('pluck_mp expects window to be an int!')
-    
+
     mp_profile = empty_mp()
-    
+
     # find the window index
     windows = profile.get('windows')
     window_index = np.argwhere(windows == window)
-    
+
     if len(window_index) < 1:
         raise RuntimeError('Unable to find window {} in the provided PMP!'.format(window))
-    
+
     window_index = window_index.flatten()[0]
 
-    w = windows[window_index]
+    window = windows[window_index]
     mp = profile['pmp'][window_index]
     n = len(mp)
-    mp_profile['mp'] = mp[0:n-w+1]
-    mp_profile['pi'] = profile['pmpi'][window_index][0:n-w+1]
+    mp_profile['mp'] = mp[0:n-window+1]
+    mp_profile['pi'] = profile['pmpi'][window_index][0:n-window+1]
     mp_profile['metric'] = profile['metric']
     mp_profile['data']['ts'] = profile['data']['ts']
     mp_profile['join'] = False
-    mp_profile['w'] = int(w)
+    mp_profile['w'] = int(window)
     mp_profile['ez'] = int(np.floor(windows[window_index] / 4))
     mp_profile['algorithm'] = 'mpx'
-    
+
     return mp_profile

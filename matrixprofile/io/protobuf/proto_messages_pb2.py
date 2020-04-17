@@ -18,7 +18,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='mpf',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n\x14proto_messages.proto\x12\x03mpf\"<\n\x0c\x44oubleMatrix\x12\x0c\n\x04rows\x18\x01 \x01(\x04\x12\x0c\n\x04\x63ols\x18\x02 \x01(\x04\x12\x10\n\x04\x64\x61ta\x18\x03 \x03(\x01\x42\x02\x10\x01\"9\n\tIntMatrix\x12\x0c\n\x04rows\x18\x01 \x01(\x04\x12\x0c\n\x04\x63ols\x18\x02 \x01(\x04\x12\x10\n\x04\x64\x61ta\x18\x03 \x03(\x03\x42\x02\x10\x01\"$\n\x08Location\x12\x0b\n\x03row\x18\x01 \x01(\x04\x12\x0b\n\x03\x63ol\x18\x02 \x01(\x04\"H\n\x05Motif\x12\x1d\n\x06motifs\x18\x01 \x03(\x0b\x32\r.mpf.Location\x12 \n\tneighbors\x18\x02 \x03(\x0b\x32\r.mpf.Location\"\xde\x01\n\rMatrixProfile\x12\x1d\n\x02mp\x18\x01 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x1a\n\x02pi\x18\x02 \x01(\x0b\x32\x0e.mpf.IntMatrix\x12\x1e\n\x03lmp\x18\x03 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x1b\n\x03lpi\x18\x04 \x01(\x0b\x32\x0e.mpf.IntMatrix\x12\x1e\n\x03rmp\x18\x05 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x1b\n\x03rpi\x18\x06 \x01(\x0b\x32\x0e.mpf.IntMatrix\x12\n\n\x02\x65z\x18\t \x01(\x04\x12\x0c\n\x04join\x18\n \x01(\x08\"P\n\x10PanMatrixProfile\x12\x1e\n\x03pmp\x18\x01 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x1c\n\x04pmpi\x18\x02 \x01(\x0b\x32\x0e.mpf.IntMatrix\"\xa8\x02\n\tMPFOutput\x12\r\n\x05klass\x18\x01 \x01(\t\x12\x11\n\talgorithm\x18\x02 \x01(\t\x12\x0e\n\x06metric\x18\x03 \x01(\t\x12\x12\n\nsample_pct\x18\x04 \x01(\x01\x12\x13\n\x07windows\x18\x05 \x03(\x04\x42\x02\x10\x01\x12\x1d\n\x02ts\x18\x06 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12 \n\x05query\x18\x07 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x1e\n\x02mp\x18\x08 \x01(\x0b\x32\x12.mpf.MatrixProfile\x12\"\n\x03pmp\x18\t \x01(\x0b\x32\x15.mpf.PanMatrixProfile\x12\x1a\n\x06motifs\x18\n \x03(\x0b\x32\n.mpf.Motif\x12\x1f\n\x08\x64iscords\x18\x0b \x03(\x0b\x32\r.mpf.Locationb\x06proto3'
+  serialized_pb=b'\n\x14proto_messages.proto\x12\x03mpf\"<\n\x0c\x44oubleMatrix\x12\x0c\n\x04rows\x18\x01 \x01(\x04\x12\x0c\n\x04\x63ols\x18\x02 \x01(\x04\x12\x10\n\x04\x64\x61ta\x18\x03 \x03(\x01\x42\x02\x10\x01\"9\n\tIntMatrix\x12\x0c\n\x04rows\x18\x01 \x01(\x04\x12\x0c\n\x04\x63ols\x18\x02 \x01(\x04\x12\x10\n\x04\x64\x61ta\x18\x03 \x03(\x03\x42\x02\x10\x01\"$\n\x08Location\x12\x0b\n\x03row\x18\x01 \x01(\x04\x12\x0b\n\x03\x63ol\x18\x02 \x01(\x04\"H\n\x05Motif\x12\x1d\n\x06motifs\x18\x01 \x03(\x0b\x32\r.mpf.Location\x12 \n\tneighbors\x18\x02 \x03(\x0b\x32\r.mpf.Location\"\xde\x01\n\rMatrixProfile\x12\x1d\n\x02mp\x18\x01 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x1a\n\x02pi\x18\x02 \x01(\x0b\x32\x0e.mpf.IntMatrix\x12\x1e\n\x03lmp\x18\x03 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x1b\n\x03lpi\x18\x04 \x01(\x0b\x32\x0e.mpf.IntMatrix\x12\x1e\n\x03rmp\x18\x05 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x1b\n\x03rpi\x18\x06 \x01(\x0b\x32\x0e.mpf.IntMatrix\x12\n\n\x02\x65z\x18\t \x01(\x04\x12\x0c\n\x04join\x18\n \x01(\x08\"P\n\x10PanMatrixProfile\x12\x1e\n\x03pmp\x18\x01 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x1c\n\x04pmpi\x18\x02 \x01(\x0b\x32\x0e.mpf.IntMatrix\"\xf8\x02\n\tMPFOutput\x12\r\n\x05klass\x18\x01 \x01(\t\x12\x11\n\talgorithm\x18\x02 \x01(\t\x12\x0e\n\x06metric\x18\x03 \x01(\t\x12\x12\n\nsample_pct\x18\x04 \x01(\x01\x12\x13\n\x07windows\x18\x05 \x03(\x04\x42\x02\x10\x01\x12\x1d\n\x02ts\x18\x06 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12 \n\x05query\x18\x07 \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x1e\n\x02mp\x18\x08 \x01(\x0b\x32\x12.mpf.MatrixProfile\x12\"\n\x03pmp\x18\t \x01(\x0b\x32\x15.mpf.PanMatrixProfile\x12\x1a\n\x06motifs\x18\n \x03(\x0b\x32\n.mpf.Motif\x12\x1f\n\x08\x64iscords\x18\x0b \x03(\x0b\x32\r.mpf.Location\x12\x1e\n\x03\x63mp\x18\x0c \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x1d\n\x02\x61v\x18\r \x01(\x0b\x32\x11.mpf.DoubleMatrix\x12\x0f\n\x07\x61v_type\x18\x0e \x01(\tb\x06proto3'
 )
 
 
@@ -392,6 +392,27 @@ _MPFOUTPUT = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='cmp', full_name='mpf.MPFOutput.cmp', index=11,
+      number=12, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='av', full_name='mpf.MPFOutput.av', index=12,
+      number=13, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='av_type', full_name='mpf.MPFOutput.av_type', index=13,
+      number=14, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -405,7 +426,7 @@ _MPFOUTPUT = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=570,
-  serialized_end=866,
+  serialized_end=946,
 )
 
 _MOTIF.fields_by_name['motifs'].message_type = _LOCATION
@@ -424,6 +445,8 @@ _MPFOUTPUT.fields_by_name['mp'].message_type = _MATRIXPROFILE
 _MPFOUTPUT.fields_by_name['pmp'].message_type = _PANMATRIXPROFILE
 _MPFOUTPUT.fields_by_name['motifs'].message_type = _MOTIF
 _MPFOUTPUT.fields_by_name['discords'].message_type = _LOCATION
+_MPFOUTPUT.fields_by_name['cmp'].message_type = _DOUBLEMATRIX
+_MPFOUTPUT.fields_by_name['av'].message_type = _DOUBLEMATRIX
 DESCRIPTOR.message_types_by_name['DoubleMatrix'] = _DOUBLEMATRIX
 DESCRIPTOR.message_types_by_name['IntMatrix'] = _INTMATRIX
 DESCRIPTOR.message_types_by_name['Location'] = _LOCATION

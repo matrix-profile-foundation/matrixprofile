@@ -82,6 +82,36 @@ matrixprofile.algorithms.scrimp_plus_plus
 
 .. autofunction:: matrixprofile.algorithms.scrimp_plus_plus
 
+matrixprofile.utils.apply_av
+============================
+
+.. autofunction:: matrixprofile.utils.apply_av
+
+matrixprofile.utils.apply_av
+============================
+
+.. autofunction:: matrixprofile.utils.apply_av
+
+matrixprofile.utils.make_default_av
+============================
+
+.. autofunction:: matrixprofile.utils.make_default_av
+
+matrixprofile.utils.make_complexity_av
+============================
+
+.. autofunction:: matrixprofile.utils.make_complexity_av
+
+matrixprofile.utils.make_meanstd_av
+============================
+
+.. autofunction:: matrixprofile.utils.make_meanstd_av
+
+matrixprofile.utils.make_clipping_av
+============================
+
+.. autofunction:: matrixprofile.utils.make_clipping_av
+
 matrixprofile.utils.empty_mp
 ============================
 
