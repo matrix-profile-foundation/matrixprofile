@@ -11,7 +11,7 @@
 .. image:: https://codecov.io/gh/matrix-profile-foundation/matrixprofile/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/matrix-profile-foundation/matrixprofile
     :alt: Code Coverage
-.. image:: https://travis-ci.com/matrix-profile-foundation/matrixprofile/master.svg
+.. image:: https://api.travis-ci.com/matrix-profile-foundation/matrixprofile.svg?branch=master
     :target: https://travis-ci.com/matrix-profile-foundation/matrixprofile
     :alt: Build Status
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
