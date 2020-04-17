@@ -57,3 +57,17 @@ def test_maximum_subsequence_68():
     upper = maximum_subsequence(ts, 0.98)
 
     assert(upper == 68)
+
+def test_maximum_subsequence_no_windows():
+    np.random.seed(9999)
+    ts = np.random.uniform(size=2**10)
+    w = 2**6
+    subq = ts[0:w]
+    ts[0:w] = subq
+    ts[w+100:w+100+w] = subq
+
+    with pytest.warns(RuntimeWarning) as record:
+        upper = maximum_subsequence(ts, 1.0)
+
+    assert(np.isnan(upper))
+    assert('No windows found with given threshold' in record[0].message.args[0])

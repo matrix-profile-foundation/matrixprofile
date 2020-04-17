@@ -331,6 +331,12 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
     mask = pearson > threshold
     pearson = pearson[mask]
     windows = windows[mask]
+
+    if len(windows) < 1:
+        warnings.warn('No windows found with given threshold, try to'\
+            ' set a lower threshold', RuntimeWarning)
+        return np.nan
+
     window_size = windows[-1]
     
     if include_pmp:
