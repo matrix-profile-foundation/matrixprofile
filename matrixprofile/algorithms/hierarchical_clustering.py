@@ -9,7 +9,7 @@ range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
 import numpy as np
-from scipy.cluster.hierarchy import dendrogram, linkage, inconsistent, fcluster
+from scipy.cluster.hierarchy import linkage, inconsistent, fcluster
 from scipy.cluster.hierarchy import cophenet
 
 from matrixprofile import core
