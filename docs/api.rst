@@ -42,6 +42,11 @@ matrixprofile.discover.statistics
 
 .. autofunction:: matrixprofile.discover.statistics
 
+matrixprofile.discover.hierarchical_clusters
+============================================
+
+.. autofunction:: matrixprofile.discover.hierarchical_clusters
+
 matrixprofile.algorithms.stomp
 ==============================
 
