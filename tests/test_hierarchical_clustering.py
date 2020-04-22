@@ -15,6 +15,7 @@ import pytest
 import numpy as np
 
 from matrixprofile.algorithms.hierarchical_clustering import (
+    compute_dist,
     pairwise_dist,
     hierarchical_clusters
 )
@@ -35,6 +36,52 @@ def test_hierarchical_clusters_valid_simple():
     t = 2
 
     clusters = hierarchical_clusters(X, w, t)
+
+    # evaluate keys
+    expected_keys = set([
+        'pairwise_distances',
+        'linkage_matrix',
+        'inconsistency_statistics',
+        'assignments',
+        'cophenet',
+        'cophenet_distances',
+        'class'
+    ])
+    actual_keys = set(clusters.keys())
+    assert(expected_keys == actual_keys)
+    assert(clusters['class'] == 'hclusters')
+
+    # evaluate cluster assignments
+    expected_assignments = np.array([1, 1, 2, 2, 3])
+    np.testing.assert_equal(clusters['assignments'], expected_assignments)
+
+    # evaluate cophenet score
+    expected_cophenet = 0.9999870997174531
+    np.testing.assert_almost_equal(clusters['cophenet'], expected_cophenet)
+
+    # evaluate pairwise distances
+    expected_distances = np.array([0, 8.2299501, 8.2299501, 8.29915377, 
+    8.2299501, 8.2299501, 8.29915377, 0, 8.2558308, 8.2558308])
+    np.testing.assert_almost_equal(
+        clusters['pairwise_distances'], expected_distances)
+
+
+def test_hierarchical_clusters_valid_simple_parallel():
+    np.random.seed(9999)
+    ts = np.random.uniform(size=2**10)
+    ts2 = np.random.uniform(size=2**10)
+    ts3 = np.random.uniform(size=2**10)
+    X = [
+        ts,
+        ts,
+        ts2,
+        ts2,
+        ts3
+    ]
+    w = 2**6
+    t = 2
+
+    clusters = hierarchical_clusters(X, w, t, n_jobs=2)
 
     # evaluate keys
     expected_keys = set([
@@ -164,3 +211,15 @@ def test_pairwise_dist_invalid_params():
     with pytest.raises(ValueError) as excinfo:
         pairwise_dist(X, w, threshold=1, n_jobs=n_jobs)
         assert(error == str(excinfo.value))
+
+
+def test_compute_dist_valid():
+    ts = np.arange(100)
+    w = 8
+    k = 0
+    threshold = 0.05
+    args = (k, ts, ts, w, threshold)
+    result = compute_dist(args)
+
+    assert(result[0] == k)
+    assert(result[0] == 0)
