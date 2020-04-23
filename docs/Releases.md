@@ -7,3 +7,7 @@
 # 1.0.2 (2020-04-14)
 - Improved API documentation
 - Better cross-platform binary wheel compile options
+
+# 1.1.0 (2020-04-23)
+- Annotation Vectors (Feature) thanks to [@Nikita Smyrnov](https://github.com/nikita-smyrnov) [@StateFarmIns](https://github.com/StateFarmIns)
+- Hierarchical Clustering with MPDist (Feature)
