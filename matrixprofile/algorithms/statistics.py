@@ -36,7 +36,7 @@ def statistics(ts, window_size):
         >>>     max: the global maximum,
         >>>     mean: the global mean,
         >>>     std: the global standard deviation,
-        >>>     median: the global standard deviation,
+        >>>     median: the global median,
         >>>     moving_min: the moving minimum,
         >>>     moving_max: the moving maximum,
         >>>     moving_mean: the moving mean,
