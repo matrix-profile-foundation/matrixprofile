@@ -29,7 +29,47 @@ def test_snippets():
     assert(result[0]['index'] == 192)
     assert(result[1]['index'] == 704)
 
+    # test inferred window size of snippet size / 2
+    result = snippets(ts, snippet_size)
+    assert(result[0]['index'] == 192)
+    assert(result[1]['index'] == 704)
+
     snippet_size = 128
     result = snippets(ts, snippet_size, window_size=w)
     assert(result[0]['index'] == 384)
     assert(result[1]['index'] == 640)
+
+
+def test_invalid_snippet_size():
+    ts = np.arange(100)
+    ss = 2
+
+    error = 'snippet_size must be an integer >= 4'
+    with pytest.raises(ValueError) as excinfo:
+        snippets(ts, ss)
+        assert(error == str(excinfo.value))
+
+    with pytest.raises(ValueError) as excinfo:
+        snippets(ts, '232')
+        assert(error == str(excinfo.value))
+
+
+def test_invalid_snippet_size_and_ts():
+    ts = np.arange(100)
+    ss = 75
+
+    error = 'Time series is too short relative to snippet length'
+    with pytest.raises(ValueError) as excinfo:
+        snippets(ts, ss)
+        assert(error == str(excinfo.value))
+
+
+def test_window_size_greater_snippet_size():
+    ts = np.arange(100)
+    ss = 25
+    w = 30
+
+    error = 'window_size must be smaller than snippet_size'
+    with pytest.raises(ValueError) as excinfo:
+        snippets(ts, ss, window_size=w)
+        assert(error == str(excinfo.value))
