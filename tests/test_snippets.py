@@ -26,12 +26,12 @@ def test_snippets():
     snippet_size = 64
 
     result = snippets(ts, snippet_size, window_size=w)
-    assert(result[0]['index'] == 192)
+    assert(result[0]['index'] == 384)
     assert(result[1]['index'] == 704)
 
     # test inferred window size of snippet size / 2
     result = snippets(ts, snippet_size)
-    assert(result[0]['index'] == 192)
+    assert(result[0]['index'] == 384)
     assert(result[1]['index'] == 704)
 
     snippet_size = 128

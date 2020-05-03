@@ -59,8 +59,6 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
     if window_size >= snippet_size:
         raise ValueError('window_size must be smaller than snippet_size')
 
-    used_window = int(np.round(snippet_size * window_size / 100))
-
     # pad end of time series with zeros
     num_zeros = int(snippet_size * np.ceil(n / snippet_size) - n)
     ts = np.append(ts, np.zeros(num_zeros))
@@ -70,7 +68,7 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
     distances = []
 
     for j, i in enumerate(indices):
-        distance = mpdist_vector(ts, ts[i:(i + snippet_size)], used_window)
+        distance = mpdist_vector(ts, ts[i:(i + snippet_size - 1)], int(window_size))
         distances.append(distance)
 
     distances = np.array(distances)	
