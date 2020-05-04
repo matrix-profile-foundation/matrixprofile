@@ -31,13 +31,13 @@ extensions.append(Extension(
 ))
 
 matplot = 'matplotlib>=3.0.3'
-scipy = 'scipy==1.3.2'
+scipy = 'scipy>=1.3.2,<2.0.0'
 if sys.version_info.major == 3:
     with open('README.rst', 'r', encoding='utf-8') as fh:
         long_description = fh.read()
 elif sys.version_info.major == 2:
     matplot = 'matplotlib'
-    scipy = 'scipy==1.2.3'
+    scipy = 'scipy<2.0.0'
     with open('README.rst', 'r') as fh:
         long_description = fh.read()
 
