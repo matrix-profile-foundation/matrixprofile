@@ -39,6 +39,10 @@ def test_snippets():
     assert(result[0]['index'] == 384)
     assert(result[1]['index'] == 640)
 
+    snippet_size = 8
+    result = snippets(ts, snippet_size, window_size=snippet_size / 2)
+    assert(result[0]['index'] == 72)
+    assert(result[1]['index'] == 784)
 
 def test_invalid_snippet_size():
     ts = np.arange(100)
