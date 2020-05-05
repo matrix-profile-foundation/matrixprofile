@@ -72,7 +72,7 @@ jobs:
       services: docker
       install: 
         - pip install twine
-        - pip install cibuildwheel==1.4.1
+        - pip install cibuildwheel==1.1.0
       script:
         - cibuildwheel --output-dir wheelhouse
       after_success:
@@ -84,7 +84,7 @@ jobs:
       language: shell
       install: 
         - pip install twine
-        - pip install cibuildwheel==1.4.1
+        - pip install cibuildwheel==1.1.0
       script:
         - cibuildwheel --output-dir wheelhouse
       after_success:
@@ -96,7 +96,7 @@ jobs:
       language: shell
       install: 
         - pip install twine
-        - pip install cibuildwheel==1.4.1
+        - pip install cibuildwheel==1.1.0
       script:
         - cibuildwheel --output-dir wheelhouse
       after_success:
