@@ -7,7 +7,7 @@
 
 language: python
 python:
-  # - 2.7
+  - 2.7
   - 3.5
   - 3.6
   - 3.7
@@ -31,13 +31,13 @@ before_install:
         export CC="/usr/local/bin/gcc"
     fi
 
-# install:
-#   - python -m pip install pytest
+install:
+  - python -m pip install pytest
 
-# script:
-#   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then pip install -r python2-requirements.txt; else pip install -r requirements.txt; fi
-#   - pip install -e .
-#   - pytest tests/
+script:
+  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then pip install -r python2-requirements.txt; else pip install -r requirements.txt; fi
+  - pip install -e .
+  - pytest tests/
 
 stages:
   # - test
@@ -79,34 +79,34 @@ jobs:
       after_success:
         # - twine upload wheelhouse/*.whl --verbose
         - ls wheelhouse/*.whl
-    # Deploy on mac
-    - stage: deploy
-      name: Build and deploy macOS wheels
-      os: osx
-      language: shell
-      install: 
-        - pip install twine
-        - pip install cython
-        - pip install cibuildwheel==1.1.0
-      script:
-        - cibuildwheel --output-dir wheelhouse
-      after_success:
-        # - twine upload wheelhouse/*.whl --verbose
-        - ls wheelhouse/*.whl
-    # Deploy on windows
-    - stage: deploy
-      name: Build and deploy Windows wheels
-      os: windows
-      language: shell
-      install: 
-        - pip install twine
-        - pip install cython
-        - pip install cibuildwheel==1.1.0
-      script:
-        - cibuildwheel --output-dir wheelhouse
-      after_success:
-        # - twine upload wheelhouse/*.whl --verbose
-        - ls wheelhouse/*.whl
+    # # Deploy on mac
+    # - stage: deploy
+    #   name: Build and deploy macOS wheels
+    #   os: osx
+    #   language: shell
+    #   install: 
+    #     - pip install twine
+    #     - pip install cython
+    #     - pip install cibuildwheel==1.1.0
+    #   script:
+    #     - cibuildwheel --output-dir wheelhouse
+    #   after_success:
+    #     # - twine upload wheelhouse/*.whl --verbose
+    #     - ls wheelhouse/*.whl
+    # # Deploy on windows
+    # - stage: deploy
+    #   name: Build and deploy Windows wheels
+    #   os: windows
+    #   language: shell
+    #   install: 
+    #     - pip install twine
+    #     - pip install cython
+    #     - pip install cibuildwheel==1.1.0
+    #   script:
+    #     - cibuildwheel --output-dir wheelhouse
+    #   after_success:
+    #     # - twine upload wheelhouse/*.whl --verbose
+    #     - ls wheelhouse/*.whl
 
 env:
   global:
@@ -114,4 +114,3 @@ env:
     - MPLBACKEND=agg
       # Note: TWINE_PASSWORD is set in Travis settings
     - CIBW_SKIP="*-win32 *-manylinux_i686"
-    - CIBW_MANYLINUX_X86_64_IMAGE=manylinux2014
