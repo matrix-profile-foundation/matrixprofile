@@ -11,3 +11,6 @@
 # 1.1.0 (2020-04-23)
 - Annotation Vectors (Feature) thanks to [@Nikita Smyrnov](https://github.com/nikita-smyrnov) [@StateFarmIns](https://github.com/StateFarmIns)
 - Hierarchical Clustering with MPDist (Feature)
+
+# 1.1.1 (2020-05-05)
+- Minor bug and dependency fixes
