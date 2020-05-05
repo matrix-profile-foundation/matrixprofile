@@ -49,22 +49,22 @@ stages:
 
 jobs:
   include:
-    # Optional: run a test on Windows
-    - os: windows
-      language: shell
-      name: Test on Windows
+    # # Optional: run a test on Windows
+    # - os: windows
+    #   language: shell
+    #   name: Test on Windows
 
-    # Code coverage
-    - stage: codecov
-      name: Add code coverage stats
-      services: docker
-      install:
-        - pip install codecov
-        - pip install pytest-cov
-        - pip install -e .
-      script:
-        - pytest --cov=matrixprofile tests/
-        - codecov
+    # # Code coverage
+    # - stage: codecov
+    #   name: Add code coverage stats
+    #   services: docker
+    #   install:
+    #     - pip install codecov
+    #     - pip install pytest-cov
+    #     - pip install -e .
+    #   script:
+    #     - pytest --cov=matrixprofile tests/
+    #     - codecov
 
     # # Deploy on linux
     - stage: deploy
