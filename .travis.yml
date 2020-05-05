@@ -30,7 +30,6 @@ before_install:
         ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
         export CC="/usr/local/bin/gcc"
     fi
-  - pip install --upgrade pip
 
 install:
   - pip install pytest
