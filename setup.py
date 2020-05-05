@@ -37,7 +37,7 @@ if sys.version_info.major == 3:
         long_description = fh.read()
 elif sys.version_info.major == 2:
     matplot = 'matplotlib'
-    scipy = 'scipy<2.0.0'
+    scipy = 'scipy'
     with open('README.rst', 'r') as fh:
         long_description = fh.read()
 
