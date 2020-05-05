@@ -77,7 +77,7 @@ jobs:
       script:
         - cibuildwheel --output-dir wheelhouse
       after_success:
-        # - twine upload wheelhouse/*.whl --verbose
+        - twine upload wheelhouse/*.whl --verbose
         - ls wheelhouse/*.whl
     # Deploy on mac
     - stage: deploy
