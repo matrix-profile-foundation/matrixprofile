@@ -23,6 +23,12 @@
 .. image:: https://img.shields.io/discord/589321741277462559?logo=discord
     :target: https://discordapp.com/invite/sBhDNXT
     :alt: Discord
+.. image:: https://joss.theoj.org/papers/10.21105/joss.02179/status.svg
+   :target: https://doi.org/10.21105/joss.02179
+   :alt: JOSSDOI
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3789780.svg
+   :target: https://doi.org/10.5281/zenodo.3789780
+   :alt: ZenodoDOI
 
 |
 
@@ -83,3 +89,25 @@ Please review our `Code of Conduct documentation <http://matrixprofile.docs.matr
 Citations
 ---------
 All proper acknowledgements for works of others may be found in our `citation documentation <http://matrixprofile.docs.matrixprofile.org/citations.html>`_.
+
+------
+Citing
+------
+Please cite this work using the `Journal of Open Source Software article <https://joss.theoj.org/papers/10.21105/joss.02179>`_.
+
+    Van Benschoten et al., (2020). MPA: a novel cross-language API for time series analysis. Journal of Open Source Software, 5(49), 2179, https://doi.org/10.21105/joss.02179
+
+.. code:: bibtex
+
+    @article{Van Benschoten2020,
+        doi = {10.21105/joss.02179},
+        url = {https://doi.org/10.21105/joss.02179},
+        year = {2020},
+        publisher = {The Open Journal},
+        volume = {5},
+        number = {49},
+        pages = {2179},
+        author = {Andrew Van Benschoten and Austin Ouyang and Francisco Bischoff and Tyler Marrs},
+        title = {MPA: a novel cross-language API for time series analysis},
+        journal = {Journal of Open Source Software}
+    }
