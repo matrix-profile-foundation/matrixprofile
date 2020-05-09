@@ -32,6 +32,17 @@ def test_moving_avg_std():
     np.testing.assert_almost_equal(std, std_desired)
 
 
+def test_it_should_not_produce_nan_values_when_std_is_almost_zero():
+    a = np.array([10.1, 10.1, 10.1, 10.1, 10.1, 10.1, 10.1], dtype='d')
+    mu, std = cycore.moving_avg_std(a, 3)
+
+    mu_desired = np.array([10.1, 10.1, 10.1, 10.1, 10.1])
+    std_desired = np.array([0, 0, 0, 0, 0])
+
+    np.testing.assert_almost_equal(mu, mu_desired)
+    np.testing.assert_almost_equal(std, std_desired)
+
+
 def test_moving_muinvn():
     a = np.array([1, 2, 3, 4, 5, 6], dtype='d')
     mu, std = cycore.muinvn(a, 3)
