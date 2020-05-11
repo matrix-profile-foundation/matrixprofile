@@ -184,13 +184,13 @@ def test_pairwise_dist_valid_simple():
     ]
     w = 8
     dists = pairwise_dist(X, w)
-    expected = np.array([ 0, np.inf, np.inf, np.inf, np.inf, np.inf])
+    expected = np.array([ 0, 4, 4, 4, 4, 4])
     np.testing.assert_equal(dists, expected)
 
     # test with MxN np.ndarray
     X = np.array(X)
     dists = pairwise_dist(X, w)
-    expected = np.array([ 0, np.inf, np.inf, np.inf, np.inf, np.inf])
+    expected = np.array([ 0, 4, 4, 4, 4, 4])
     np.testing.assert_equal(dists, expected)
 
 
