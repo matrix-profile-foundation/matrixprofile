@@ -92,7 +92,10 @@ def muinvn(double[:] a, unsigned int w):
             s = s + (((p - (x - z)) + (h[j] - z)) + r[j])
             p = x
 
-        sig[i] = 1 / sqrt(p + s)
+        if p + s == 0:
+            sig[i] = 0
+        else:
+            sig[i] = 1 / sqrt(p + s)
     
     return (mu, sig)
 
