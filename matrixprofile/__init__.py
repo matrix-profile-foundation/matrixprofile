@@ -1,5 +1,9 @@
 name = "matrixprofile"
 
+import sys
+sys.path.append('../')
+
+from matrixprofile.version import __version__, __version_info__
 
 from matrixprofile.compute import compute
 from matrixprofile.visualize import visualize

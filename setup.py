@@ -11,6 +11,8 @@ import numpy
 import os, sys
 from glob import glob
 
+import version
+
 SOURCE_URL = 'https://github.com/matrix-profile-foundation/matrixprofile'
 
 # manual list of files to be compiled
@@ -41,9 +43,15 @@ elif sys.version_info.major == 2:
     with open('README.rst', 'r') as fh:
         long_description = fh.read()
 
+# copy version file over
+src_path = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(src_path, 'version.py')) as fh:
+    with open(os.path.join(src_path, 'matrixprofile', 'version.py'), 'w') as out:
+        out.write(fh.read())
+
 setuptools.setup(
     name="matrixprofile",
-    version="1.1.1",
+    version=version.__version__,
     author="Matrix Profile Foundation",
     author_email="tylerwmarrs@gmail.com",
     description="An open source time series data mining library based on Matrix Profile algorithms.",
