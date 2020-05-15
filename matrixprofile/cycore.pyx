@@ -133,28 +133,21 @@ def moving_avg_std(double[:] a, unsigned int w):
     cdef double[:] sig = np.empty(profile_len, dtype='d')
     
     cumsum[0] = a[0]
-    for i in range(1, n):
-        cumsum[i] = a[i] + cumsum[i - 1]
-    
     sq_cumsum[0] = a[0] * a[0]
     for i in range(1, n):
+        cumsum[i] = a[i] + cumsum[i - 1]
         sq_cumsum[i] = a[i] * a[i] + sq_cumsum[i - 1]
     
     sums[0] = cumsum[w - 1]
-    for i in range(n - w):
-        sums[i + 1] = cumsum[w + i] - cumsum[i]
-    
     sq_sums[0] = sq_cumsum[w - 1]
     for i in range(n - w):
+        sums[i + 1] = cumsum[w + i] - cumsum[i]
         sq_sums[i + 1] = sq_cumsum[w + i] - sq_cumsum[i]
     
     for i in range(profile_len):
         mu[i] = sums[i] / w
-    
-    for i in range(profile_len):
         sig_sq[i] = sq_sums[i] / w - mu[i] * mu[i]
-    
-    for i in range(profile_len):
+
         if sig_sq[i] < 0:
             sig[i] = 0
         else:
