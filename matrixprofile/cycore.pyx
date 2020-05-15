@@ -92,7 +92,10 @@ def muinvn(double[:] a, unsigned int w):
             s = s + (((p - (x - z)) + (h[j] - z)) + r[j])
             p = x
 
-        sig[i] = 1 / sqrt(p + s)
+        if p + s == 0:
+            sig[i] = 0
+        else:
+            sig[i] = 1 / sqrt(p + s)
     
     return (mu, sig)
 
@@ -152,6 +155,9 @@ def moving_avg_std(double[:] a, unsigned int w):
         sig_sq[i] = sq_sums[i] / w - mu[i] * mu[i]
     
     for i in range(profile_len):
-        sig[i] = sqrt(sig_sq[i])
+        if sig_sq[i] < 0:
+            sig[i] = 0
+        else:
+            sig[i] = sqrt(sig_sq[i])
     
     return (mu, sig)
