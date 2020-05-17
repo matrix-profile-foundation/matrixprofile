@@ -14,3 +14,7 @@
 
 # 1.1.1 (2020-05-05)
 - Minor bug and dependency fixes
+
+# 1.1.2 (2020-05-17)
+- Minor bug fixes
+- Minor optimizations
