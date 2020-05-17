@@ -26,12 +26,12 @@ def test_snippets():
     snippet_size = 64
 
     result = snippets(ts, snippet_size, window_size=w)
-    assert(result[0]['index'] == 192)
+    assert(result[0]['index'] == 384)
     assert(result[1]['index'] == 704)
 
     # test inferred window size of snippet size / 2
     result = snippets(ts, snippet_size)
-    assert(result[0]['index'] == 192)
+    assert(result[0]['index'] == 384)
     assert(result[1]['index'] == 704)
 
     snippet_size = 128
@@ -39,6 +39,10 @@ def test_snippets():
     assert(result[0]['index'] == 384)
     assert(result[1]['index'] == 640)
 
+    snippet_size = 8
+    result = snippets(ts, snippet_size, window_size=snippet_size / 2)
+    assert(result[0]['index'] == 72)
+    assert(result[1]['index'] == 784)
 
 def test_invalid_snippet_size():
     ts = np.arange(100)
