@@ -72,6 +72,11 @@ matrixprofile.algorithms.mpdist
 
 .. autofunction:: matrixprofile.algorithms.mpdist
 
+matrixprofile.algorithms.pairwise_dist
+======================================
+
+.. autofunction:: matrixprofile.algorithms.pairwise_dist
+
 matrixprofile.algorithms.maximum_subsequence
 ============================================
 

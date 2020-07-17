@@ -7,3 +7,4 @@ from matrixprofile.algorithms.scrimp import scrimp_plus_plus
 from matrixprofile.algorithms.scrimp import prescrimp
 from matrixprofile.algorithms.skimp import skimp
 from matrixprofile.algorithms.skimp import maximum_subsequence
+from matrixprofile.algorithms.pairwise_dist import pairwise_dist
