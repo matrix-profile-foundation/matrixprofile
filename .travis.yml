@@ -58,6 +58,7 @@ jobs:
     - stage: codecov
       name: Add code coverage stats
       services: docker
+      python: 3.6.2
       install:
         - pip install codecov
         - pip install pytest-cov
@@ -70,7 +71,7 @@ jobs:
     - stage: deploy
       name: Build and deploy Linux wheels
       services: docker
-      install: 
+      install:
         - pip install twine
         - pip install cython
         - pip install cibuildwheel==1.1.0
@@ -84,7 +85,7 @@ jobs:
       name: Build and deploy macOS wheels
       os: osx
       language: shell
-      install: 
+      install:
         - pip install twine
         - pip install cython
         - pip install cibuildwheel==1.1.0
@@ -98,7 +99,7 @@ jobs:
       name: Build and deploy Windows wheels
       os: windows
       language: shell
-      install: 
+      install:
         - pip install twine
         - pip install cython
         - pip install cibuildwheel==1.1.0
