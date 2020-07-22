@@ -18,3 +18,6 @@
 # 1.1.2 (2020-05-17)
 - Minor bug fixes
 - Minor optimizations
+
+# 1.1.3 (2020-07-22)
+- Minor code refactoring
