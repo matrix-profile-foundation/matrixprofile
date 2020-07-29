@@ -243,7 +243,7 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     
 
 def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
-    include_pmp=False):
+    include_pmp=False, lower_window=8):
     """
     Finds the maximum subsequence length based on the threshold provided. Note
     that this threshold is domain specific requiring some knowledge about the
@@ -266,6 +266,8 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
         Number of cpu cores to use.
     include_pmp : bool, default False
         Include the PanMatrixProfile for the computed windows.
+    lower_window : int, default 8
+        Lower bound of subsequence length that can be altered if required.
     
     Returns
     -------
@@ -292,7 +294,7 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
     ts = core.to_np_array(ts)
     n = len(ts)
     correlation_max = np.inf
-    window_size = 8
+    window_size = lower_window
     max_window = int(np.floor(len(ts) / 2))
     
     def resize(mp, pi, n):
