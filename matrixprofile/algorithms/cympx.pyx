@@ -24,7 +24,7 @@ import numpy as np
 from matrixprofile.cycore import muinvn
 
 
-@cython.boundscheck(False)
+@cython.boundscheck(True)
 @cython.cdivision(True)
 @cython.wraparound(False)
 cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
@@ -116,8 +116,122 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
     
     return (mp, mpi)
 
+@cython.embedsignature(True)
+@cython.boundscheck(True) # in case I mess up, coerce to python out of bounds error for now.
+@cython.cdivision(True)
+@cython.wraparound(False)
+cpdef mpx_parallel_exper(double[:] ts, int w, int cross_correlation, int n_jobs):
+    """
+    The MPX algorithm computes the matrix profile without using the FFT. Right
+    now it only supports single dimension self joins. 
+ 
+    The experimental version uses a slightly simpler factorization in an effort to 
+    avoid cases of very ill conditioned products on time series with streams of zeros
+    or missing data.
 
-@cython.boundscheck(False)
+    Parameters
+    ----------
+    ts : array_like
+        The time series to compute the matrix profile for.
+    w : int
+        The window size.
+    cross_correlation : int
+        Flag (0, 1) to determine if cross_correlation distance should be
+        returned. It defaults to Euclidean Distance (0).
+    n_jobs : int, Default = 1
+        Number of cpu cores to use.
+    
+    Returns
+    -------
+    (array_like, array_like) :
+        The matrix profile (distance profile, profile index).
+
+    """
+    # A couple of these are used to sanitize against the possibility of out of bounds reads on invalid parameter inputsg
+    if w < 1: 
+        raise ValueError('zero or negative subsequence length')
+    
+    cdef int i, j, diag, offset
+    cdef int n = ts.shape[0]
+
+    # the original implementation allows the minlag to be manually set
+    # here it is always w / 4 similar to SCRIMP++
+    cdef int minlag = int(floor(w / 4))
+    cdef int profile_len = n - w + 1
+    
+    if profile_len < w:  
+        raise ValueError('time series is too short relative to subsequence length w')
+
+    cdef double c, c_cmp
+
+    stats = muinvn(ts, w)
+    cdef double[:] mu = stats[0]
+    cdef double[:] sig = stats[1]
+    stats_short = muinvn(ts, w-1)
+    cdef double[:] mu_s = stats_short[0] 
+
+    cdef np.ndarray[np.double_t, ndim=1] mp = np.full(profile_len, -1, dtype='d')
+    cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, np.nan, dtype='int')
+    
+    cdef double[:,:] tmp_mp = np.full((profile_len, n_jobs), -1, dtype='d')
+    cdef np.int_t[:,:] tmp_mpi = np.full((profile_len, n_jobs), np.nan, dtype='int')
+    # These formulas fold a constant of (w-1)/w into one sequence of each (row,column) pair
+    # where row and column refer to the elements of the correlation matrix of subsequence pairs,
+    # which they are used to compute. This represent  a fairly arbitrary choice on where to fold it.
+    # The previous formula used a twisted factorization, which is omitted here due to certain edge cases.
+    cdef double[:] r_bwd = np.empty(profile_len)
+    cdef double[:] c_bwd = np.empty(profile_len)
+    r_bwd[0] = 0
+    c_bwd[0] = 0
+    for i in range(profile_len-1):
+        r_bwd[i+1] = ts[i] - mu[i]
+        c_bwd[i+1] = ts[i] - mu_s[i + 1]
+    cdef double[:] r_fwd = np.empty(profile_len, dtype='d')
+    cdef double[:] c_fwd = np.empty(profile_len, dtype='d') 
+    for i in range(profile_len):
+        r_fwd[i] = ts[i+w-1] - mu[i]
+        c_fwd[i] = ts[i+w-1] - mu_s[i]
+    for diag in range(minlag, profile_len):
+        c = 0
+        for i in range(diag, diag + w):
+            c += ((ts[i] - mu[diag]) * (ts[i-diag] - mu[0]))
+
+        for offset in range(n - w - diag + 1):
+            c = c - r_bwd[offset] * c_bwd[offset + diag] + r_fwd[offset] * c_fwd[offset + diag]
+            c_cmp = c * sig[offset] * sig[offset + diag]
+            
+            # update the distance profile and profile index
+            if c_cmp > tmp_mp[offset, openmp.omp_get_thread_num()]:
+                tmp_mp[offset, openmp.omp_get_thread_num()] = c_cmp
+                tmp_mpi[offset, openmp.omp_get_thread_num()] = offset + diag
+            
+            if c_cmp > tmp_mp[offset + diag, openmp.omp_get_thread_num()]:
+                if c_cmp > 1:
+                    c_cmp = 1
+                tmp_mp[offset + diag, openmp.omp_get_thread_num()] = c_cmp
+                tmp_mpi[offset + diag, openmp.omp_get_thread_num()] = offset
+    
+    # combine parallel results...
+    for i in range(tmp_mp.shape[0]):
+        for j in range(tmp_mp.shape[1]):
+            if tmp_mp[i,j] > mp[i]:
+                if tmp_mp[i, j] > 1:
+                    mp[i] = 1
+                else:
+                    mp[i] = tmp_mp[i, j]
+                mpi[i] = tmp_mpi[i, j]
+    
+    # convert normalized cross correlation to euclidean distance
+    if cross_correlation == 0:
+        for i in range(profile_len):
+            mp[i] = sqrt(2 * w * (1 - mp[i]))
+    
+    return (mp, mpi)
+
+
+
+@cython.embedsignature(True)
+@cython.boundscheck(True)
 @cython.cdivision(True)
 @cython.wraparound(False)
 cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, int cross_correlation, int n_jobs):
