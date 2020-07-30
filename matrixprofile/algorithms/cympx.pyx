@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+#cython: boundscheck=False, cdivision=True, wraparound=False
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -12,7 +14,7 @@ from libc.math cimport ceil
 from libc.math cimport sqrt
 
 from cython.parallel import prange
-
+from cython.view cimport array as cvarray
 from numpy cimport ndarray
 cimport numpy as np
 cimport cython
@@ -24,13 +26,14 @@ import numpy as np
 from matrixprofile.cycore import muinvn
 
 
-@cython.boundscheck(False)
-@cython.cdivision(True)
-@cython.wraparound(False)
-cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
+cpdef mpx_parallel(double[::1] ts, int w, int cross_correlation, int n_jobs):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
-    now it only supports single dimension self joins.
+    now it only supports single dimension self joins. 
+ 
+    The experimental version uses a slightly simpler factorization in an effort to 
+    avoid cases of very ill conditioned products on time series with streams of zeros
+    or missing data.
 
     Parameters
     ----------
@@ -50,76 +53,73 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
         The matrix profile (distance profile, profile index).
 
     """
-    cdef int i, j, diag, offset
-    cdef int n = ts.shape[0]
+    if w < 2: 
+        raise ValueError('subsequence length is too short to admit a normalized representation')
+    
+    cdef int i, j, diag, row, col
+    cdef double cov_, corr_
+    
+    cdef int minlag = w // 4
+    cdef int subseqcount = ts.size - w + 1
 
-    # the original implementation allows the minlag to be manually set
-    # here it is always w / 4 similar to SCRIMP++
-    cdef int minlag = int(floor(w / 4))
-    cdef int profile_len = n - w + 1
+    if subseqcount < 1 + minlag:  
+        raise ValueError('time series is too short relative to subsequence length w')
     
-    cdef double c, c_cmp
+    cdef double[::1] mu, mu_s, invnorm
+    mu, invnorm  = muinvn(ts, w)
+    mu_s, _ = muinvn(ts[:ts.size-1], w-1)
+    mprof_ = np.empty(subseqcount, dtype='d')
+    mprofidx_ = np.empty(subseqcount, dtype='i')
+    cdef double[::1] mprof = mprof_
+    cdef int[::1] mprofidx = mprofidx_ 
 
-    stats = muinvn(ts, w)
-    cdef double[:] mu = stats[0]
-    cdef double[:] sig = stats[1]
+    for i in range(subseqcount):
+        mprof[i] = -1.0
+        mprofidx[i] = -1
     
-    cdef double[:] df = np.empty(profile_len, dtype='d')
-    cdef double[:] dg = np.empty(profile_len, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] mp = np.full(profile_len, -1, dtype='d')
-    cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, np.nan, dtype='int')
-    
-    cdef double[:,:] tmp_mp = np.full((profile_len, n_jobs), -1, dtype='d')
-    cdef np.int_t[:,:] tmp_mpi = np.full((profile_len, n_jobs), np.nan, dtype='int')
-    
-    # this is where we compute the diagonals and later the matrix profile
-    df[0] = 0
-    dg[0] = 0
-    for i in prange(w, n, num_threads=n_jobs, nogil=True):
-        df[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
-        dg[i - w + 1] = (ts[i] - mu[i - w + 1]) + (ts[i - w] - mu[i - w])    
+    cdef double[::1] r_bwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] c_bwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] r_fwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] c_fwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+   
+    for i in range(subseqcount-1):
+        r_bwd[i] = ts[i] - mu[i]
+        c_bwd[i] = ts[i] - mu_s[i+1]
+        r_fwd[i] = ts[i+w] - mu[i+1]
+        c_fwd[i] = ts[i+w] - mu_s[i+1]
 
-    for diag in prange(minlag, profile_len, num_threads=n_jobs, nogil=True):
-        c = 0
+    cdef double[::1] first_row = cvarray(shape=(w,), itemsize=sizeof(double), format='d')
+    cdef double m_ = mu[0]
+    for i in range(w):
+        first_row[i] = ts[i] - m_     
+
+    for diag in range(minlag, subseqcount):
+        cov_ = 0 
         for i in range(diag, diag + w):
-            c = c + ((ts[i] - mu[diag]) * (ts[i-diag] - mu[0]))
+            cov_ += (ts[i] - mu[diag]) * first_row[i-diag]
 
-        for offset in range(n - w - diag + 1):
-            c = c + df[offset] * dg[offset + diag] + df[offset + diag] * dg[offset]
-            c_cmp = c * sig[offset] * sig[offset + diag]
-            
-            # update the distance profile and profile index
-            if c_cmp > tmp_mp[offset, openmp.omp_get_thread_num()]:
-                tmp_mp[offset, openmp.omp_get_thread_num()] = c_cmp
-                tmp_mpi[offset, openmp.omp_get_thread_num()] = offset + diag
-            
-            if c_cmp > tmp_mp[offset + diag, openmp.omp_get_thread_num()]:
-                if c_cmp > 1:
-                    c_cmp = 1
-                tmp_mp[offset + diag, openmp.omp_get_thread_num()] = c_cmp
-                tmp_mpi[offset + diag, openmp.omp_get_thread_num()] = offset
+        for row in range(subseqcount - diag):
+            col = diag + row
+            if row > 0: 
+                cov_ -= r_bwd[row-1] * c_bwd[col-1] 
+                cov_ += r_fwd[row-1] * c_fwd[col-1]
+            corr_ = cov_ * invnorm[row] * invnorm[col]
+            if corr_ > 1.0:
+                corr_ = 1.0
+            if corr_ > mprof[row]:
+                mprof[row] = corr_ 
+                mprofidx[row] = col 
+            if corr_ > mprof[col]:
+                mprof[col] = corr_
+                mprofidx[col] = row
     
-    # combine parallel results...
-    for i in range(tmp_mp.shape[0]):
-        for j in range(tmp_mp.shape[1]):
-            if tmp_mp[i,j] > mp[i]:
-                if tmp_mp[i, j] > 1:
-                    mp[i] = 1
-                else:
-                    mp[i] = tmp_mp[i, j]
-                mpi[i] = tmp_mpi[i, j]
-    
-    # convert normalized cross correlation to euclidean distance
     if cross_correlation == 0:
-        for i in range(profile_len):
-            mp[i] = sqrt(2 * w * (1 - mp[i]))
+        for i in range(subseqcount):
+            mprof[i] = sqrt(2 * w * (1 - mprof[i]))
     
-    return (mp, mpi)
+    return mprof_, mprofidx_
 
 
-@cython.boundscheck(False)
-@cython.cdivision(True)
-@cython.wraparound(False)
 cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, int cross_correlation, int n_jobs):
     """
     The MPX algorithm computes the matrix profile without using the FFT. This
