@@ -12,7 +12,7 @@ from libc.math cimport ceil
 from libc.math cimport sqrt
 
 from cython.parallel import prange
-
+from cython.view cimport array as cvarray
 from numpy cimport ndarray
 cimport numpy as np
 cimport cython
@@ -166,49 +166,53 @@ cpdef mpx_parallel_exper(double[:] ts, int w, int cross_correlation, int n_jobs)
 
     cdef double c, c_cmp
 
-    stats = muinvn(ts, w)
-    cdef double[:] mu
-    cdef double[:] sig
+    cdef double[::1] mu
+    cdef double[::1] mu_s
+    cdef double[::1] sig
     
-    #cdef double[:] mu = stats[0]
-    #cdef double[:] sig = stats[1]
-    stats_short = muinvn(ts, w-1)
-    cdef double[:] mu_s = stats_short[0] 
-
-    cdef np.ndarray[np.double_t, ndim=1] mp = np.full(profile_len, -1, dtype='d')
-    cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, np.nan, dtype='int')
+    mu,sig = muinvn(ts, w)
+    mu_s,_ = muinvn(ts[:n-1], w-1)
+    mprof_ = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='f')
+    mprofidx_ = cvarray(shape=(profile_len,), itemsize=sizeof(int), format='i')
+    for i in range(profile_len):
+        mprof_[i] = -1.0
+        mprofidx_[i] = -1
     
-    cdef double[:,:] tmp_mp = np.full((profile_len, n_jobs), -1, dtype='d')
-    cdef np.int_t[:,:] tmp_mpi = np.full((profile_len, n_jobs), np.nan, dtype='int')
+    r_bwd = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='f')
+    c_bwd = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='f')
+    r_fwd = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='f')
+    c_fwd = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='f')
+    
     # These formulas fold a constant of (w-1)/w into one sequence of each (row,column) pair
     # where row and column refer to the elements of the correlation matrix of subsequence pairs,
     # which they are used to compute. This represent  a fairly arbitrary choice on where to fold it.
     # The previous formula used a twisted factorization, which is omitted here due to certain edge cases.
-    cdef double[:] r_bwd = np.empty(profile_len)
-    cdef double[:] c_bwd = np.empty(profile_len)
-    r_bwd[0] = 0
-    c_bwd[0] = 0
     for i in range(profile_len-1):
-        r_bwd[i+1] = ts[i] - mu[i]
-        c_bwd[i+1] = ts[i] - mu_s[i + 1]
-    cdef double[:] r_fwd = np.empty(profile_len, dtype='d')
-    cdef double[:] c_fwd = np.empty(profile_len, dtype='d') 
-    for i in range(profile_len):
-        r_fwd[i] = ts[i+w-1] - mu[i]
-        c_fwd[i] = ts[i+w-1] - mu_s[i]
-    for diag in range(minlag, profile_len):
-        c = 0
-        for i in range(diag, diag + w):
-            c += ((ts[i] - mu[diag]) * (ts[i-diag] - mu[0]))
+        r_bwd[i] = ts[i] - mu[i]
+        c_bwd[i] = ts[i] - mu_s[i + 1]
+        r_fwd[i] = ts[i+subseqlen] - mu[i+1]
+        c_fwd[i] = ts[i+subseqlen] - mu_s[i+1]
 
-        for offset in range(n - w - diag + 1):
-            c = c - r_bwd[offset] * c_bwd[offset + diag] + r_fwd[offset] * c_fwd[offset + diag]
-            c_cmp = c * sig[offset] * sig[offset + diag]
+    first_row = cvarray(shape=(w,), itemsize=sizeof(double), type='f')
+    cdef double m_ = mu[0]
+    for i in range(subseqlen):
+        first_row[i] = ts[i] - m_     
+
+    for diag in range(minlag, profile_len):
+        cov_ = 0  # not exact cov, this isn't divided by the number of samples
+        for i in range(diag, diag + w):
+            cov_ += ((ts[i] - mu[diag]) * first_row[i-diag]
+
+        for row in range(n - w - diag + 1):
+            col = diag + row
+            cov_ -= r_bwd[row] * c_bwd[col] 
+            cov_ += r_fwd[row] * c_fwd[col]
+            corr_ = cov_ * invnorm[row] * invnorm[col]
             
             # update the distance profile and profile index
-            if c_cmp > tmp_mp[offset, openmp.omp_get_thread_num()]:
-                tmp_mp[offset, openmp.omp_get_thread_num()] = c_cmp
-                tmp_mpi[offset, openmp.omp_get_thread_num()] = offset + diag
+            if corr_ > tmp_mp[row, openmp.omp_get_thread_num()]:
+                tmp_mp[row, openmp.omp_get_thread_num()] = c_cmp
+                tmp_mpi[row, openmp.omp_get_thread_num()] = offset + diag
             
             if c_cmp > tmp_mp[offset + diag, openmp.omp_get_thread_num()]:
                 if c_cmp > 1:
