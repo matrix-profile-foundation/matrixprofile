@@ -87,8 +87,6 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
         for offset in range(n - w - diag + 1):
             c = c + df[offset] * dg[offset + diag] + df[offset + diag] * dg[offset]
             c_cmp = c * sig[offset] * sig[offset + diag]
-cdef double[:] mu
-    cdef double[:] sig
                 
             # update the distance profile and profile index
             if c_cmp > tmp_mp[offset, openmp.omp_get_thread_num()]:
@@ -205,8 +203,9 @@ cpdef mpx_parallel_exper(double[:] ts, int w, int cross_correlation, int n_jobs)
 
         for row in range(n - w - diag + 1):
             col = diag + row
-            cov_ -= r_bwd[row] * c_bwd[col] 
-            cov_ += r_fwd[row] * c_fwd[col]
+            if row > 0: 
+                cov_ -= r_bwd[row] * c_bwd[col] 
+                cov_ += r_fwd[row] * c_fwd[col]
             corr_ = cov_ * invnorm[row] * invnorm[col]
             
             # update the distance profile and profile index
