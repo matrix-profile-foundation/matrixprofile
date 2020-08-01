@@ -87,7 +87,9 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
         for offset in range(n - w - diag + 1):
             c = c + df[offset] * dg[offset + diag] + df[offset + diag] * dg[offset]
             c_cmp = c * sig[offset] * sig[offset + diag]
-            
+cdef double[:] mu
+    cdef double[:] sig
+                
             # update the distance profile and profile index
             if c_cmp > tmp_mp[offset, openmp.omp_get_thread_num()]:
                 tmp_mp[offset, openmp.omp_get_thread_num()] = c_cmp
@@ -156,7 +158,7 @@ cpdef mpx_parallel_exper(double[:] ts, int w, int cross_correlation, int n_jobs)
 
     # the original implementation allows the minlag to be manually set
     # here it is always w / 4 similar to SCRIMP++
-    cdef int minlag = int(floor(w / 4))
+    cdef int minlag = w // 4
     cdef int profile_len = n - w + 1
     
     if profile_len < w:  
@@ -165,8 +167,11 @@ cpdef mpx_parallel_exper(double[:] ts, int w, int cross_correlation, int n_jobs)
     cdef double c, c_cmp
 
     stats = muinvn(ts, w)
-    cdef double[:] mu = stats[0]
-    cdef double[:] sig = stats[1]
+    cdef double[:] mu
+    cdef double[:] sig
+    
+    #cdef double[:] mu = stats[0]
+    #cdef double[:] sig = stats[1]
     stats_short = muinvn(ts, w-1)
     cdef double[:] mu_s = stats_short[0] 
 
