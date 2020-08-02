@@ -151,29 +151,29 @@ cpdef mpx_parallel_exper(double[::1] ts, int w, int cross_correlation, int n_job
     cdef double cov_, corr_
     
     cdef int minlag = w // 4
-    cdef int subseqcount = n - w + 1
+    cdef int subseqcount = ts.size - w + 1
 
     if subseqcount < 1 + minlag:  
         raise ValueError('time series is too short relative to subsequence length w')
     
     cdef double[::1] mu, mu_s, invnorm
     mu, invnorm  = muinvn(ts, w)
-    mu_s, _ = muinvn(ts[:n-1], w-1)
-    mprof_ = np.empty(profile_len, dtype='d')
-    mprofidx_ = np.empty(profile_len, dtype='i')
+    mu_s, _ = muinvn(ts[:ts.size-1], w-1)
+    mprof_ = np.empty(subseqcount, dtype='d')
+    mprofidx_ = np.empty(subseqcount, dtype='i')
     cdef double[::1] mprof = mprof_
     cdef int[::1] mprofidx = mprofidx_ 
 
-    for i in range(profile_len):
+    for i in range(subseqcount):
         mprof[i] = -1.0
         mprofidx[i] = -1
     
-    cdef double[::1] r_bwd = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
-    cdef double[::1] c_bwd = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
-    cdef double[::1] r_fwd = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
-    cdef double[::1] c_fwd = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] r_bwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] c_bwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] r_fwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] c_fwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
    
-    for i in range(profile_len-1):
+    for i in range(subseqcount-1):
         r_bwd[i] = ts[i] - mu[i]
         c_bwd[i] = ts[i] - mu_s[i + 1]
         r_fwd[i] = ts[i+w] - mu[i+1]
@@ -184,12 +184,12 @@ cpdef mpx_parallel_exper(double[::1] ts, int w, int cross_correlation, int n_job
     for i in range(w):
         first_row[i] = ts[i] - m_     
 
-    for diag in range(minlag, profile_len):
+    for diag in range(minlag, subseqcount):
         cov_ = 0 
         for i in range(diag, diag + w):
             cov_ += (ts[i] - mu[diag]) * first_row[i-diag]
 
-        for row in range(profile_len - diag):
+        for row in range(subseqcount - diag):
             col = diag + row
             if row > 0: 
                 cov_ -= r_bwd[row-1] * c_bwd[col-1] 
@@ -200,13 +200,12 @@ cpdef mpx_parallel_exper(double[::1] ts, int w, int cross_correlation, int n_job
             if corr_ > mprof[row]:
                 mprof[row] = corr_ 
                 mprofidx[row] = col 
-            
             if corr_ > mprof[col]:
                 mprof[col] = corr_
                 mprofidx[col] = row
     
     if cross_correlation == 0:
-        for i in range(profile_len):
+        for i in range(subseqcount):
             mprof[i] = sqrt(2 * w * (1 - mprof[i]))
     
     return mprof_, mprofidx_
