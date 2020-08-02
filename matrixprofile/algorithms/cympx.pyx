@@ -164,31 +164,27 @@ cpdef mpx_parallel_exper(double[::1] ts, int w, int cross_correlation, int n_job
     cdef double[::1] mu, mu_s, invnorm
     mu, invnorm  = muinvn(ts, w)
     mu_s, _ = muinvn(ts[:n-1], w-1)
-    cdef double[::1] mprof = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='d')
-    cdef int[::1] mprofidx = cvarray(shape=(profile_len,), itemsize=sizeof(int), format='i')
+    mprof_ = np.empty(profile_len, dtype='d')
+    mprofidx_ = np.empty(profile_len, dtype='i')
+    cdef double[::1] mprof = mprof_
+    cdef int[::1] mprofidx = mprofidx_ 
 
     for i in range(profile_len):
         mprof[i] = -1.0
         mprofidx[i] = -1
     
-    r_bwd_ = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
-    c_bwd_ = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
-    r_fwd_ = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
-    c_fwd_ = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] r_bwd = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] c_bwd = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] r_fwd = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] c_fwd = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
    
-    cdef double [::1] r_bwd = r_bwd_
-    cdef double [::1] c_bwd = c_bwd_
-    cdef double [::1] r_fwd = r_fwd_
-    cdef double [::1] c_fwd = c_fwd_
-
     for i in range(profile_len-1):
         r_bwd[i] = ts[i] - mu[i]
         c_bwd[i] = ts[i] - mu_s[i + 1]
         r_fwd[i] = ts[i+w] - mu[i+1]
         c_fwd[i] = ts[i+w] - mu_s[i+1]
 
-    first_row_ = cvarray(shape=(w,), itemsize=sizeof(double), format='d')
-    cdef double[::1] first_row = first_row_ 
+    cdef double[::1] first_row = cvarray(shape=(w,), itemsize=sizeof(double), format='d')
     cdef double m_ = mu[0]
     for i in range(w):
         first_row[i] = ts[i] - m_     
@@ -218,7 +214,7 @@ cpdef mpx_parallel_exper(double[::1] ts, int w, int cross_correlation, int n_job
         for i in range(profile_len):
             mprof[i] = sqrt(2 * w * (1 - mprof[i]))
     
-    return np.asarray(mprof), np.asarray(mprofidx)
+    return mprof_, mprofidx_
 
 
 
