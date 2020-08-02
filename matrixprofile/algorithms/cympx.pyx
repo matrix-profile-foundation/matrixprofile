@@ -84,7 +84,7 @@ cpdef mpx_parallel(double[::1] ts, int w, int cross_correlation, int n_jobs):
    
     for i in range(subseqcount-1):
         r_bwd[i] = ts[i] - mu[i]
-        c_bwd[i] = ts[i] - mu_s[i + 1]
+        c_bwd[i] = ts[i] - mu_s[i+1]
         r_fwd[i] = ts[i+w] - mu[i+1]
         c_fwd[i] = ts[i+w] - mu_s[i+1]
 
