@@ -24,7 +24,7 @@ import numpy as np
 from matrixprofile.cycore import muinvn
 
 
-@cython.boundscheck(True)
+@cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
 cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
@@ -117,10 +117,10 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
     return (mp, mpi)
 
 @cython.embedsignature(True)
-@cython.boundscheck(True) # in case I mess up, coerce to python out of bounds error for now.
+@cython.boundscheck(False) # in case I mess up, coerce to python out of bounds error for now.
 @cython.cdivision(True)
 @cython.wraparound(False)
-cpdef mpx_parallel_exper(double[:] ts, int w, int cross_correlation, int n_jobs):
+cpdef mpx_parallel_exper(double[::1] ts, int w, int cross_correlation, int n_jobs):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
     now it only supports single dimension self joins. 
@@ -151,90 +151,74 @@ cpdef mpx_parallel_exper(double[:] ts, int w, int cross_correlation, int n_jobs)
     if w < 1: 
         raise ValueError('zero or negative subsequence length')
     
-    cdef int i, j, diag, offset
+    cdef int i, j, diag, row, col
     cdef int n = ts.shape[0]
-
-    # the original implementation allows the minlag to be manually set
-    # here it is always w / 4 similar to SCRIMP++
+    cdef double cov_, corr_
+    
     cdef int minlag = w // 4
     cdef int profile_len = n - w + 1
-    
+
     if profile_len < w:  
         raise ValueError('time series is too short relative to subsequence length w')
-
-    cdef double c, c_cmp
-
-    cdef double[::1] mu
-    cdef double[::1] mu_s
-    cdef double[::1] sig
     
-    mu,sig = muinvn(ts, w)
-    mu_s,_ = muinvn(ts[:n-1], w-1)
-    mprof_ = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='f')
-    mprofidx_ = cvarray(shape=(profile_len,), itemsize=sizeof(int), format='i')
+    cdef double[::1] mu, mu_s, invnorm
+    mu, invnorm  = muinvn(ts, w)
+    mu_s, _ = muinvn(ts[:n-1], w-1)
+    cdef double[::1] mprof = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='d')
+    cdef int[::1] mprofidx = cvarray(shape=(profile_len,), itemsize=sizeof(int), format='i')
+
     for i in range(profile_len):
-        mprof_[i] = -1.0
-        mprofidx_[i] = -1
+        mprof[i] = -1.0
+        mprofidx[i] = -1
     
-    r_bwd = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='f')
-    c_bwd = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='f')
-    r_fwd = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='f')
-    c_fwd = cvarray(shape=(profile_len,), itemsize=sizeof(double), format='f')
-    
-    # These formulas fold a constant of (w-1)/w into one sequence of each (row,column) pair
-    # where row and column refer to the elements of the correlation matrix of subsequence pairs,
-    # which they are used to compute. This represent  a fairly arbitrary choice on where to fold it.
-    # The previous formula used a twisted factorization, which is omitted here due to certain edge cases.
+    r_bwd_ = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
+    c_bwd_ = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
+    r_fwd_ = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
+    c_fwd_ = cvarray(shape=(profile_len-1,), itemsize=sizeof(double), format='d')
+   
+    cdef double [::1] r_bwd = r_bwd_
+    cdef double [::1] c_bwd = c_bwd_
+    cdef double [::1] r_fwd = r_fwd_
+    cdef double [::1] c_fwd = c_fwd_
+
     for i in range(profile_len-1):
         r_bwd[i] = ts[i] - mu[i]
         c_bwd[i] = ts[i] - mu_s[i + 1]
-        r_fwd[i] = ts[i+subseqlen] - mu[i+1]
-        c_fwd[i] = ts[i+subseqlen] - mu_s[i+1]
+        r_fwd[i] = ts[i+w] - mu[i+1]
+        c_fwd[i] = ts[i+w] - mu_s[i+1]
 
-    first_row = cvarray(shape=(w,), itemsize=sizeof(double), type='f')
+    first_row_ = cvarray(shape=(w,), itemsize=sizeof(double), format='d')
+    cdef double[::1] first_row = first_row_ 
     cdef double m_ = mu[0]
-    for i in range(subseqlen):
+    for i in range(w):
         first_row[i] = ts[i] - m_     
 
     for diag in range(minlag, profile_len):
-        cov_ = 0  # not exact cov, this isn't divided by the number of samples
+        cov_ = 0 
         for i in range(diag, diag + w):
-            cov_ += ((ts[i] - mu[diag]) * first_row[i-diag]
+            cov_ += (ts[i] - mu[diag]) * first_row[i-diag]
 
-        for row in range(n - w - diag + 1):
+        for row in range(profile_len - diag):
             col = diag + row
             if row > 0: 
-                cov_ -= r_bwd[row] * c_bwd[col] 
-                cov_ += r_fwd[row] * c_fwd[col]
+                cov_ -= r_bwd[row-1] * c_bwd[col-1] 
+                cov_ += r_fwd[row-1] * c_fwd[col-1]
             corr_ = cov_ * invnorm[row] * invnorm[col]
+            if corr_ > 1.0:
+                corr_ = 1.0
+            if corr_ > mprof[row]:
+                mprof[row] = corr_ 
+                mprofidx[row] = col 
             
-            # update the distance profile and profile index
-            if corr_ > tmp_mp[row, openmp.omp_get_thread_num()]:
-                tmp_mp[row, openmp.omp_get_thread_num()] = c_cmp
-                tmp_mpi[row, openmp.omp_get_thread_num()] = offset + diag
-            
-            if c_cmp > tmp_mp[offset + diag, openmp.omp_get_thread_num()]:
-                if c_cmp > 1:
-                    c_cmp = 1
-                tmp_mp[offset + diag, openmp.omp_get_thread_num()] = c_cmp
-                tmp_mpi[offset + diag, openmp.omp_get_thread_num()] = offset
+            if corr_ > mprof[col]:
+                mprof[col] = corr_
+                mprofidx[col] = row
     
-    # combine parallel results...
-    for i in range(tmp_mp.shape[0]):
-        for j in range(tmp_mp.shape[1]):
-            if tmp_mp[i,j] > mp[i]:
-                if tmp_mp[i, j] > 1:
-                    mp[i] = 1
-                else:
-                    mp[i] = tmp_mp[i, j]
-                mpi[i] = tmp_mpi[i, j]
-    
-    # convert normalized cross correlation to euclidean distance
     if cross_correlation == 0:
         for i in range(profile_len):
-            mp[i] = sqrt(2 * w * (1 - mp[i]))
+            mprof[i] = sqrt(2 * w * (1 - mprof[i]))
     
-    return (mp, mpi)
+    return np.asarray(mprof), np.asarray(mprofidx)
 
 
 
