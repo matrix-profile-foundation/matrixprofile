@@ -26,97 +26,7 @@ import numpy as np
 from matrixprofile.cycore import muinvn
 
 
-cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
-    """
-    The MPX algorithm computes the matrix profile without using the FFT. Right
-    now it only supports single dimension self joins.
-
-    Parameters
-    ----------
-    ts : array_like
-        The time series to compute the matrix profile for.
-    w : int
-        The window size.
-    cross_correlation : int
-        Flag (0, 1) to determine if cross_correlation distance should be
-        returned. It defaults to Euclidean Distance (0).
-    n_jobs : int, Default = 1
-        Number of cpu cores to use.
-    
-    Returns
-    -------
-    (array_like, array_like) :
-        The matrix profile (distance profile, profile index).
-
-    """
-    cdef int i, j, diag, offset
-    cdef int n = ts.shape[0]
-
-    # the original implementation allows the minlag to be manually set
-    # here it is always w / 4 similar to SCRIMP++
-    cdef int minlag = int(floor(w / 4))
-    cdef int profile_len = n - w + 1
-    
-    cdef double c, c_cmp
-
-    stats = muinvn(ts, w)
-    cdef double[:] mu = stats[0]
-    cdef double[:] sig = stats[1]
-    
-    cdef double[:] df = np.empty(profile_len, dtype='d')
-    cdef double[:] dg = np.empty(profile_len, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] mp = np.full(profile_len, -1, dtype='d')
-    cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, np.nan, dtype='int')
-    
-    cdef double[:,:] tmp_mp = np.full((profile_len, n_jobs), -1, dtype='d')
-    cdef np.int_t[:,:] tmp_mpi = np.full((profile_len, n_jobs), np.nan, dtype='int')
-    
-    # this is where we compute the diagonals and later the matrix profile
-    df[0] = 0
-    dg[0] = 0
-    for i in prange(w, n, num_threads=n_jobs, nogil=True):
-        df[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
-        dg[i - w + 1] = (ts[i] - mu[i - w + 1]) + (ts[i - w] - mu[i - w])    
-
-    for diag in prange(minlag, profile_len, num_threads=n_jobs, nogil=True):
-        c = 0
-        for i in range(diag, diag + w):
-            c = c + ((ts[i] - mu[diag]) * (ts[i-diag] - mu[0]))
-
-        for offset in range(n - w - diag + 1):
-            c = c + df[offset] * dg[offset + diag] + df[offset + diag] * dg[offset]
-            c_cmp = c * sig[offset] * sig[offset + diag]
-                
-            # update the distance profile and profile index
-            if c_cmp > tmp_mp[offset, openmp.omp_get_thread_num()]:
-                tmp_mp[offset, openmp.omp_get_thread_num()] = c_cmp
-                tmp_mpi[offset, openmp.omp_get_thread_num()] = offset + diag
-            
-            if c_cmp > tmp_mp[offset + diag, openmp.omp_get_thread_num()]:
-                if c_cmp > 1:
-                    c_cmp = 1
-                tmp_mp[offset + diag, openmp.omp_get_thread_num()] = c_cmp
-                tmp_mpi[offset + diag, openmp.omp_get_thread_num()] = offset
-    
-    # combine parallel results...
-    for i in range(tmp_mp.shape[0]):
-        for j in range(tmp_mp.shape[1]):
-            if tmp_mp[i,j] > mp[i]:
-                if tmp_mp[i, j] > 1:
-                    mp[i] = 1
-                else:
-                    mp[i] = tmp_mp[i, j]
-                mpi[i] = tmp_mpi[i, j]
-    
-    # convert normalized cross correlation to euclidean distance
-    if cross_correlation == 0:
-        for i in range(profile_len):
-            mp[i] = sqrt(2 * w * (1 - mp[i]))
-    
-    return (mp, mpi)
-
-
-cpdef mpx_parallel_exper(double[::1] ts, int w, int cross_correlation, int n_jobs):
+cpdef mpx_parallel(double[::1] ts, int w, int cross_correlation, int n_jobs):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
     now it only supports single dimension self joins. 
@@ -143,9 +53,8 @@ cpdef mpx_parallel_exper(double[::1] ts, int w, int cross_correlation, int n_job
         The matrix profile (distance profile, profile index).
 
     """
-    # A couple of these are used to sanitize against the possibility of out of bounds reads on invalid parameter inputsg
-    if w < 1: 
-        raise ValueError('zero or negative subsequence length')
+    if w < 2: 
+        raise ValueError('subsequence length is too short to admit a normalized representation')
     
     cdef int i, j, diag, row, col
     cdef double cov_, corr_
