@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+#cython: boundscheck=False, cdivision=True, wraparound=False
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -24,9 +26,6 @@ import numpy as np
 from matrixprofile.cycore import muinvn
 
 
-@cython.boundscheck(False)
-@cython.cdivision(True)
-@cython.wraparound(False)
 cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
@@ -116,10 +115,7 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
     
     return (mp, mpi)
 
-@cython.embedsignature(True)
-@cython.boundscheck(False) # in case I mess up, coerce to python out of bounds error for now.
-@cython.cdivision(True)
-@cython.wraparound(False)
+
 cpdef mpx_parallel_exper(double[::1] ts, int w, int cross_correlation, int n_jobs):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
@@ -152,13 +148,12 @@ cpdef mpx_parallel_exper(double[::1] ts, int w, int cross_correlation, int n_job
         raise ValueError('zero or negative subsequence length')
     
     cdef int i, j, diag, row, col
-    cdef int n = ts.shape[0]
     cdef double cov_, corr_
     
     cdef int minlag = w // 4
-    cdef int profile_len = n - w + 1
+    cdef int subseqcount = n - w + 1
 
-    if profile_len < w:  
+    if subseqcount < 1 + minlag:  
         raise ValueError('time series is too short relative to subsequence length w')
     
     cdef double[::1] mu, mu_s, invnorm
@@ -217,11 +212,6 @@ cpdef mpx_parallel_exper(double[::1] ts, int w, int cross_correlation, int n_job
     return mprof_, mprofidx_
 
 
-
-@cython.embedsignature(True)
-@cython.boundscheck(True)
-@cython.cdivision(True)
-@cython.wraparound(False)
 cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, int cross_correlation, int n_jobs):
     """
     The MPX algorithm computes the matrix profile without using the FFT. This
