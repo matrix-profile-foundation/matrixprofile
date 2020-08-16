@@ -595,3 +595,73 @@ def plot_motifs_pmp(profile):
     motif_figures.append(fig)
 
     return motif_figures
+
+
+def plot_snippets(snippets, ts):
+    """
+    Plot snippets for the given Snippets data structure.
+    
+    Parameters
+    ----------
+    snippets : list
+        A list of snippets as dictionary objects to plot.
+    ts : array_like
+        The time series.
+        
+    Returns
+    -------
+    list : figures
+        A list of matplotlib figures.
+        
+    """
+    figures = []
+    
+    for i in range(len(snippets)):
+        snippet_id = str(i+1)
+        snippet_start = snippets[i]['index']
+        snippet_end = snippets[i]['index']+len(snippets[i]['snippet'])
+        snippet_data = snippets[i]['snippet']
+        
+        # Create a plot for current snippets
+        fig, ax = plt.subplots(1, 1, sharex=True, figsize=(15,5))
+        ax.plot(ts)
+        ax.set_title('Snippet-'+snippet_id, size=12)
+        ax.set_ylabel('Data')
+        flag = 1
+    
+        # Get intervals for the given neighboring snippet indices
+        neighbors = snippets[i]['neighbors']
+        intervals = []
+        for i in range(len(neighbors)):
+            if i == 0:
+                intervals.append(neighbors[i])
+            if i == len(neighbors)-1:
+                intervals.append(neighbors[i])
+                break
+            if (neighbors[i+1] - neighbors[i]) != 1:
+                intervals.append(neighbors[i])
+                intervals.append(neighbors[i+1])
+        step = 2
+        intervals = [intervals[i:i+step] for i in range(0, len(intervals), step)]
+    
+        # Plot the neighboring snippets
+        for interval in intervals:
+            start = interval[0]
+            end = interval[1]
+            if flag:
+                ax.plot(np.arange(start,end+1),ts[start:end+1], c = "orange"
+                        ,label = "Subsequences Represented by Snippet-"+ snippet_id)
+                flag = 0
+            else:
+                ax.plot(np.arange(start,end+1),ts[start:end+1],"orange")
+    
+        # Plot the snippet
+        ax.plot(np.arange(snippet_start,snippet_end), snippet_data, c = "red"
+                , label = 'Snippet-'+ snippet_id)
+        
+        plt.legend()        
+        fig.tight_layout()       
+        figures.append(fig)
+    
+    return figures
+
