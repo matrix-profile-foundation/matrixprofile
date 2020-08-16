@@ -45,6 +45,7 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
 
     """
     ts = core.to_np_array(ts).astype('d')
+    time_series_len = len(ts)
     n = len(ts)
 
     if not isinstance(snippet_size, int) or snippet_size < 4:
@@ -105,6 +106,12 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
     # compute the fraction of each snippet
     for snippet in snippets:
         mask = (snippet['distance'] <= total_min)
+        # create a key "neighbors" for the snippet dict, 
+        # and store all the time series indices for the data represented by a snippet (arr[mask])
+        # since 'ts' is padded with 0, use filter and lambda to eliminate indices that do not exist in the original 'ts'
+        arr = np.arange(len(mask))
+        max_index = time_series_len - snippet_size
+        snippet['neighbors'] = list(filter(lambda x : x <= max_index, arr[mask]))       
         snippet['fraction'] = mask.sum() / (len(ts) - snippet_size)
         total_min = total_min - mask
         del snippet['distance']
