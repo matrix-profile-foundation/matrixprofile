@@ -108,10 +108,16 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
         mask = (snippet['distance'] <= total_min)
         # create a key "neighbors" for the snippet dict, 
         # and store all the time series indices for the data represented by a snippet (arr[mask])
-        # since 'ts' is padded with 0, use filter and lambda to eliminate indices that do not exist in the original 'ts'
         arr = np.arange(len(mask))
+        # max_index indicates the length of a profile, which is (n-m) in the Snippets paper)
         max_index = time_series_len - snippet_size
-        snippet['neighbors'] = list(filter(lambda x : x <= max_index, arr[mask]))       
+        # since 'ts' is padded with 0 before calculate the MPdist profile
+        # all parts of the profile that are out of range [0, n-m] cannot be used as neighboring snippet indices
+        snippet['neighbors'] = list(filter(lambda x : x <= max_index, arr[mask]))     
+        # Add the last m time series indices into the neighboring snippet indices
+        if max_index in snippet['neighbors']:
+            last_m_indices = list(range(max_index,time_series_len))
+            snippet['neighbors'].extend(last_m_indices)
         snippet['fraction'] = mask.sum() / (len(ts) - snippet_size)
         total_min = total_min - mask
         del snippet['distance']
