@@ -116,7 +116,7 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
         snippet['neighbors'] = list(filter(lambda x : x <= max_index, arr[mask]))     
         # Add the last m time series indices into the neighboring snippet indices
         if max_index in snippet['neighbors']:
-            last_m_indices = list(range(max_index,time_series_len))
+            last_m_indices = list(range(max_index+1, time_series_len))
             snippet['neighbors'].extend(last_m_indices)
         snippet['fraction'] = mask.sum() / (len(ts) - snippet_size)
         total_min = total_min - mask
