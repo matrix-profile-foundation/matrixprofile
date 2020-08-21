@@ -77,7 +77,7 @@ def test_scrimp_plus_plus():
     ])
     expected_mpidx = np.array([
         4,
-        2,
+        3,
         0,
         0,
         0,

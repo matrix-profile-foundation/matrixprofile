@@ -581,7 +581,7 @@ def apply_exclusion_zone(exclusion_zone, is_join, window_size, data_length,
     index, distance_profile):
     if exclusion_zone > 0 and not is_join:
         ez_start = np.max([0, index - exclusion_zone])
-        ez_end = np.min([data_length - window_size + 1, index + exclusion_zone])
+        ez_end = np.min([data_length - window_size + 1, index + exclusion_zone + 1])
         distance_profile[ez_start:ez_end] = np.inf
 
     return distance_profile

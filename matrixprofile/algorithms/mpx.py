@@ -30,7 +30,7 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=1):
     query : array_like
         Optionally a query series.
     cross_correlation : bool, Default=False
-        Setermine if cross_correlation distance should be returned. It defaults
+        Determine if cross_correlation distance should be returned. It defaults
         to Euclidean Distance.
     n_jobs : int, Default = 1
         Number of cpu cores to use.
@@ -73,7 +73,6 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=1):
     else:
         mp, mpi = cympx_parallel(ts, w, int(cross_correlation), n_jobs)
 
-
     mp = np.asarray(mp)
     mpi = np.asarray(mpi)
     distance_metric = 'euclidean'
@@ -89,7 +88,7 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=1):
         'lpi': None,
         'metric': distance_metric,
         'w': w,
-        'ez': int(np.floor(w / 4)),
+        'ez': int(np.ceil(w / 4.0)) if is_join else 0,
         'join': is_join,
         'sample_pct': 1,
         'data': {
