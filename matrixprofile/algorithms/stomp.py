@@ -124,6 +124,11 @@ def _batch_compute(args):
         matrix_profile[indices] = distance_profile[indices]
         profile_index[indices] = 0
 
+        # update the left matrix profile
+        if not is_join:
+            left_matrix_profile[indices] = distance_profile[indices]
+            left_profile_index[np.argwhere(indices)] = 0
+
         batch_start += 1
 
     # make sure to compute inclusively from batch start to batch end
