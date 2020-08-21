@@ -41,8 +41,8 @@ def test_stomp_small_series_self_join_single_threaded():
     desired = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0])
     desired_pi = np.array([4, 5, 6, 7, 0, 1, 2, 3, 0])
 
-    desired_lmp = np.array([np.inf, np.inf, np.inf, 4, 2.82842712, 0, 0, 0, 0])
-    desired_lpi = np.array([0, 0, 0, 1, 1, 1, 2, 3, 4])
+    desired_lmp = np.array([np.inf, np.inf, np.inf, 2.82842712, 0, 0, 0, 0, 0])
+    desired_lpi = np.array([0, 0, 0, 0, 0, 1, 2, 3, 0])
 
     desired_rmp = np.array([0, 0, 0, 0, 0, 2.82842712, np.inf, np.inf, np.inf])
     desired_rpi = np.array([4, 5, 6, 7, 8, 8, 0, 0, 0])
@@ -64,8 +64,8 @@ def test_stomp_small_series_self_join_multi_threaded():
     desired = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0])
     desired_pi = np.array([4, 5, 6, 7, 0, 1, 2, 3, 0])
 
-    desired_lmp = np.array([np.inf, np.inf, np.inf, 4, 2.82842712, 0, 0, 0, 0])
-    desired_lpi = np.array([0, 0, 0, 1, 1, 1, 2, 3, 4])
+    desired_lmp = np.array([np.inf, np.inf, np.inf, 2.82842712, 0, 0, 0, 0, 0])
+    desired_lpi = np.array([0, 0, 0, 0, 0, 1, 2, 3, 0])
 
     desired_rmp = np.array([0, 0, 0, 0, 0, 2.82842712, np.inf, np.inf, np.inf])
     desired_rpi = np.array([4, 5, 6, 7, 8, 8, 0, 0, 0])

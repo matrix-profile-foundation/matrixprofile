@@ -55,7 +55,7 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
 
     # the original implementation allows the minlag to be manually set
     # here it is always w / 4 similar to SCRIMP++
-    cdef int minlag = int(floor(w / 4))
+    cdef int minlag = int(ceil(w / 4.0))
     cdef int profile_len = n - w + 1
     
     cdef double c, c_cmp
@@ -79,7 +79,7 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
         df[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
         dg[i - w + 1] = (ts[i] - mu[i - w + 1]) + (ts[i - w] - mu[i - w])    
 
-    for diag in prange(minlag, profile_len, num_threads=n_jobs, nogil=True):
+    for diag in prange(minlag + 1, profile_len, num_threads=n_jobs, nogil=True):
         c = 0
         for i in range(diag, diag + w):
             c = c + ((ts[i] - mu[diag]) * (ts[i-diag] - mu[0]))
