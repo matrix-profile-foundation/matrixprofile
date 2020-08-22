@@ -17,7 +17,8 @@ import numpy as np
 from matrixprofile.algorithms.stomp import stomp
 from matrixprofile.algorithms.skimp import skimp
 from matrixprofile.visualize import visualize
-
+from matrixprofile.visualize import plot_snippets
+from matrixprofile.algorithms.snippets import snippets
 
 def test_catch_all_visualize_invalid_structure():
     data = {}
@@ -158,3 +159,14 @@ def test_catch_all_stats():
 
     figures = visualize(profile)
     assert(len(figures) == 1)
+
+
+def test_catch_all_visualize_snippets():
+    ts = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    snippet_size = 4
+    snippet_num = 1
+
+    snippet_list = snippets(ts, snippet_size, snippet_num)
+
+    figures = plot_snippets(snippet_list, ts)
+    assert (len(figures) == snippet_num)

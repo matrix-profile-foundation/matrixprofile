@@ -28,21 +28,29 @@ def test_snippets():
     result = snippets(ts, snippet_size, window_size=w)
     assert(result[0]['index'] == 384)
     assert(result[1]['index'] == 704)
+    assert(sum(result[0]['neighbors']) == 191408)
+    assert(sum(result[1]['neighbors']) == 190967)
 
     # test inferred window size of snippet size / 2
     result = snippets(ts, snippet_size)
     assert(result[0]['index'] == 384)
     assert(result[1]['index'] == 704)
+    assert(sum(result[0]['neighbors']) == 191408)
+    assert(sum(result[1]['neighbors']) == 190967)
 
     snippet_size = 128
     result = snippets(ts, snippet_size, window_size=w)
     assert(result[0]['index'] == 384)
     assert(result[1]['index'] == 640)
+    assert(sum(result[0]['neighbors']) == 227661)
+    assert(sum(result[1]['neighbors']) == 154714)
 
     snippet_size = 8
     result = snippets(ts, snippet_size, window_size=snippet_size / 2)
     assert(result[0]['index'] == 72)
     assert(result[1]['index'] == 784)
+    assert(sum(result[0]['neighbors']) == 149499)
+    assert(sum(result[1]['neighbors']) == 232876)
 
 def test_invalid_snippet_size():
     ts = np.arange(100)
