@@ -102,3 +102,31 @@ def test_compute_pmp_no_windows_sample_pct():
 
     # sample pct is ignored when windows are provided and defaults to 1
     assert(profile['sample_pct'] == 0.1)
+
+
+def test_compute_mp_invalid_windows():
+    ts = [3., 3., 3., 3., 3., 3., 3., 3.]
+
+    with pytest.raises(ValueError) as excinfo:
+        w = 0
+        compute(ts, windows=w)
+        assert 'Compute requires all window sizes to be greater than 3!' \
+            in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        w = 3
+        compute(ts, windows=w)
+        assert 'Compute requires all window sizes to be greater than 3!' \
+            in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        w = [4, 0]
+        compute(ts, windows=w)
+        assert 'Compute requires all window sizes to be greater than 3!' \
+            in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        w = [4, 3]
+        compute(ts, windows=w)
+        assert 'Compute requires all window sizes to be greater than 3!' \
+            in str(excinfo.value)
