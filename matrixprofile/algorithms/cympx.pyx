@@ -26,6 +26,228 @@ import numpy as np
 from matrixprofile.cycore import muinvn
 
 
+
+# Note: These aren't used for anything yet. I will revisit them.
+
+def non_finite_regions(double[::1] ts, int w):
+    if ts.size == 0:
+        raise ValueError('Zero length time series')
+    if w >= ts.size:
+        raise ValueError('Subsequence length is too long to allow for valid comparisons')
+    # this will catch anything that isn't summable, including cases for which computing mean(ts) as sum(ts) / len(ts) would fail.
+    non_finite_regions, = np.invert(np.convolve(ts, np.ones(w, dtype='d'), 'valid'))
+    return non_finite_regions
+
+def constant_regions(double[::1] ts, int w):
+    """ This provides an index array indicating the windows or subsequences of time series ts which lack a normalized representation.  
+        
+        Parameters
+        ----------
+        ts : array_like
+            Time series to search
+
+        w : int
+            The window size.
+    
+   
+        Returns
+        -------
+        array_like:
+            The subsequence indices which do not admit a normalized representation or None
+
+    """
+
+    if w < 2:
+        raise ValueError('subsequence length does allow for a normalized representation')
+
+    sz
+    if sz < w:
+        raise ValueError('time series is too short relative to subsequence length')
+
+    omit = np.zeros(subseqcount, dtype=bool)
+   
+    # This could be done faster. Numpy lacks a good check for any(condition) per window
+    
+    const_regions = np.empty(subseqcount)
+    reg_count
+    i = -1
+    # This is written with the assumption that constant regions in real data that match or exceed our window 
+    # length are quite rare
+    while i < subseqcount:
+        subpos = i
+        val = ts[i]
+        while subpos < subseqcount and ts[subpos] == val:
+            subpos += 1
+        const_seq_count = subpos - i - w
+        if const_seq_count > 0 and np.isfinite(val):
+            for j in range(const_seq_count):
+                const_regions[reg_count + j] = i + j
+            reg_count += marked_seq_count
+        i = subpos
+    
+    return omit, safe_regions
+
+
+def safe_sections(int[::1] omitted_windows, window_count):
+    """ This maps a sequence of windows with missing data from a total of seqcount windows to a sequence of safe contiguous sub-regions.
+    """
+
+    if omitted_windows.size < 1:
+        return
+
+    if np.any(mr > window_count):
+        raise ValueError('unsafe position declared out of bounds')
+
+    return
+
+
+cdef mpx_overl_sq(double [::1] mp, long long[::1] mpi, double[::1] cov, double[::1] r_bwd, double[::1] c_bwd, double[::1] r_fwd, double[::1] c_fwd, double[::1] invnorm):
+
+    """    
+    This covers block matrix profile calculations over a contiguous section of a single time series.
+
+    Parameters
+    ----------
+
+    cov: second central co-moment of subsequence 0 and subsequence minlag....subseqcount
+
+    r_bwd: trailing difference equation rows
+    c_bwd: trailing difference equation columns
+    r_fwd: leading difference equation rows
+    c_fwd: leading difference equation columns
+    invnorm: reciprocal norms
+
+
+    This assumes that rows and columns are differentiated entirely through positional aliasing and that 
+    any boundary conditions due to partitioning, missing data, or the end of a time series are handled by 
+    column boundary
+
+    
+    Returns
+    -------
+    
+    """
+
+    cdef Py_ssize_t seqcount = invnorm.shape[0]
+    cdef Py_ssize_t minlag = seqcount - cov.shape[0]
+    cdef Py_ssize_t diag, subdiag, subdiag_lim, row, col, full_row_iters, fringe
+
+    for diag in range(minlag, seqcount, unrollwid):
+        full_row_iters = seqcount - diag - (unrollwid - 1) if diag + unrollwid <= seqcount, else 0
+        fringe = seqcount - diag - full_row_iters
+        for row in range(full_row_iters):
+            for subdiag in range(diag, diag + unrollwid):
+                pass
+        for row in range(full_row_iters, seqcount - diag):
+            for subdiag in range(fringe - (row - full_row_iters)):
+                pass
+
+  
+    for diag in range(minlag, seqcount, unrollwid):
+            size_t full_row_iters = seqcount - diag - (unrollwid - 1) if diag + unrollwid <= seqcount else 0
+            for row in range(seqcount - diag):
+                subdiag_lim = diag + unrollwid if row < full_row_iters else seqcount - row
+            for subdiag in range(diag, subdiag_lim):
+                col = subdiag + row
+                accum = cov[subdiag - minlag
+          
+
+
+
+cpdef mpx_parallel_mr(double[::1] ts, int w, int cross_correlation, int n_jobs):
+    """
+    The MPX algorithm computes the matrix profile without using the FFT. Right
+    now it only supports single dimension self joins. 
+ 
+    The experimental version uses a slightly simpler factorization in an effort to 
+    avoid cases of very ill conditioned products on time series with streams of zeros
+    or missing data.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series to compute the matrix profile for.
+    w : int
+        The window size.
+    cross_correlation : int
+        Flag (0, 1) to determine if cross_correlation distance should be
+        returned. It defaults to Euclidean Distance (0).
+    n_jobs : int, Default = 1
+        Number of cpu cores to use.
+    
+    Returns
+    -------
+    (array_like, array_like) :
+        The matrix profile (distance profile, profile index).
+
+    """
+    if w < 2: 
+        raise ValueError('subsequence length is too short to admit a normalized representation')
+    
+    cdef int i, j, diag, row, col
+    cdef double cov_, corr_
+    
+    cdef int minlag = w // 4
+    cdef int subseqcount = ts.size - w + 1
+
+    if subseqcount < 1 + minlag:  
+        raise ValueError('time series is too short relative to subsequence length w')
+    
+    cdef double[::1] mu, mu_s, invnorm
+    mu, invnorm  = muinvn(ts, w)
+    mu_s, _ = muinvn(ts[:ts.size-1], w-1)
+    mprof_ = np.empty(subseqcount, dtype='d')
+    mprofidx_ = np.empty(subseqcount, dtype='i')
+    cdef double[::1] mprof = mprof_
+    cdef int[::1] mprofidx = mprofidx_ 
+
+    for i in range(subseqcount):
+        mprof[i] = -1.0
+        mprofidx[i] = -1
+    
+    cdef double[::1] r_bwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] c_bwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] r_fwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] c_fwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+   
+    for i in range(subseqcount-1):
+        r_bwd[i] = ts[i] - mu[i]
+        c_bwd[i] = ts[i] - mu_s[i+1]
+        r_fwd[i] = ts[i+w] - mu[i+1]
+        c_fwd[i] = ts[i+w] - mu_s[i+1]
+
+    cdef double[::1] first_row = cvarray(shape=(w,), itemsize=sizeof(double), format='d')
+    cdef double m_ = mu[0]
+    for i in range(w):
+        first_row[i] = ts[i] - m_     
+
+    for diag in range(minlag, subseqcount):
+        cov_ = 0 
+        for i in range(diag, diag + w):
+            cov_ += (ts[i] - mu[diag]) * first_row[i-diag]
+
+        for row in range(subseqcount - diag):
+            col = diag + row
+            if row > 0: 
+                cov_ -= r_bwd[row-1] * c_bwd[col-1] 
+                cov_ += r_fwd[row-1] * c_fwd[col-1]
+            corr_ = cov_ * invnorm[row] * invnorm[col]
+            if corr_ > 1.0:
+                corr_ = 1.0
+            if corr_ > mprof[row]:
+                mprof[row] = corr_ 
+                mprofidx[row] = col 
+            if corr_ > mprof[col]:
+                mprof[col] = corr_
+                mprofidx[col] = row
+    
+    if cross_correlation == 0:
+        for i in range(subseqcount):
+            mprof[i] = sqrt(2 * w * (1 - mprof[i]))
+    
+    return mprof_, mprofidx_
+
+
 cpdef mpx_parallel(double[::1] ts, int w, int cross_correlation, int n_jobs):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
