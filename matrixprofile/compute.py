@@ -7,11 +7,16 @@ from __future__ import unicode_literals
 range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
+# Python native imports
 import math
 import logging
 
 logger = logging.getLogger(__name__)
 
+# Third-party imports
+import numpy as np
+
+# Project imports
 from matrixprofile import core
 from matrixprofile.algorithms.mpx import mpx
 from matrixprofile.algorithms.scrimp import scrimp_plus_plus
@@ -71,9 +76,9 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
     if no_windows and not has_threshold:
         raise ValueError('compute requires a threshold or window(s) to be set!')
 
-    # Check to make sure all window sizes are greater than 1, return a ValueError if not.
-    if (isinstance(windows, int) and windows <= 1) or (multiple_windows and (all(i > 1 for i in windows) is False)):
-        raise ValueError('Compute requires all window sizes to be greater than 1!')
+    # Check to make sure all window sizes are greater than 3, return a ValueError if not.
+    if (isinstance(windows, int) and windows < 4) or (multiple_windows and np.unique(windows).min() < 4):
+        raise ValueError('Compute requires all window sizes to be greater than 3!')
 
     if core.is_array_like(windows) and len(windows) == 1:
         windows = windows[0]
