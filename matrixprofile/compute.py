@@ -71,9 +71,9 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
     if no_windows and not has_threshold:
         raise ValueError('compute requires a threshold or window(s) to be set!')
 
-    # Check to make sure the window size is greater than 1, return a ValueError if not.
-    if isinstance(windows, int) and windows <= 1:
-        raise ValueError('Compute requires window size to be greater than 1!')
+    # Check to make sure all window sizes are greater than 1, return a ValueError if not.
+    if (isinstance(windows, int) and windows <= 1) or (multiple_windows and (all(i > 1 for i in windows) is False)):
+        raise ValueError('Compute requires all window sizes to be greater than 1!')
 
     if core.is_array_like(windows) and len(windows) == 1:
         windows = windows[0]
