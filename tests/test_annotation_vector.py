@@ -214,8 +214,8 @@ def test_clipping_invalid():
 
 
 def test_apply_default_av_valid():
-    ts = [3., 3., 3., 3., 3., 3.]
-    w = 3
+    ts = [3., 3., 3., 3., 3., 3., 3., 3.]
+    w = 4
 
     profile = compute(ts, windows=w)
     expect = profile['mp']
@@ -226,8 +226,8 @@ def test_apply_default_av_valid():
 
 
 def test_apply_complexity_av_valid():
-    ts = [3., 3., 3., 3., 3., 3.]
-    w = 3
+    ts = [3., 3., 3., 3., 3., 3., 3., 3.]
+    w = 4
 
     profile = compute(ts, windows=w)
     expect = profile['mp'] * 2
@@ -238,8 +238,8 @@ def test_apply_complexity_av_valid():
 
 
 def test_apply_meanstd_av_valid():
-    ts = [3., 3., 3., 3., 3., 3.]
-    w = 3
+    ts = [3., 3., 3., 3., 3., 3., 3., 3.]
+    w = 4
 
     profile = compute(ts, windows=w)
     expect = profile['mp'] * 2
@@ -250,8 +250,8 @@ def test_apply_meanstd_av_valid():
 
 
 def test_apply_clipping_av_valid():
-    ts = [3., 3., 3., 3., 3., 3.]
-    w = 3
+    ts = [3., 3., 3., 3., 3., 3., 3., 3.]
+    w = 4
 
     profile = compute(ts, windows=w)
     expect = profile['mp'] * 2
@@ -262,21 +262,21 @@ def test_apply_clipping_av_valid():
 
 
 def test_apply_custom_av_valid():
-    ts = [3., 3., 3., 3., 3., 3.]
-    w = 3
+    ts = [3., 3., 3., 3., 3., 3., 3., 3.]
+    w = 4
 
     profile = compute(ts, windows=w)
     expect = profile['mp'] * 2
 
-    av = [0., 0., 0., 0.]
+    av = [0., 0., 0., 0., 0.]
     profile = transform.apply_av(profile, "custom", av)
 
     np.testing.assert_almost_equal(profile['cmp'], expect)
 
 
 def test_apply_av_invalid():
-    ts = [3., 3., 3., 3., 3., 3.]
-    w = 3
+    ts = [3., 3., 3., 3., 3., 3., 3., 3.]
+    w = 4
 
     with pytest.raises(ValueError) as excinfo:
         transform.apply_av("profile", "default")
