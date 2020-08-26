@@ -7,8 +7,13 @@ from __future__ import unicode_literals
 range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
+# Python native imports
 import math
 
+# Third-party imports
+import numpy as np
+
+# Library imports
 from matrixprofile import core
 
 from matrixprofile.discover import discords
@@ -229,6 +234,10 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs
     is_exact = sample_pct >= 1
     is_approx = sample_pct > 0 and sample_pct < 1
 
+    # Check to make sure all window sizes are greater than 3, return a ValueError if not.
+    if (single_window and windows < 4) or (many_windows and np.any(np.unique(windows) < 4)):
+        raise ValueError('Analyze requires all window sizes to be greater than 3!')
+
     # use PMP with no window provided
     if no_window or many_windows:
         result = analyze_pmp(ts, query, sample_pct, threshold, windows=windows, n_jobs=n_jobs)
@@ -237,6 +246,6 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs
     elif single_window and is_approx:
         result = analyze_mp_approximate(ts, query, windows, sample_pct, n_jobs=n_jobs)
     else:
-        raise RuntimeError('Param combination resulted in an uknown operation')
+        raise RuntimeError('Param combination resulted in an unknown operation')
 
     return result

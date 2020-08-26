@@ -77,7 +77,7 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
         raise ValueError('compute requires a threshold or window(s) to be set!')
 
     # Check to make sure all window sizes are greater than 3, return a ValueError if not.
-    if (isinstance(windows, int) and windows < 4) or (multiple_windows and np.any(np.unique(windows) < 4)):
+    elif (isinstance(windows, int) and windows < 4) or (multiple_windows and np.any(np.unique(windows) < 4)):
         raise ValueError('Compute requires all window sizes to be greater than 3!')
 
     if core.is_array_like(windows) and len(windows) == 1:
