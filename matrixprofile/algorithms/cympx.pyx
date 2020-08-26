@@ -27,7 +27,7 @@ import numpy as np
 from matrixprofile.cycore import muinvn
 
 
-cdef mpx_block_overl(double [::1] mp, Py_ssize_t[::1] mpi, double[::1] cov, double[::1] r_bwd, double[::1] c_bwd, double[::1] r_fwd, double[::1] c_fwd, double[::1] invnorm, Py_ssize_t roffset):
+cdef mpx_block_overl(double [::1] mp, Py_ssize_t[::1] mpi, double[::1] cov, double[::1] r_bwd, double[::1] c_bwd, double[::1] r_fwd, double[::1] c_fwd, double[::1] invnorm, Py_ssize_t minlag, Py_ssize_t roffset):
 
     """    
     This covers block matrix profile calculations over a contiguous section of a single time series.
@@ -59,7 +59,12 @@ cdef mpx_block_overl(double [::1] mp, Py_ssize_t[::1] mpi, double[::1] cov, doub
     # This should probably be a C routine
   
     cdef Py_ssize_t seqcount = invnorm.shape[0]
-    cdef Py_ssize_t minlag = seqcount - cov.shape[0]
+    # minlag may differ from the base function, as it indicates minimum separation in this block
+    #
+    # Todo: add a separate function for disjoint sections, which can be shared with AB
+    #
+    # This approach should remain for the case of self comparisons, because any row/column aliasing
+    # is handled through indexing rather than aliasing between distinct memory views
     cdef Py_ssize_t diag, subdiag, subdiag_lim, row, col, full_row_iters, fringe, max_rows, subcol
     # initialize 
     cdef Py_ssize_t mxcoridx = -1
@@ -93,11 +98,15 @@ cdef mpx_block_overl(double [::1] mp, Py_ssize_t[::1] mpi, double[::1] cov, doub
             mxcoridx = -1
             for subdiag in range(unrollwid):
                 subcol = col + subdiag 
-                cv = cov[subdiag]
+                cv = cov[subcol-minlag]
                 if row > 0:
+                    if subcol >= c_bwd.shape[0]:
+                        print(f'shapes, rbwd:{r_bwd.shape[0]}, cbwd:{c_bwd.shape[0]}, rfwd{r_fwd.shape[0]}, cfwd:{c_fwd.shape[0]}, mp:{mp.shape[0]}, mpi:{mpi.shape[0]}, cov:{cov.shape[0]}, offset:{roffset}')
+                        print(f'subcol:{subcol}, row:{row}, minlag:{minlag}, subdiag:{subdiag}, diag:{diag}, full_row_iters:{full_row_iters}')
+                        return
                     cv -= rb * c_bwd[subcol]
                     cv += rf * c_fwd[subcol]
-                    cov[subdiag] = cv
+                    cov[subcol-minlag] = cv
                 cor = cv * ir * invnorm[subcol]
                 if cor > mxcor:
                     mxcor = cor
@@ -121,11 +130,11 @@ cdef mpx_block_overl(double [::1] mp, Py_ssize_t[::1] mpi, double[::1] cov, doub
             mxcoridx = -1
             for subdiag in range(fringe):
                 subcol = col + subdiag 
-                cv = cov[subdiag]
+                cv = cov[subcol-minlag]
                 if row > 0:
                     cv -= rb * c_bwd[subcol]
                     cv += rf * c_fwd[subcol]
-                    cov[subdiag] = cv
+                    cov[subcol-minlag] = cv
                 cor = cv * ir * invnorm[subcol]
                 if cor > mxcor:
                     mxcor = cor
@@ -167,7 +176,7 @@ cpdef mpx_parallel(double[::1] ts, Py_ssize_t w, Py_ssize_t cross_correlation, P
     cdef double cov_, corr_, m_, accum
     
     cdef Py_ssize_t minlag = w // 4
-    cdef Py_ssize_t subseqcount = ts.size - w + 1
+    cdef Py_ssize_t subseqcount = ts.shape[0] - w + 1
 
     if subseqcount < 1 + minlag:  
         raise ValueError('time series is too short relative to subsequence length w')
@@ -223,7 +232,7 @@ cpdef mpx_parallel(double[::1] ts, Py_ssize_t w, Py_ssize_t cross_correlation, P
             first_row[k] = ts[row + k] - m_
         for diag in range(minlag, subseqcount - row, blocklen):
             first_col_idx = row + diag
-            max_cols = subseqcount - row - minlag
+            max_cols = subseqcount - row - diag 
             col_count = blocklen if max_cols >= blocklen else max_cols
             for pos in range(col_count):
                 accum = 0.0
@@ -232,7 +241,7 @@ cpdef mpx_parallel(double[::1] ts, Py_ssize_t w, Py_ssize_t cross_correlation, P
                 for k in range(w):
                     accum += (ts[col + k] - m_) * first_row[k]
                 cov[pos] = accum
-            collim = diag + row + blocklen
+            collim = row + diag + col_count
             tslim = collim + w - 1
             mpx_block_overl(mprof[row:collim],
                     mprofidx[row:collim],
@@ -242,6 +251,7 @@ cpdef mpx_parallel(double[::1] ts, Py_ssize_t w, Py_ssize_t cross_correlation, P
                     r_fwd[row:collim],
                     c_fwd[row:collim],
                     invnorm[row:collim],
+                    diag - row,
                     row)
 
     if cross_correlation == 0:
