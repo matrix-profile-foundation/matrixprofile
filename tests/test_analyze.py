@@ -125,3 +125,17 @@ def test_analyze_mp_invalid_windows():
         analyze(ts, windows=windows)
         assert 'Analyze requires all window sizes to be greater than 3!' \
             in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        windows = [4, 3]
+        analyze(ts, windows=windows, sample_pct=1)
+        assert 'Analyze requires all window sizes to be greater than 3!' \
+            in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        windows = 0
+        query = ts[100:200]
+
+        profile, figures = analyze(ts, windows=windows, query=query)
+        assert 'Analyze requires all window sizes to be greater than 3!' \
+            in str(excinfo.value)
