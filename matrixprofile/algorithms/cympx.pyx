@@ -22,10 +22,10 @@ cimport numpy as np
 cimport cython
 cimport openmp
 from numpy.math cimport INFINITY
-
 import numpy as np
 
 from matrixprofile.cycore import muinvn
+
 
 cdef mpx_block_overl(double [::1] mp, long long[::1] mpi, double[::1] cov, double[::1] r_bwd, double[::1] c_bwd, double[::1] r_fwd, double[::1] c_fwd, double[::1] invnorm, Py_ssize_t roffset):
 
@@ -60,8 +60,11 @@ cdef mpx_block_overl(double [::1] mp, long long[::1] mpi, double[::1] cov, doubl
   
     cdef Py_ssize_t seqcount = invnorm.shape[0]
     cdef Py_ssize_t minlag = seqcount - cov.shape[0]
-    cdef Py_ssize_t diag, subdiag, subdiag_lim, row, col, full_row_iters, fringe, max_rows, subcol, mxcoridx
-    cdef double cv, cor, mxcor, ir, rb, rf
+    cdef Py_ssize_t diag, subdiag, subdiag_lim, row, col, full_row_iters, fringe, max_rows, subcol
+    # initialize 
+    cdef Py_ssize_t mxcoridx = -1
+    cdef double mxcor = -1.0
+    cdef double cv, cor, ir, rb, rf
     # This mimics some earlier C code experiments. We unroll just enough diagonals to hide the latency of 
     # various arithmetic ops. 
     #
@@ -84,14 +87,15 @@ cdef mpx_block_overl(double [::1] mp, long long[::1] mpi, double[::1] cov, doubl
             rf = r_fwd[row]
             ir = invnorm[row]
             abs_row = row + roffset 
-            mxcr = -1.0
-            mxcridx = -1
+            mxcor = -1.0
+            mxcoridx = -1
             for subdiag in range(unrollwid):
                 subcol = col + subdiag 
                 cv = cov[subdiag]
                 if row > 0:
                     cv -= rb * c_bwd[subcol]
                     cv += rf * c_fwd[subcol]
+                    cov[subdiag] = cv
                 cor = cv * ir * invnorm[subcol]
                 if cor > mxcor:
                     mxcor = cor
@@ -99,7 +103,7 @@ cdef mpx_block_overl(double [::1] mp, long long[::1] mpi, double[::1] cov, doubl
                 if cor > mp[subcol]:
                     mp[subcol] = cor
                     mpi[subcol] = abs_row
-            if mxcr > mp[row]:
+            if mxcor > mp[row]:
                 mp[row] = mxcor
                 mpi[row] = mxcoridx + roffset
         # unoptimizable loops 
@@ -111,14 +115,15 @@ cdef mpx_block_overl(double [::1] mp, long long[::1] mpi, double[::1] cov, doubl
             rf = r_fwd[row]
             ir = invnorm[row]
             abs_row = row + roffset 
-            mxcr = -1.0
-            mxcridx = -1
+            mxcor = -1.0
+            mxcoridx = -1
             for subdiag in range(fringe):
                 subcol = col + subdiag 
                 cv = cov[subdiag]
                 if row > 0:
                     cv -= rb * c_bwd[subcol]
                     cv += rf * c_fwd[subcol]
+                    cov[subdiag] = cv
                 cor = cv * ir * invnorm[subcol]
                 if cor > mxcor:
                     mxcor = cor
@@ -126,7 +131,7 @@ cdef mpx_block_overl(double [::1] mp, long long[::1] mpi, double[::1] cov, doubl
                 if cor > mp[subcol]:
                     mp[subcol] = cor
                     mpi[subcol] = abs_row
-            if mxcr > mp[row]:
+            if mxcor > mp[row]:
                 mp[row] = mxcor
                 mpi[row] = mxcoridx + roffset
             
@@ -215,7 +220,7 @@ cpdef mpx_base(double[::1] ts, int w, int cross_correlation, int n_jobs):
             tslim = collim + w - 1
             mpx_block_overl(mprof[row:collim],
                     mprofidx[row:collim],
-                    cov, 
+                    cov[:col_count], 
                     r_bwd[row:collim], 
                     c_bwd[row:collim],
                     r_fwd[row:collim],
@@ -228,8 +233,6 @@ cpdef mpx_base(double[::1] ts, int w, int cross_correlation, int n_jobs):
             mprof[k] = sqrt(2 * w * (1 - mprof[k]))
     
     return mprof, mprofidx
-
-
 
 
 cpdef mpx_parallel_mr(double[::1] ts, int w, int cross_correlation, int n_jobs):
