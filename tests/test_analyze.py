@@ -97,3 +97,31 @@ def test_analyze_pmp_windows():
     assert(profile['sample_pct'] == 1)
     np.testing.assert_equal(profile['windows'], windows)
     assert(len(figures) == 6)
+
+
+def test_analyze_mp_invalid_windows():
+    ts = np.loadtxt(os.path.join(MODULE_PATH, '..', 'tests', 'sampledata.txt'))
+
+    with pytest.raises(ValueError) as excinfo:
+        windows = 0
+        analyze(ts, windows=windows)
+        assert 'Analyze requires all window sizes to be greater than 3!' \
+            in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        windows = 3
+        analyze(ts, windows=windows)
+        assert 'Analyze requires all window sizes to be greater than 3!' \
+            in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        windows = [4, 0]
+        analyze(ts, windows=windows)
+        assert 'Analyze requires all window sizes to be greater than 3!' \
+            in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        windows = [4, 3]
+        analyze(ts, windows=windows)
+        assert 'Analyze requires all window sizes to be greater than 3!' \
+            in str(excinfo.value)
