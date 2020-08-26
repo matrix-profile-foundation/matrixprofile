@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 # range = getattr(__builtins__, 'xrange', range)
 # end of py2 compatability boilerplate
 
+from libc.math cimport log
 from libc.math cimport floor
 from libc.math cimport ceil
 from libc.math cimport sqrt
@@ -16,6 +17,7 @@ from libc.math cimport sqrt
 from cython.parallel import prange
 from cython.view cimport array as cvarray
 from numpy cimport ndarray
+import math
 cimport numpy as np
 cimport cython
 cimport openmp
@@ -25,83 +27,7 @@ import numpy as np
 
 from matrixprofile.cycore import muinvn
 
-
-
-# Note: These aren't used for anything yet. I will revisit them.
-
-def non_finite_regions(double[::1] ts, int w):
-    if ts.size == 0:
-        raise ValueError('Zero length time series')
-    if w >= ts.size:
-        raise ValueError('Subsequence length is too long to allow for valid comparisons')
-    # this will catch anything that isn't summable, including cases for which computing mean(ts) as sum(ts) / len(ts) would fail.
-    non_finite_regions, = np.invert(np.convolve(ts, np.ones(w, dtype='d'), 'valid'))
-    return non_finite_regions
-
-def constant_regions(double[::1] ts, int w):
-    """ This provides an index array indicating the windows or subsequences of time series ts which lack a normalized representation.  
-        
-        Parameters
-        ----------
-        ts : array_like
-            Time series to search
-
-        w : int
-            The window size.
-    
-   
-        Returns
-        -------
-        array_like:
-            The subsequence indices which do not admit a normalized representation or None
-
-    """
-
-    if w < 2:
-        raise ValueError('subsequence length does allow for a normalized representation')
-
-    sz
-    if sz < w:
-        raise ValueError('time series is too short relative to subsequence length')
-
-    omit = np.zeros(subseqcount, dtype=bool)
-   
-    # This could be done faster. Numpy lacks a good check for any(condition) per window
-    
-    const_regions = np.empty(subseqcount)
-    reg_count
-    i = -1
-    # This is written with the assumption that constant regions in real data that match or exceed our window 
-    # length are quite rare
-    while i < subseqcount:
-        subpos = i
-        val = ts[i]
-        while subpos < subseqcount and ts[subpos] == val:
-            subpos += 1
-        const_seq_count = subpos - i - w
-        if const_seq_count > 0 and np.isfinite(val):
-            for j in range(const_seq_count):
-                const_regions[reg_count + j] = i + j
-            reg_count += marked_seq_count
-        i = subpos
-    
-    return omit, safe_regions
-
-
-def safe_sections(int[::1] omitted_windows, window_count):
-    """ This maps a sequence of windows with missing data from a total of seqcount windows to a sequence of safe contiguous sub-regions.
-    """
-
-    if omitted_windows.size < 1:
-        return
-
-    if np.any(mr > window_count):
-        raise ValueError('unsafe position declared out of bounds')
-
-    return
-
-
-cdef mpx_overl_sq(double [::1] mp, long long[::1] mpi, double[::1] cov, double[::1] r_bwd, double[::1] c_bwd, double[::1] r_fwd, double[::1] c_fwd, double[::1] invnorm):
+cdef mpx_block_overl(double [::1] mp, long long[::1] mpi, double[::1] cov, double[::1] r_bwd, double[::1] c_bwd, double[::1] r_fwd, double[::1] c_fwd, double[::1] invnorm, Py_ssize_t roffset):
 
     """    
     This covers block matrix profile calculations over a contiguous section of a single time series.
@@ -110,12 +36,14 @@ cdef mpx_overl_sq(double [::1] mp, long long[::1] mpi, double[::1] cov, double[:
     ----------
 
     cov: second central co-moment of subsequence 0 and subsequence minlag....subseqcount
-
+    mp:    profile
+    mpi:   index
     r_bwd: trailing difference equation rows
     c_bwd: trailing difference equation columns
     r_fwd: leading difference equation rows
     c_fwd: leading difference equation columns
     invnorm: reciprocal norms
+    roffset: offset from the beginning of the time series
 
 
     This assumes that rows and columns are differentiated entirely through positional aliasing and that 
@@ -127,30 +55,180 @@ cdef mpx_overl_sq(double [::1] mp, long long[::1] mpi, double[::1] cov, double[:
     -------
     
     """
-
+   
+    # This should probably be a C routine
+  
     cdef Py_ssize_t seqcount = invnorm.shape[0]
     cdef Py_ssize_t minlag = seqcount - cov.shape[0]
-    cdef Py_ssize_t diag, subdiag, subdiag_lim, row, col, full_row_iters, fringe
+    cdef Py_ssize_t diag, subdiag, subdiag_lim, row, col, full_row_iters, fringe, max_rows, subcol, mxcoridx
+    cdef double cv, cor, mxcor, ir, rb, rf
+    # This mimics some earlier C code experiments. We unroll just enough diagonals to hide the latency of 
+    # various arithmetic ops. 
+    #
+    # In an optimized implementation of this part, anything hoisted by row would be broadcast and 
+    # anything accessed by column would be folded into arithmetic operations as much as possible. A reduction step
+    # would be interleaved with the rest, using data that is already loaded for the accumulation update, since 
+    # making a second pass over the data is much slower
+    #
+    # This format applies to anything where the data forms a single contiguous array where all initial co-moments
+    # start on one row and end on one column
+
+    cdef Py_ssize_t unrollwid = 32 
 
     for diag in range(minlag, seqcount, unrollwid):
-        full_row_iters = seqcount - diag - (unrollwid - 1) if diag + unrollwid <= seqcount, else 0
-        fringe = seqcount - diag - full_row_iters
+        full_row_iters = seqcount - diag - (unrollwid - 1) if diag + unrollwid <= seqcount else 0
+        # optimizable range, since unrolling factor is constant, "some" compilers do an okay job here
         for row in range(full_row_iters):
-            for subdiag in range(diag, diag + unrollwid):
-                pass
+            col = row + diag
+            rb = r_bwd[row]
+            rf = r_fwd[row]
+            ir = invnorm[row]
+            abs_row = row + roffset 
+            mxcr = -1.0
+            mxcridx = -1
+            for subdiag in range(unrollwid):
+                subcol = col + subdiag 
+                cv = cov[subdiag]
+                if row > 0:
+                    cv -= rb * c_bwd[subcol]
+                    cv += rf * c_fwd[subcol]
+                cor = cv * ir * invnorm[subcol]
+                if cor > mxcor:
+                    mxcor = cor
+                    mxcoridx = subcol
+                if cor > mp[subcol]:
+                    mp[subcol] = cor
+                    mpi[subcol] = abs_row
+            if mxcr > mp[row]:
+                mp[row] = mxcor
+                mpi[row] = mxcoridx + roffset
+        # unoptimizable loops 
+        max_rows = seqcount - diag
         for row in range(full_row_iters, seqcount - diag):
-            for subdiag in range(fringe - (row - full_row_iters)):
-                pass
+            fringe = max_rows - row
+            col = row + diag
+            rb = r_bwd[row]
+            rf = r_fwd[row]
+            ir = invnorm[row]
+            abs_row = row + roffset 
+            mxcr = -1.0
+            mxcridx = -1
+            for subdiag in range(fringe):
+                subcol = col + subdiag 
+                cv = cov[subdiag]
+                if row > 0:
+                    cv -= rb * c_bwd[subcol]
+                    cv += rf * c_fwd[subcol]
+                cor = cv * ir * invnorm[subcol]
+                if cor > mxcor:
+                    mxcor = cor
+                    mxcoridx = subcol
+                if cor > mp[subcol]:
+                    mp[subcol] = cor
+                    mpi[subcol] = abs_row
+            if mxcr > mp[row]:
+                mp[row] = mxcor
+                mpi[row] = mxcoridx + roffset
+            
 
-  
-    for diag in range(minlag, seqcount, unrollwid):
-            size_t full_row_iters = seqcount - diag - (unrollwid - 1) if diag + unrollwid <= seqcount else 0
-            for row in range(seqcount - diag):
-                subdiag_lim = diag + unrollwid if row < full_row_iters else seqcount - row
-            for subdiag in range(diag, subdiag_lim):
-                col = subdiag + row
-                accum = cov[subdiag - minlag
-          
+cpdef mpx_base(double[::1] ts, int w, int cross_correlation, int n_jobs):
+    """
+    The MPX algorithm computes the matrix profile without using the FFT. Right
+    now it only supports single dimension self joins. 
+ 
+    The experimental version uses a slightly simpler factorization in an effort to 
+    avoid cases of very ill conditioned products on time series with streams of zeros
+    or missing data.
+
+    Parameters
+    ----------
+    ts : array_like
+        The time series to compute the matrix profile for.
+    w : int
+        The window size.
+    
+    Returns
+    -------
+    (array_like, array_like) :
+        The matrix profile (distance profile, profile index).
+
+    """
+    if w < 2: 
+        raise ValueError('subsequence length is too short to admit a normalized representation')
+    
+    cdef int k, diag, row, col, first_col_idx, max_cols, pos
+    cdef double cov_, corr_, m_, accum
+    
+    cdef int minlag = w // 4
+    cdef int subseqcount = ts.size - w + 1
+
+    if subseqcount < 1 + minlag:  
+        raise ValueError('time series is too short relative to subsequence length w')
+    
+    cdef double[::1] mu, mu_s, invnorm
+    mu, invnorm  = muinvn(ts, w)
+    mu_s, _ = muinvn(ts[:ts.size-1], w-1)
+    cdef cvarray mprof = cvarray(shape=(subseqcount,), itemsize=sizeof(double), format='d')
+    cdef cvarray mprofidx = cvarray(shape=(subseqcount,), itemsize=sizeof(long long), format='i')
+    mprof[:] = -1.0
+    mprofidx[:] = -1
+    
+    cdef double[::1] r_bwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] c_bwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] r_fwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+    cdef double[::1] c_fwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
+   
+    for k in range(subseqcount-1):
+        r_bwd[k] = ts[k] - mu[k]
+        c_bwd[k] = ts[k] - mu_s[k+1]
+        r_fwd[k] = ts[k+w] - mu[k+1]
+        c_fwd[k] = ts[k+w] - mu_s[k+1]
+
+    cdef double[::1] cov = cvarray(shape=(subseqcount,), itemsize=sizeof(double), format='d')
+    cdef double[::1] first_row = cvarray(shape=(w,), itemsize=sizeof(double), format='d')
+
+    cdef long long blocklen
+    
+    if w <= 2048:
+        blocklen = 4096
+    else:
+        b = math.floor(math.log(w, 2))
+        blocklen = 2**(b + 2)
+
+    # initial blocking
+    for row in range(0, subseqcount, blocklen):
+        m_ = mu[row]
+        for k in range(w):
+            first_row[k] = ts[row + k] - m_
+        for diag in range(minlag, subseqcount - row, blocklen):
+            first_col_idx = row + diag
+            max_cols = subseqcount - row - minlag
+            col_count = blocklen if max_cols >= blocklen else max_cols
+            for pos in range(col_count):
+                accum = 0.0
+                m_ = mu[pos]
+                col = row + diag + pos
+                for k in range(w):
+                    accum += (ts[col + k] - m_) * first_row[k]
+                cov[pos] = accum
+            collim = diag + row + blocklen
+            tslim = collim + w - 1
+            mpx_block_overl(mprof[row:collim],
+                    mprofidx[row:collim],
+                    cov, 
+                    r_bwd[row:collim], 
+                    c_bwd[row:collim],
+                    r_fwd[row:collim],
+                    c_fwd[row:collim],
+                    invnorm[row:collim],
+                    row)
+
+    if cross_correlation == 0:
+        for k in range(subseqcount):
+            mprof[k] = sqrt(2 * w * (1 - mprof[k]))
+    
+    return mprof, mprofidx
+
 
 
 
