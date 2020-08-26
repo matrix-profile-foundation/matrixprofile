@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#cython: boundscheck=False, cdivision=True, wraparound=False
+#cython: boundscheck=True, cdivision=True, wraparound=False
 
 from __future__ import absolute_import
 from __future__ import division
@@ -27,7 +27,7 @@ import numpy as np
 from matrixprofile.cycore import muinvn
 
 
-cdef mpx_block_overl(double [::1] mp, long long[::1] mpi, double[::1] cov, double[::1] r_bwd, double[::1] c_bwd, double[::1] r_fwd, double[::1] c_fwd, double[::1] invnorm, Py_ssize_t roffset):
+cdef mpx_block_overl(double [::1] mp, Py_ssize_t[::1] mpi, double[::1] cov, double[::1] r_bwd, double[::1] c_bwd, double[::1] r_fwd, double[::1] c_fwd, double[::1] invnorm, Py_ssize_t roffset):
 
     """    
     This covers block matrix profile calculations over a contiguous section of a single time series.
@@ -75,6 +75,8 @@ cdef mpx_block_overl(double [::1] mp, long long[::1] mpi, double[::1] cov, doubl
     #
     # This format applies to anything where the data forms a single contiguous array where all initial co-moments
     # start on one row and end on one column
+
+    # Note that for discontiguous ranges, we can use an AB routine. 
 
     cdef Py_ssize_t unrollwid = 32 
 
@@ -136,7 +138,7 @@ cdef mpx_block_overl(double [::1] mp, long long[::1] mpi, double[::1] cov, doubl
                 mpi[row] = mxcoridx + roffset
             
 
-cpdef mpx_base(double[::1] ts, int w, int cross_correlation, int n_jobs):
+cpdef mpx_parallel(double[::1] ts, Py_ssize_t w, Py_ssize_t cross_correlation, Py_ssize_t n_jobs):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
     now it only supports single dimension self joins. 
@@ -161,11 +163,11 @@ cpdef mpx_base(double[::1] ts, int w, int cross_correlation, int n_jobs):
     if w < 2: 
         raise ValueError('subsequence length is too short to admit a normalized representation')
     
-    cdef int k, diag, row, col, first_col_idx, max_cols, pos
+    cdef Py_ssize_t k, diag, row, col, first_col_idx, max_cols, pos
     cdef double cov_, corr_, m_, accum
     
-    cdef int minlag = w // 4
-    cdef int subseqcount = ts.size - w + 1
+    cdef Py_ssize_t minlag = w // 4
+    cdef Py_ssize_t subseqcount = ts.size - w + 1
 
     if subseqcount < 1 + minlag:  
         raise ValueError('time series is too short relative to subsequence length w')
@@ -174,7 +176,8 @@ cpdef mpx_base(double[::1] ts, int w, int cross_correlation, int n_jobs):
     mu, invnorm  = muinvn(ts, w)
     mu_s, _ = muinvn(ts[:ts.size-1], w-1)
     cdef cvarray mprof = cvarray(shape=(subseqcount,), itemsize=sizeof(double), format='d')
-    cdef cvarray mprofidx = cvarray(shape=(subseqcount,), itemsize=sizeof(long long), format='i')
+    # not sure there's a format specifier for Py_ssize_t
+    cdef cvarray mprofidx = cvarray(shape=(subseqcount,), itemsize=sizeof(Py_ssize_t), format='q')
     mprof[:] = -1.0
     mprofidx[:] = -1
     
@@ -191,14 +194,27 @@ cpdef mpx_base(double[::1] ts, int w, int cross_correlation, int n_jobs):
 
     cdef double[::1] cov = cvarray(shape=(subseqcount,), itemsize=sizeof(double), format='d')
     cdef double[::1] first_row = cvarray(shape=(w,), itemsize=sizeof(double), format='d')
-
-    cdef long long blocklen
     
+    cdef Py_ssize_t blocklen
+    # Blocklen is chosen to amortize the work done by initialization of the array "cov" for each block
+    # and so that the work done along tile edges does not dominate calculations.
+
+    # As of right now, each tile begins on a single row and ends on a single column
+     
+    # If this turns out to be a significant impediment, it's possible to begin and end on a single row
+    # whenever this would not cause a tile to read past the end of an array.
+
+    # Initialization of "cov" is also amenable to parallelization and simd optimization,
+    # so in general, these patterns are adaptable for higher core counts, where smaller block lengths 
+    # produce less thrashing of shared cache. 
+
     if w <= 2048:
         blocklen = 4096
     else:
         b = math.floor(math.log(w, 2))
         blocklen = 2**(b + 2)
+        if blocklen > subseqcount:
+            blocklen = subseqcount
 
     # initial blocking
     for row in range(0, subseqcount, blocklen):
@@ -232,104 +248,10 @@ cpdef mpx_base(double[::1] ts, int w, int cross_correlation, int n_jobs):
         for k in range(subseqcount):
             mprof[k] = sqrt(2 * w * (1 - mprof[k]))
     
-    return mprof, mprofidx
+    return {'mp': mprof, 'pi': mprofidx}
 
 
 cpdef mpx_parallel_mr(double[::1] ts, int w, int cross_correlation, int n_jobs):
-    """
-    The MPX algorithm computes the matrix profile without using the FFT. Right
-    now it only supports single dimension self joins. 
- 
-    The experimental version uses a slightly simpler factorization in an effort to 
-    avoid cases of very ill conditioned products on time series with streams of zeros
-    or missing data.
-
-    Parameters
-    ----------
-    ts : array_like
-        The time series to compute the matrix profile for.
-    w : int
-        The window size.
-    cross_correlation : int
-        Flag (0, 1) to determine if cross_correlation distance should be
-        returned. It defaults to Euclidean Distance (0).
-    n_jobs : int, Default = 1
-        Number of cpu cores to use.
-    
-    Returns
-    -------
-    (array_like, array_like) :
-        The matrix profile (distance profile, profile index).
-
-    """
-    if w < 2: 
-        raise ValueError('subsequence length is too short to admit a normalized representation')
-    
-    cdef int i, j, diag, row, col
-    cdef double cov_, corr_
-    
-    cdef int minlag = w // 4
-    cdef int subseqcount = ts.size - w + 1
-
-    if subseqcount < 1 + minlag:  
-        raise ValueError('time series is too short relative to subsequence length w')
-    
-    cdef double[::1] mu, mu_s, invnorm
-    mu, invnorm  = muinvn(ts, w)
-    mu_s, _ = muinvn(ts[:ts.size-1], w-1)
-    mprof_ = np.empty(subseqcount, dtype='d')
-    mprofidx_ = np.empty(subseqcount, dtype='i')
-    cdef double[::1] mprof = mprof_
-    cdef int[::1] mprofidx = mprofidx_ 
-
-    for i in range(subseqcount):
-        mprof[i] = -1.0
-        mprofidx[i] = -1
-    
-    cdef double[::1] r_bwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
-    cdef double[::1] c_bwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
-    cdef double[::1] r_fwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
-    cdef double[::1] c_fwd = cvarray(shape=(subseqcount-1,), itemsize=sizeof(double), format='d')
-   
-    for i in range(subseqcount-1):
-        r_bwd[i] = ts[i] - mu[i]
-        c_bwd[i] = ts[i] - mu_s[i+1]
-        r_fwd[i] = ts[i+w] - mu[i+1]
-        c_fwd[i] = ts[i+w] - mu_s[i+1]
-
-    cdef double[::1] first_row = cvarray(shape=(w,), itemsize=sizeof(double), format='d')
-    cdef double m_ = mu[0]
-    for i in range(w):
-        first_row[i] = ts[i] - m_     
-
-    for diag in range(minlag, subseqcount):
-        cov_ = 0 
-        for i in range(diag, diag + w):
-            cov_ += (ts[i] - mu[diag]) * first_row[i-diag]
-
-        for row in range(subseqcount - diag):
-            col = diag + row
-            if row > 0: 
-                cov_ -= r_bwd[row-1] * c_bwd[col-1] 
-                cov_ += r_fwd[row-1] * c_fwd[col-1]
-            corr_ = cov_ * invnorm[row] * invnorm[col]
-            if corr_ > 1.0:
-                corr_ = 1.0
-            if corr_ > mprof[row]:
-                mprof[row] = corr_ 
-                mprofidx[row] = col 
-            if corr_ > mprof[col]:
-                mprof[col] = corr_
-                mprofidx[col] = row
-    
-    if cross_correlation == 0:
-        for i in range(subseqcount):
-            mprof[i] = sqrt(2 * w * (1 - mprof[i]))
-    
-    return mprof_, mprofidx_
-
-
-cpdef mpx_parallel(double[::1] ts, int w, int cross_correlation, int n_jobs):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
     now it only supports single dimension self joins. 
