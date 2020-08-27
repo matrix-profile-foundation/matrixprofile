@@ -69,7 +69,11 @@ cdef mpx_block_overl(double [::1] mp, Py_ssize_t[::1] mpi, double[::1] cov, doub
     # initialize 
     cdef Py_ssize_t mxcoridx = -1
     cdef double mxcor = -1.0
-    cdef double cv, cor, ir, rb, rf
+    cdef double cv, cor, ir
+
+    # Initialize early to quell compiler warnings 
+    cdef double rb = 0.0
+    cdef double rf = 0.0
     # This mimics some earlier C code experiments. We unroll just enough diagonals to hide the latency of 
     # various arithmetic ops. 
     #
@@ -90,8 +94,9 @@ cdef mpx_block_overl(double [::1] mp, Py_ssize_t[::1] mpi, double[::1] cov, doub
         # optimizable range, since unrolling factor is constant, "some" compilers do an okay job here
         for row in range(full_row_iters):
             col = row + diag
-            rb = r_bwd[row]
-            rf = r_fwd[row]
+            if row > 0:
+                rb = r_bwd[row-1]
+                rf = r_fwd[row-1]
             ir = invnorm[row]
             abs_row = row + roffset 
             mxcor = -1.0
@@ -100,13 +105,19 @@ cdef mpx_block_overl(double [::1] mp, Py_ssize_t[::1] mpi, double[::1] cov, doub
                 subcol = col + subdiag 
                 cv = cov[subcol-minlag]
                 if row > 0:
-                    if subcol >= c_bwd.shape[0]:
-                        print(f'shapes, rbwd:{r_bwd.shape[0]}, cbwd:{c_bwd.shape[0]}, rfwd{r_fwd.shape[0]}, cfwd:{c_fwd.shape[0]}, mp:{mp.shape[0]}, mpi:{mpi.shape[0]}, cov:{cov.shape[0]}, offset:{roffset}')
+                    if subcol > c_bwd.shape[0] or subcol >= invnorm.shape[0]:
+                        if subcol >= invnorm.shape[0]:
+                            print('invnorm oob')
+                        print(f'shapes, rbwd:{r_bwd.shape[0]}, cbwd:{c_bwd.shape[0]}, rfwd{r_fwd.shape[0]}, cfwd:{c_fwd.shape[0]}, mp:{mp.shape[0]}, mpi:{mpi.shape[0]}, cov:{cov.shape[0]}, offset:{roffset}, invnorm:{invnorm.shape[0]}')
                         print(f'subcol:{subcol}, row:{row}, minlag:{minlag}, subdiag:{subdiag}, diag:{diag}, full_row_iters:{full_row_iters}')
                         return
-                    cv -= rb * c_bwd[subcol]
-                    cv += rf * c_fwd[subcol]
+                    cv -= rb * c_bwd[subcol-1]
+                    cv += rf * c_fwd[subcol-1]
                     cov[subcol-minlag] = cv
+                if subcol >= invnorm.shape[0]:
+                        print(f'shapes, rbwd:{r_bwd.shape[0]}, cbwd:{c_bwd.shape[0]}, rfwd{r_fwd.shape[0]}, cfwd:{c_fwd.shape[0]}, mp:{mp.shape[0]}, mpi:{mpi.shape[0]}, cov:{cov.shape[0]}, offset:{roffset}, invnorm:{invnorm.shape[0]}')
+                        print(f'subcol:{subcol}, row:{row}, minlag:{minlag}, subdiag:{subdiag}, diag:{diag}, full_row_iters:{full_row_iters}')
+                    
                 cor = cv * ir * invnorm[subcol]
                 if cor > mxcor:
                     mxcor = cor
@@ -122,8 +133,9 @@ cdef mpx_block_overl(double [::1] mp, Py_ssize_t[::1] mpi, double[::1] cov, doub
         for row in range(full_row_iters, seqcount - diag):
             fringe = max_rows - row
             col = row + diag
-            rb = r_bwd[row]
-            rf = r_fwd[row]
+            if row > 0:
+                rb = r_bwd[row-1]
+                rf = r_fwd[row-1]
             ir = invnorm[row]
             abs_row = row + roffset 
             mxcor = -1.0
@@ -132,8 +144,8 @@ cdef mpx_block_overl(double [::1] mp, Py_ssize_t[::1] mpi, double[::1] cov, doub
                 subcol = col + subdiag 
                 cv = cov[subcol-minlag]
                 if row > 0:
-                    cv -= rb * c_bwd[subcol]
-                    cv += rf * c_fwd[subcol]
+                    cv -= rb * c_bwd[subcol-1]
+                    cv += rf * c_fwd[subcol-1]
                     cov[subcol-minlag] = cv
                 cor = cv * ir * invnorm[subcol]
                 if cor > mxcor:
@@ -246,10 +258,10 @@ cpdef mpx_parallel(double[::1] ts, Py_ssize_t w, Py_ssize_t cross_correlation, P
             mpx_block_overl(mprof[row:collim],
                     mprofidx[row:collim],
                     cov[:col_count], 
-                    r_bwd[row:collim], 
-                    c_bwd[row:collim],
-                    r_fwd[row:collim],
-                    c_fwd[row:collim],
+                    r_bwd[row:collim-1], 
+                    c_bwd[row:collim-1],
+                    r_fwd[row:collim-1],
+                    c_fwd[row:collim-1],
                     invnorm[row:collim],
                     diag - row,
                     row)
