@@ -21,3 +21,8 @@
 
 # 1.1.3 (2020-07-22)
 - Minor code refactoring
+
+# 1.1.4 (2020-08-30)
+- Enhanced snippets support and visualization thanks to [@Yue Lue](https://github.com/LuYueee)
+- Updated exclusion zone calculation thanks to [@Llewellyn Strydom](https://github.com/LlewellynS96)
+- Better handling of subsequence lower bounds thanks to [Kaminwar Sai Rahul](https://github.com/KSaiRahul21)
