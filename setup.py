@@ -32,6 +32,11 @@ extensions.append(Extension(
     include_dirs=[numpy.get_include()],
 ))
 
+extensions.append(Extension(
+   'matrixprofile.streamingimpl',
+   ['matrixprofile/algorithms/streamingimpl.pyx'],
+   include_dirs=[numpy.get_include()]))
+
 matplot = 'matplotlib>=3.0.3'
 scipy = 'scipy>=1.3.2,<2.0.0'
 if sys.version_info.major == 3:
