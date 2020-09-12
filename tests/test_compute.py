@@ -14,8 +14,8 @@ import pytest
 
 import numpy as np
 
-# from matrixprofile import compute
-from matrixprofile.compute import compute
+from matrixprofile.compute import preprocess
+from matrixprofile import compute
 
 import matrixprofile
 MODULE_PATH = matrixprofile.__path__[0]
@@ -137,14 +137,7 @@ def test_preprocess_data():
     ts = np.array([np.nan, np.inf, np.inf, np.nan, np.inf, 2, 3, 2, 3, 1, 2, 3, 4, 2,
                    np.nan, np.inf, 4, 2, 3, 4, 5, 6, 7, 8, 3, 4, 2, 3, 4, 5, 6, 7, 6,
                    5, 4, 3, np.nan, np.nan, np.inf, np.nan, np.inf, np.nan])
-    m = 6
 
-    profile = compute(ts)
-    ts = profile['data']['ts']
-    assert(np.any(np.isnan(ts)) == False)
-    assert(np.any(np.isinf(ts)) == False)
-
-    profile = compute(ts, windows=m)
-    ts = profile['data']['ts']
+    ts = preprocess(ts, 4)
     assert(np.any(np.isnan(ts)) == False)
     assert(np.any(np.isinf(ts)) == False)
