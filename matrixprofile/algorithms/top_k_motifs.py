@@ -29,7 +29,7 @@ def pmp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius
         size. Setting the exclusion zone to 0 makes it not apply.
     k : int, Default = 3
         Desired number of motifs to find.
-    neighbor_count : int, Default = 10
+    max_neighbors : int, Default = 10
         The maximum number of neighbors to include for a given motif.
     radius : int, Default = 3
         The radius is used to associate a neighbor by checking if the
@@ -187,7 +187,7 @@ def mp_top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=
         size. Setting the exclusion zone to 0 makes it not apply.
     k : int, Default = 3
         Desired number of motifs to find.
-    neighbor_count : int, Default = 10
+    max_neighbors : int, Default = 10
         The maximum number of neighbors to include for a given motif.
     radius : int, Default = 3
         The radius is used to associate a neighbor by checking if the
@@ -332,7 +332,7 @@ def top_k_motifs(profile, exclusion_zone=None, k=3, max_neighbors=10, radius=3, 
         size. Setting the exclusion zone to 0 makes it not apply.
     k : int, Default = 3
         Desired number of motifs to find.
-    neighbor_count : int, Default = 10
+    max_neighbors : int, Default = 10
         The maximum number of neighbors to include for a given motif.
     radius : int, Default = 3
         The radius is used to associate a neighbor by checking if the
