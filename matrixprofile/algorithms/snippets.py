@@ -36,11 +36,12 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
     -------
     list : snippets
         A list of snippets as dictionary objects with the following structure.
-        
+
         >>> {
-        >>> 	fraction: fraction of the snippet,
         >>> 	index: the index of the snippet,
-        >>> 	snippet: the snippet values
+        >>> 	snippet: the snippet values,
+        >>>     neighbors: the starting indices of all subsequences similar to the current snippet
+        >>>     fraction: fraction of the snippet
         >>> }
 
     """
@@ -72,7 +73,7 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
         distance = mpdist_vector(ts, ts[i:(i + snippet_size - 1)], int(window_size))
         distances.append(distance)
 
-    distances = np.array(distances)	
+    distances = np.array(distances)
 
     # find N snippets
     snippets = []
@@ -106,14 +107,14 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
     # compute the fraction of each snippet
     for snippet in snippets:
         mask = (snippet['distance'] <= total_min)
-        # create a key "neighbors" for the snippet dict, 
+        # create a key "neighbors" for the snippet dict,
         # and store all the time series indices for the data represented by a snippet (arr[mask])
         arr = np.arange(len(mask))
         # max_index indicates the length of a profile, which is (n-m) in the Snippets paper)
         max_index = time_series_len - snippet_size
         # since 'ts' is padded with 0 before calculate the MPdist profile
         # all parts of the profile that are out of range [0, n-m] cannot be used as neighboring snippet indices
-        snippet['neighbors'] = list(filter(lambda x : x <= max_index, arr[mask]))     
+        snippet['neighbors'] = list(filter(lambda x : x <= max_index, arr[mask]))
         # Add the last m time series indices into the neighboring snippet indices
         if max_index in snippet['neighbors']:
             last_m_indices = list(range(max_index+1, time_series_len))
