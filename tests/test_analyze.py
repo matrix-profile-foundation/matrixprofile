@@ -97,3 +97,26 @@ def test_analyze_pmp_windows():
     assert(profile['sample_pct'] == 1)
     np.testing.assert_equal(profile['windows'], windows)
     assert(len(figures) == 6)
+
+
+def test_preprocess():
+    ts = np.array([2, 3, 2, 3, 1, 2, 3, 4, 2, np.nan, np.inf, 4, 2, 3, 4, 5,
+                   6, 7, 8, 3, 4, 2, 3, 4, 5, 6, 7, 6, 5, 4, 3, np.nan, np.nan,
+                   np.inf, np.nan, np.inf, np.nan, np.inf, np.nan, np.inf])
+    m = 6
+    preprocessing_args = {
+        'window': 5,
+        'impute_method': 'median',
+        'impute_direction': 'backward',
+        'add_noise': False
+    }
+
+    result = analyze(ts, windows=m, preprocessing_args=preprocessing_args)
+    preprocessed_ts = result[0]['data']['ts']
+    assert (np.any(np.isnan(preprocessed_ts)) == False)
+    assert (np.any(np.isinf(preprocessed_ts)) == False)
+
+    result = analyze(ts, windows=m, preprocessing_args=None)
+    unprocessed_ts = result[0]['data']['ts']
+    assert (np.any(np.isnan(unprocessed_ts)) == True)
+    assert (np.any(np.isinf(unprocessed_ts)) == True)

@@ -130,3 +130,26 @@ def test_compute_mp_invalid_windows():
         compute(ts, windows=w)
         assert 'Compute requires all window sizes to be greater than 3!' \
             in str(excinfo.value)
+
+
+def test_preprocess():
+    ts = np.array([np.nan, np.inf, np.inf, np.nan, np.inf, 2, 3, 2, 3, 1, 2, 3, 4, 2,
+                   np.nan, np.inf, 4, 2, 3, 4, 5, 6, 7, 8, 3, 4, 2, 3, 4, 5, 6, 7, 6,
+                   5, 4, 3, np.nan, np.nan, np.inf, np.nan, np.inf, np.nan])
+    m = 6
+    preprocessing_args = {
+        'window': 5,
+        'impute_method': 'median',
+        'impute_direction': 'backward',
+        'add_noise': False
+    }
+
+    profile = compute(ts, windows=m, preprocessing_args=preprocessing_args)
+    preprocessed_ts = profile['data']['ts']
+    assert(np.any(np.isnan(preprocessed_ts)) == False)
+    assert(np.any(np.isinf(preprocessed_ts)) == False)
+
+    profile = compute(ts, windows=m, preprocessing_args=None)
+    unprocessed_ts = profile['data']['ts']
+    assert(np.any(np.isnan(unprocessed_ts)) == True)
+    assert(np.any(np.isinf(unprocessed_ts)) == True)

@@ -11,6 +11,7 @@ import math
 
 from matrixprofile import core
 
+from matrixprofile.preprocess import preprocess
 from matrixprofile.discover import discords
 from matrixprofile.discover import motifs
 from matrixprofile.algorithms import skimp
@@ -168,7 +169,9 @@ def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=-1):
     return (profile, figures)
 
 
-def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs=1):
+def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs=1,
+            preprocessing_args = { 'window': 4, 'impute_method': 'mean',
+            'impute_direction': 'forward', 'add_noise': True }):
     """
     Runs an appropriate workflow based on the parameters passed in. The goal
     of this function is to compute all fundamental algorithms on the provided
@@ -209,6 +212,10 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs
         window(s) is given.
     n_jobs : int, Default = 1
         Number of cpu cores to use.
+    preprocessing_args : dict, default = { 'window': 4, 'impute_method': 'mean', 'impute_direction': 'forward', 'add_noise': True }
+        A dictionary object to sets parameters for preprocess function.
+        To disable preprocessing procedure, set the preprocessing_args to
+        None/False/""/{}.
 
     Returns
     -------
@@ -217,6 +224,42 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs
 
     """
     result = None
+
+    # preprocess the time series
+    if preprocessing_args != None and preprocessing_args:
+
+        valid_preprocessing_args_keys = {'window', 'impute_method', 'impute_direction', 'add_noise'}
+
+        if isinstance(preprocessing_args,dict) == False:
+            raise ValueError("The parameter 'preprocessing_args' is not dict like!")
+
+        elif set(preprocessing_args.keys()).issubset(valid_preprocessing_args_keys):
+            window = 4
+            impute_method = 'mean'
+            impute_direction = 'forward'
+            add_noise = True
+
+            if 'window' in preprocessing_args.keys():
+                window = preprocessing_args['window']
+
+            if 'impute_method' in preprocessing_args.keys():
+                impute_method = preprocessing_args['impute_method']
+
+            if 'impute_direction' in preprocessing_args.keys():
+                impute_direction = preprocessing_args['impute_direction']
+
+            if 'add_noise' in preprocessing_args.keys():
+                add_noise = preprocessing_args['add_noise']
+
+            ts = preprocess(ts,
+                            window=window,
+                            impute_method=impute_method,
+                            impute_direction=impute_direction,
+                            add_noise=add_noise)
+
+        else:
+            raise ValueError('invalid key(s) for preprocessing_args! '
+                             'valid key(s) should include '+ str(valid_preprocessing_args_keys))
 
     # determine proper number of jobs
     n_jobs = core.valid_n_jobs(n_jobs)
