@@ -40,8 +40,7 @@ def snippets(ts, snippet_size, num_snippets=2, window_size=None):
         >>> {
         >>> 	fraction: fraction of the snippet,
         >>> 	index: the index of the snippet,
-        >>> 	snippet: the snippet values,
-        >>> 	neighbors: the neighboring snippet indices
+        >>> 	snippet: the snippet values
         >>> }
 
     """

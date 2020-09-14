@@ -14,6 +14,67 @@ import numpy as np
 from matrixprofile import core
 
 
+def validate_preprocess_kwargs(preprocessing_kwargs):
+    """
+    Tests the arguments of preprocess function and raises errors for invalid arguments.
+
+    Parameters
+    ----------
+    preprocessing_kwargs : dict-like or None or False
+        A dictionary object to store keyword arguments for the preprocess function.
+        It can also be None/False/{}/"".
+
+    Returns
+    -------
+    valid_kwargs : dict-like or None
+        The valid keyword arguments for the preprocess function.
+        Returns None if the input preprocessing_kwargs is None/False/{}/"".
+
+    Raises
+    ------
+    ValueError
+        If preprocessing_kwargs is not dict-like or None.
+        If gets invalid key(s) for preprocessing_kwargs.
+
+    """
+    if preprocessing_kwargs != None and preprocessing_kwargs:
+
+        valid_preprocessing_kwargs_keys = {'window', 'impute_method', 'impute_direction', 'add_noise'}
+
+        if isinstance(preprocessing_kwargs,dict) == False:
+            raise ValueError("The parameter 'preprocessing_kwargs' is not dict like!")
+
+        elif set(preprocessing_kwargs.keys()).issubset(valid_preprocessing_kwargs_keys):
+            window = 4
+            impute_method = 'mean'
+            impute_direction = 'forward'
+            add_noise = True
+
+            if 'window' in preprocessing_kwargs.keys():
+                window = preprocessing_kwargs['window']
+
+            if 'impute_method' in preprocessing_kwargs.keys():
+                impute_method = preprocessing_kwargs['impute_method']
+
+            if 'impute_direction' in preprocessing_kwargs.keys():
+                impute_direction = preprocessing_kwargs['impute_direction']
+
+            if 'add_noise' in preprocessing_kwargs.keys():
+                add_noise = preprocessing_kwargs['add_noise']
+
+            valid_kwargs =  { 'window': window,
+                              'impute_method': impute_method,
+                              'impute_direction': impute_direction,
+                              'add_noise': add_noise }
+        else:
+            raise ValueError('invalid key(s) for preprocessing_kwargs! '
+                             'valid key(s) should include '+ str(valid_preprocessing_kwargs_keys))
+    else:
+        valid_kwargs = None
+
+    return valid_kwargs
+
+
 def is_subsequence_constant(subsequence):
     """
     Determines whether the given time series subsequence is an array of constants.
