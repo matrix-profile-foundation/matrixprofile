@@ -19,6 +19,7 @@ import numpy as np
 # Project imports
 from matrixprofile import core
 from matrixprofile.preprocess import preprocess
+from matrixprofile.preprocess import validate_preprocess_kwargs
 from matrixprofile.algorithms.mpx import mpx
 from matrixprofile.algorithms.scrimp import scrimp_plus_plus
 from matrixprofile.algorithms.skimp import skimp
@@ -26,8 +27,7 @@ from matrixprofile.algorithms.skimp import maximum_subsequence
 
 
 def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
-            n_jobs=1, preprocessing_args = { 'window': 4, 'impute_method': 'mean',
-            'impute_direction': 'forward', 'add_noise': True }):
+            n_jobs=1, preprocessing_kwargs = None):
     """
     Computes the exact or approximate MatrixProfile based on the sample percent
     specified. Currently, MPX and SCRIMP++ is used for the exact and
@@ -63,9 +63,9 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
         window(s) is given.
     n_jobs : int, default = 1
         Number of cpu cores to use.
-    preprocessing_args : dict, default = { 'window': 4, 'impute_method': 'mean', 'impute_direction': 'forward', 'add_noise': True }
+    preprocessing_kwargs : dict, default = None
         A dictionary object to sets parameters for preprocess function.
-        To disable preprocessing procedure, set the preprocessing_args to
+        To disable preprocessing procedure, set the preprocessing_kwargs to
         None/False/""/{}.
 
     Returns
@@ -90,40 +90,13 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
         windows = windows[0]
 
     # preprocess the time series
-    if preprocessing_args != None and preprocessing_args:
-
-        valid_preprocessing_args_keys = {'window', 'impute_method', 'impute_direction', 'add_noise'}
-
-        if isinstance(preprocessing_args,dict) == False:
-            raise ValueError("The parameter 'preprocessing_args' is not dict like!")
-
-        elif set(preprocessing_args.keys()).issubset(valid_preprocessing_args_keys):
-            window = 4
-            impute_method = 'mean'
-            impute_direction = 'forward'
-            add_noise = True
-
-            if 'window' in preprocessing_args.keys():
-                window = preprocessing_args['window']
-
-            if 'impute_method' in preprocessing_args.keys():
-                impute_method = preprocessing_args['impute_method']
-
-            if 'impute_direction' in preprocessing_args.keys():
-                impute_direction = preprocessing_args['impute_direction']
-
-            if 'add_noise' in preprocessing_args.keys():
-                add_noise = preprocessing_args['add_noise']
-
-            ts = preprocess(ts,
-                            window=window,
-                            impute_method=impute_method,
-                            impute_direction=impute_direction,
-                            add_noise=add_noise)
-
-        else:
-            raise ValueError('invalid key(s) for preprocessing_args! '
-                             'valid key(s) should include '+ str(valid_preprocessing_args_keys))
+    preprocessing_kwargs = validate_preprocess_kwargs(preprocessing_kwargs)
+    if preprocessing_kwargs != None:
+        ts = preprocess(ts,
+                        window=preprocessing_kwargs['window'],
+                        impute_method=preprocessing_kwargs['impute_method'],
+                        impute_direction=preprocessing_kwargs['impute_direction'],
+                        add_noise=preprocessing_kwargs['add_noise'])
 
     # compute the upper window and pmp
     if no_windows and has_threshold:

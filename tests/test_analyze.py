@@ -104,19 +104,41 @@ def test_preprocess():
                    6, 7, 8, 3, 4, 2, 3, 4, 5, 6, 7, 6, 5, 4, 3, np.nan, np.nan,
                    np.inf, np.nan, np.inf, np.nan, np.inf, np.nan, np.inf])
     m = 6
-    preprocessing_args = {
+    preprocessing_kwargs = {
         'window': 5,
         'impute_method': 'median',
         'impute_direction': 'backward',
         'add_noise': False
     }
 
-    result = analyze(ts, windows=m, preprocessing_args=preprocessing_args)
+    result = analyze(ts, windows=m, preprocessing_kwargs=preprocessing_kwargs)
     preprocessed_ts = result[0]['data']['ts']
     assert (np.any(np.isnan(preprocessed_ts)) == False)
     assert (np.any(np.isinf(preprocessed_ts)) == False)
 
-    result = analyze(ts, windows=m, preprocessing_args=None)
+    # if preprocessing_kwargs=None, we disable the preprocessing procedure.
+    result = analyze(ts, windows=m, preprocessing_kwargs=None)
     unprocessed_ts = result[0]['data']['ts']
     assert (np.any(np.isnan(unprocessed_ts)) == True)
     assert (np.any(np.isinf(unprocessed_ts)) == True)
+
+    # check if preprocessing_kwargs is None by default.
+    result = analyze(ts, windows=m)
+    unprocessed_ts = result[0]['data']['ts']
+    assert(np.any(np.isnan(unprocessed_ts)) == True)
+    assert(np.any(np.isinf(unprocessed_ts)) == True)
+
+    with pytest.raises(ValueError) as excinfo:
+        analyze(ts, windows=m, preprocessing_kwargs=1)
+        assert "The parameter 'preprocessing_kwargs' is not dict like!" \
+            in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        preprocessing_kwargs = {
+            'win': 5,
+            'impute_dir': 'backward',
+        }
+        analyze(ts, windows=m, preprocessing_kwargs=preprocessing_kwargs)
+        assert "invalid key(s) for preprocessing_kwargs! valid key(s) should include " \
+               "{'impute_direction', 'add_noise', 'impute_method', 'window'}" \
+            in str(excinfo.value)
