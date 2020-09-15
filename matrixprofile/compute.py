@@ -65,6 +65,20 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
         Number of cpu cores to use.
     preprocessing_kwargs : dict, default = None
         A dictionary object to sets parameters for preprocess function.
+        A valid preprocessing_kwargs should have the following structure:
+
+        >>> {
+        >>>     'window': The window size to compute the mean/median/minimum/maximum value,
+        >>>     'method': A string indicating the data imputation method, which should be
+        >>>               'mean', 'median', 'min' or 'max',
+        >>>     'direction': A string indicating the data imputation direction, which should be
+        >>>                 'forward', 'fwd', 'f', 'backward', 'bwd', 'b'. If the direction is
+        >>>                 forward, we use previous data for imputation; if the direction is
+        >>>                 backward, we use subsequent data for imputation.,
+        >>>     'add_noise': A boolean value indicating whether noise needs to be added into the
+        >>>                 time series
+        >>> }
+
         To disable preprocessing procedure, set the preprocessing_kwargs to
         None/False/""/{}.
 
@@ -91,7 +105,7 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
 
     # preprocess the time series
     preprocessing_kwargs = validate_preprocess_kwargs(preprocessing_kwargs)
-    if preprocessing_kwargs != None:
+    if preprocessing_kwargs:
         ts = preprocess(ts,
                         window=preprocessing_kwargs['window'],
                         impute_method=preprocessing_kwargs['impute_method'],

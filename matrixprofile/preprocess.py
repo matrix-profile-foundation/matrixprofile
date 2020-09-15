@@ -35,13 +35,15 @@ def validate_preprocess_kwargs(preprocessing_kwargs):
     ValueError
         If preprocessing_kwargs is not dict-like or None.
         If gets invalid key(s) for preprocessing_kwargs.
+        If gets invalid value(s) for preprocessing_kwargs['window'], preprocessing_kwargs['impute_method']
+        preprocessing_kwargs['impute_direction'] and preprocessing_kwargs['add_noise'].
 
     """
-    if preprocessing_kwargs != None and preprocessing_kwargs:
+    if preprocessing_kwargs:
 
         valid_preprocessing_kwargs_keys = {'window', 'impute_method', 'impute_direction', 'add_noise'}
 
-        if isinstance(preprocessing_kwargs,dict) == False:
+        if not isinstance(preprocessing_kwargs,dict):
             raise ValueError("The parameter 'preprocessing_kwargs' is not dict like!")
 
         elif set(preprocessing_kwargs.keys()).issubset(valid_preprocessing_kwargs_keys):
@@ -49,17 +51,28 @@ def validate_preprocess_kwargs(preprocessing_kwargs):
             impute_method = 'mean'
             impute_direction = 'forward'
             add_noise = True
+            methods = ['mean', 'median', 'min', 'max']
+            directions = ['forward', 'fwd', 'f', 'backward', 'bwd', 'b']
 
             if 'window' in preprocessing_kwargs.keys():
+                if not isinstance(preprocessing_kwargs['window'],int):
+                    raise ValueError("The value for preprocessing_kwargs['window'] is not an integer!")
                 window = preprocessing_kwargs['window']
 
+
             if 'impute_method' in preprocessing_kwargs.keys():
+                if preprocessing_kwargs['impute_method'] not in methods:
+                    raise ValueError('invalid imputation method! valid include options: ' + ', '.join(methods))
                 impute_method = preprocessing_kwargs['impute_method']
 
             if 'impute_direction' in preprocessing_kwargs.keys():
+                if preprocessing_kwargs['impute_direction'] not in directions:
+                    raise ValueError('invalid imputation direction! valid include options: ' + ', '.join(directions))
                 impute_direction = preprocessing_kwargs['impute_direction']
 
             if 'add_noise' in preprocessing_kwargs.keys():
+                if not isinstance(preprocessing_kwargs['add_noise'],bool):
+                    raise ValueError("The value for preprocessing_kwargs['add_noise'] is not a boolean value!")
                 add_noise = preprocessing_kwargs['add_noise']
 
             valid_kwargs =  { 'window': window,
@@ -168,6 +181,9 @@ def impute_missing(ts, window, method='mean', direction='forward'):
     if direction not in directions:
         raise ValueError('invalid imputation direction! valid include options: ' + ', '.join(directions))
 
+    if not isinstance(window, int):
+        raise ValueError("window is not an integer!")
+
     temp = np.copy(core.to_np_array(ts))
     nan_infs = core.nan_inf_indices(temp)
     func = method_map[method]
@@ -181,35 +197,27 @@ def impute_missing(ts, window, method='mean', direction='forward'):
         temp[-1] = temp[~nan_infs][-1]
         nan_infs = core.nan_inf_indices(temp)
 
-    # Use previous data for imputation / fills in data in a forward direction
-    if direction in directions[:3]:
-        for index in range(len(temp) - window + 1):
-            start = index
-            end = index + window
-            has_missing = np.any(nan_infs[index:index + window])
+    index_order = None
 
-            if has_missing:
-                subseq = temp[start:end]
-                nan_infs_subseq = nan_infs[start:end]
-                stat = func(temp[start:end][~nan_infs_subseq])
-                temp[start:end][nan_infs_subseq] = stat
-                # Update nan_infs after array 'temp' is changed
-                nan_infs = core.nan_inf_indices(temp)
+    if direction.startswith('f'):
+        # Use previous data for imputation / fills in data in a forward direction
+        index_order = range(len(temp) - window + 1)
+    elif direction.startswith('b'):
+        # Use subsequent data for imputation / fills in data in a backward direction
+        index_order = range(len(temp) - window + 1, 0, -1)
 
-    # Use subsequent data for imputation / fills in data in a backward direction
-    elif direction in directions[3:]:
-        for index in range(len(temp) - window + 1, 0, -1):
-            start = index
-            end = index + window
-            has_missing = np.any(nan_infs[index:index + window])
+    for index in index_order:
+        start = index
+        end = index + window
+        has_missing = np.any(nan_infs[index:index + window])
 
-            if has_missing:
-                subseq = temp[start:end]
-                nan_infs_subseq = nan_infs[start:end]
-                stat = func(temp[start:end][~nan_infs_subseq])
-                temp[start:end][nan_infs_subseq] = stat
-                # Update nan_infs after array 'temp' is changed
-                nan_infs = core.nan_inf_indices(temp)
+        if has_missing:
+            subseq = temp[start:end]
+            nan_infs_subseq = nan_infs[start:end]
+            stat = func(temp[start:end][~nan_infs_subseq])
+            temp[start:end][nan_infs_subseq] = stat
+            # Update nan_infs after array 'temp' is changed
+            nan_infs = core.nan_inf_indices(temp)
 
     return temp
 
