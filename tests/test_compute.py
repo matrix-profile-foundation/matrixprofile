@@ -130,3 +130,48 @@ def test_compute_mp_invalid_windows():
         compute(ts, windows=w)
         assert 'Compute requires all window sizes to be greater than 3!' \
             in str(excinfo.value)
+
+
+def test_preprocess():
+    ts = np.array([np.nan, np.inf, np.inf, np.nan, np.inf, 2, 3, 2, 3, 1, 2, 3, 4, 2,
+                   np.nan, np.inf, 4, 2, 3, 4, 5, 6, 7, 8, 3, 4, 2, 3, 4, 5, 6, 7, 6,
+                   5, 4, 3, np.nan, np.nan, np.inf, np.nan, np.inf, np.nan])
+    m = 6
+    preprocessing_kwargs = {
+        'window': 5,
+        'impute_method': 'median',
+        'impute_direction': 'backward',
+        'add_noise': False
+    }
+
+    profile = compute(ts, windows=m, preprocessing_kwargs=preprocessing_kwargs)
+    preprocessed_ts = profile['data']['ts']
+    assert(np.any(np.isnan(preprocessed_ts)) == False)
+    assert(np.any(np.isinf(preprocessed_ts)) == False)
+
+    # if preprocessing_kwargs=None, we disable the preprocessing procedure.
+    profile = compute(ts, windows=m, preprocessing_kwargs=None)
+    unprocessed_ts = profile['data']['ts']
+    assert(np.any(np.isnan(unprocessed_ts)) == True)
+    assert(np.any(np.isinf(unprocessed_ts)) == True)
+
+    # check if preprocessing_kwargs is None by default.
+    profile = compute(ts, windows=m)
+    unprocessed_ts = profile['data']['ts']
+    assert(np.any(np.isnan(unprocessed_ts)) == True)
+    assert(np.any(np.isinf(unprocessed_ts)) == True)
+
+    with pytest.raises(ValueError) as excinfo:
+        compute(ts, windows=m, preprocessing_kwargs=1)
+        assert "The parameter 'preprocessing_kwargs' is not dict like!" \
+            in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        preprocessing_kwargs = {
+            'win': 5,
+            'impute_dir': 'backward',
+        }
+        compute(ts, windows=m, preprocessing_kwargs=preprocessing_kwargs)
+        assert "invalid key(s) for preprocessing_kwargs! valid key(s) should include " \
+               "{'impute_direction', 'add_noise', 'impute_method', 'window'}" \
+            in str(excinfo.value)

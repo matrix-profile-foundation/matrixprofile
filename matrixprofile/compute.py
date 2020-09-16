@@ -18,6 +18,8 @@ import numpy as np
 
 # Project imports
 from matrixprofile import core
+from matrixprofile.preprocess import preprocess
+from matrixprofile.preprocess import validate_preprocess_kwargs
 from matrixprofile.algorithms.mpx import mpx
 from matrixprofile.algorithms.scrimp import scrimp_plus_plus
 from matrixprofile.algorithms.skimp import skimp
@@ -25,7 +27,7 @@ from matrixprofile.algorithms.skimp import maximum_subsequence
 
 
 def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
-            n_jobs=1):
+            n_jobs=1, preprocessing_kwargs = None):
     """
     Computes the exact or approximate MatrixProfile based on the sample percent
     specified. Currently, MPX and SCRIMP++ is used for the exact and
@@ -61,6 +63,24 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
         window(s) is given.
     n_jobs : int, default = 1
         Number of cpu cores to use.
+    preprocessing_kwargs : dict, default = None
+        A dictionary object to sets parameters for preprocess function.
+        A valid preprocessing_kwargs should have the following structure:
+
+        >>> {
+        >>>     'window': The window size to compute the mean/median/minimum/maximum value,
+        >>>     'method': A string indicating the data imputation method, which should be
+        >>>               'mean', 'median', 'min' or 'max',
+        >>>     'direction': A string indicating the data imputation direction, which should be
+        >>>                 'forward', 'fwd', 'f', 'backward', 'bwd', 'b'. If the direction is
+        >>>                 forward, we use previous data for imputation; if the direction is
+        >>>                 backward, we use subsequent data for imputation.,
+        >>>     'add_noise': A boolean value indicating whether noise needs to be added into the
+        >>>                 time series
+        >>> }
+
+        To disable preprocessing procedure, set the preprocessing_kwargs to
+        None/False/""/{}.
 
     Returns
     -------
@@ -82,6 +102,15 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
 
     if core.is_array_like(windows) and len(windows) == 1:
         windows = windows[0]
+
+    # preprocess the time series
+    preprocessing_kwargs = validate_preprocess_kwargs(preprocessing_kwargs)
+    if preprocessing_kwargs:
+        ts = preprocess(ts,
+                        window=preprocessing_kwargs['window'],
+                        impute_method=preprocessing_kwargs['impute_method'],
+                        impute_direction=preprocessing_kwargs['impute_direction'],
+                        add_noise=preprocessing_kwargs['add_noise'])
 
     # compute the upper window and pmp
     if no_windows and has_threshold:

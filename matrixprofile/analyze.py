@@ -11,6 +11,8 @@ import math
 
 from matrixprofile import core
 
+from matrixprofile.preprocess import preprocess
+from matrixprofile.preprocess import validate_preprocess_kwargs
 from matrixprofile.discover import discords
 from matrixprofile.discover import motifs
 from matrixprofile.algorithms import skimp
@@ -168,7 +170,8 @@ def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=-1):
     return (profile, figures)
 
 
-def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs=1):
+def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs=1,
+            preprocessing_kwargs = None):
     """
     Runs an appropriate workflow based on the parameters passed in. The goal
     of this function is to compute all fundamental algorithms on the provided
@@ -205,10 +208,28 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs
         the MP or PMP. When it is 1, the exact algorithm is used.
     threshold : float, Default 0.98
         The correlation coefficient used as the threshold. It should be between
-        0 and 1. This is used to compute the upper window size when no 
+        0 and 1. This is used to compute the upper window size when no
         window(s) is given.
     n_jobs : int, Default = 1
         Number of cpu cores to use.
+    preprocessing_kwargs : dict, default = None
+        A dictionary object to sets parameters for preprocess function.
+        A valid preprocessing_kwargs should have the following structure:
+
+        >>> {
+        >>>     'window': The window size to compute the mean/median/minimum/maximum value,
+        >>>     'method': A string indicating the data imputation method, which should be
+        >>>               'mean', 'median', 'min' or 'max',
+        >>>     'direction': A string indicating the data imputation direction, which should be
+        >>>                 'forward', 'fwd', 'f', 'backward', 'bwd', 'b'. If the direction is
+        >>>                 forward, we use previous data for imputation; if the direction is
+        >>>                 backward, we use subsequent data for imputation.,
+        >>>     'add_noise': A boolean value indicating whether noise needs to be added into the
+        >>>                 time series
+        >>> }
+
+        To disable preprocessing procedure, set the preprocessing_kwargs to
+        None/False/""/{}.
 
     Returns
     -------
@@ -217,6 +238,15 @@ def analyze(ts, query=None, windows=None, sample_pct=1.0, threshold=0.98, n_jobs
 
     """
     result = None
+
+    # preprocess the time series
+    preprocessing_kwargs = validate_preprocess_kwargs(preprocessing_kwargs)
+    if preprocessing_kwargs:
+        ts = preprocess(ts,
+                        window=preprocessing_kwargs['window'],
+                        impute_method=preprocessing_kwargs['impute_method'],
+                        impute_direction=preprocessing_kwargs['impute_direction'],
+                        add_noise=preprocessing_kwargs['add_noise'])
 
     # determine proper number of jobs
     n_jobs = core.valid_n_jobs(n_jobs)

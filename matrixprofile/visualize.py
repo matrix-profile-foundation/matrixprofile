@@ -659,7 +659,7 @@ def plot_snippets(snippets, ts):
         ax.plot(np.arange(snippet_start,snippet_end), snippet_data, c = "red"
                 , label = 'Snippet-'+ snippet_id)
         
-        plt.legend()        
+        plt.legend(loc="upper right")       
         fig.tight_layout()       
         figures.append(fig)
     
