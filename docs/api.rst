@@ -17,6 +17,21 @@ matrixprofile.visualize
 
 .. autofunction:: matrixprofile.visualize
 
+matrixprofile.preprocess.preprocess
+===================================
+
+.. autofunction:: matrixprofile.preprocess.preprocess
+
+matrixprofile.preprocess.impute_missing
+=======================================
+
+.. autofunction:: matrixprofile.preprocess.impute_missing
+
+matrixprofile.preprocess.add_noise_to_series
+============================================
+
+.. autofunction:: matrixprofile.preprocess.add_noise_to_series
+
 matrixprofile.discover.motifs
 =============================
 
