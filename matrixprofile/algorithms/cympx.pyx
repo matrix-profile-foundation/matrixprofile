@@ -50,7 +50,7 @@ cpdef mpx_parallel(double[::1] ts, int w, bint cross_correlation=0, int n_jobs=1
         The matrix profile (distance profile, profile index).
 
     """
-    cdef int i, j, diag, offset
+    cdef int i, j, diag, offset, threadnum, col
     cdef int n = ts.shape[0]
 
     # the original implementation allows the minlag to be manually set
@@ -69,8 +69,8 @@ cpdef mpx_parallel(double[::1] ts, int w, bint cross_correlation=0, int n_jobs=1
     cdef np.ndarray[np.double_t, ndim=1] mp = np.full(profile_len, -1.0, dtype='d')
     cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, -1, dtype='int')
     
-    cdef double[:,::1] tmp_mp = np.full((profile_len, n_jobs), -1.0, dtype='d')
-    cdef np.int_t[:,::1] tmp_mpi = np.full((profile_len, n_jobs), -1, dtype='int')
+    cdef double[:,::1] tmp_mp = np.full((n_jobs, profile_len), -1.0, dtype='d')
+    cdef np.int_t[:,::1] tmp_mpi = np.full((n_jobs, profile_len), -1, dtype='int')
     
     # this is where we compute the diagonals and later the matrix profile
     df[0] = 0
@@ -81,38 +81,40 @@ cpdef mpx_parallel(double[::1] ts, int w, bint cross_correlation=0, int n_jobs=1
 
     for diag in prange(minlag, profile_len, num_threads=n_jobs, nogil=True):
         c = 0
+        threadnum = openmp.omp_get_thread_num()
         for i in range(diag, diag + w):
             c = c + ((ts[i] - mu[diag]) * (ts[i-diag] - mu[0]))
 
         for offset in range(n - w - diag + 1):
-            c = c + df[offset] * dg[offset + diag] + df[offset + diag] * dg[offset]
-            c_cmp = c * sig[offset] * sig[offset + diag]
+            col = offset + diag
+            c = c + df[offset] * dg[col] + df[col] * dg[offset]
+            c_cmp = c * sig[offset] * sig[col]
             
             # update the distance profile and profile index
-            if c_cmp > tmp_mp[offset, openmp.omp_get_thread_num()]:
-                tmp_mp[offset, openmp.omp_get_thread_num()] = c_cmp
-                tmp_mpi[offset, openmp.omp_get_thread_num()] = offset + diag
+            if c_cmp > tmp_mp[threadnum, offset]:
+                tmp_mp[threadnum, offset] = c_cmp
+                tmp_mpi[threadnum, offset] = col
             
-            if c_cmp > tmp_mp[offset + diag, openmp.omp_get_thread_num()]:
-                if c_cmp > 1:
-                    c_cmp = 1
-                tmp_mp[offset + diag, openmp.omp_get_thread_num()] = c_cmp
-                tmp_mpi[offset + diag, openmp.omp_get_thread_num()] = offset
+            if c_cmp > tmp_mp[threadnum, col]:
+                if c_cmp > 1.0:
+                    c_cmp = 1.0
+                tmp_mp[threadnum, col] = c_cmp
+                tmp_mpi[threadnum, col] = offset
     
     # combine parallel results...
     for i in range(tmp_mp.shape[0]):
         for j in range(tmp_mp.shape[1]):
-            if tmp_mp[i,j] > mp[i]:
-                if tmp_mp[i, j] > 1:
-                    mp[i] = 1
+            if tmp_mp[i,j] > mp[j]:
+                if tmp_mp[i, j] > 1.0:
+                    mp[j] = 1.0
                 else:
-                    mp[i] = tmp_mp[i, j]
-                mpi[i] = tmp_mpi[i, j]
+                    mp[j] = tmp_mp[i, j]
+                mpi[j] = tmp_mpi[i, j]
     
     # convert normalized cross correlation to euclidean distance
     if cross_correlation == 0:
         for i in range(profile_len):
-            mp[i] = sqrt(2 * w * (1 - mp[i]))
+            mp[i] = sqrt(2.0 * w * (1.0 - mp[i]))
     
     return (mp, mpi)
 
@@ -145,7 +147,7 @@ cpdef mpx_ab_parallel(double[::1] ts, double[::1] query, int w, bint cross_corre
         The matrix profile (distance profile, profile index, dist..b, prof..b).
 
     """
-    cdef int i, j, k, mx
+    cdef int i, j, k, mx, threadnum
     cdef int n = ts.shape[0]
     cdef int qn = query.shape[0]
     cdef double cov_, corr_, eucdist, mxdist
@@ -171,10 +173,10 @@ cpdef mpx_ab_parallel(double[::1] ts, double[::1] query, int w, bint cross_corre
     cdef np.ndarray[np.double_t, ndim=1] mpb = np.full(profile_lenb, -1.0, dtype='d')
     cdef np.ndarray[np.int_t, ndim=1] mpib = np.full(profile_lenb, -1, dtype='int')
     
-    cdef double[:,::1] tmp_mp = np.full((profile_len, n_jobs), -1.0, dtype='d')
-    cdef np.int_t[:,::1] tmp_mpi = np.full((profile_len, n_jobs), -1, dtype='int')
-    cdef double[:,::1] tmp_mpb = np.full((profile_lenb, n_jobs), -1.0, dtype='d')
-    cdef np.int_t[:,::1] tmp_mpib = np.full((profile_lenb, n_jobs), -1, dtype='int')
+    cdef double[:,::1] tmp_mp = np.full((n_jobs, profile_len), -1.0, dtype='d')
+    cdef np.int_t[:,::1] tmp_mpi = np.full((n_jobs, profile_len), -1, dtype='int')
+    cdef double[:,::1] tmp_mpb = np.full((n_jobs, profile_lenb), -1.0, dtype='d')
+    cdef np.int_t[:,::1] tmp_mpib = np.full((n_jobs, profile_lenb), -1, dtype='int')
     
     # # this is where we compute the diagonals and later the matrix profile
     diff_fa[0] = 0
@@ -191,6 +193,7 @@ cpdef mpx_ab_parallel(double[::1] ts, double[::1] query, int w, bint cross_corre
 
     # AB JOIN
     for i in prange(profile_len, num_threads=n_jobs, nogil=True):
+        threadnum = openmp.omp_get_thread_num()
         mx = (profile_len - i) if (profile_len - i) < profile_lenb else profile_lenb
 
         cov_ = 0
@@ -198,20 +201,22 @@ cpdef mpx_ab_parallel(double[::1] ts, double[::1] query, int w, bint cross_corre
             cov_ = cov_ + ((ts[j] - mua[i]) * (query[j-i] - mub[0]))
 
         for j in range(mx):
-            cov_ = cov_ + diff_fa[j + i] * diff_gb[j] + diff_ga[j + i] * diff_fb[j]
-            corr_ = cov_ * siga[j + i] * sigb[j]
+            k = j + i
+            cov_ = cov_ + diff_fa[k] * diff_gb[j] + diff_ga[k] * diff_fb[j]
+            corr_ = cov_ * siga[k] * sigb[j]
 
-            if corr_ > tmp_mp[j + i, openmp.omp_get_thread_num()]:
-                tmp_mp[j + i, openmp.omp_get_thread_num()] = corr_
-                tmp_mpi[j + i, openmp.omp_get_thread_num()] = j
+            if corr_ > tmp_mp[threadnum, k]:
+                tmp_mp[threadnum, k] = corr_
+                tmp_mpi[threadnum, k] = j
 
-            if corr_ > tmp_mpb[j, openmp.omp_get_thread_num()]:
-                tmp_mpb[j, openmp.omp_get_thread_num()] = corr_
-                tmp_mpib[j, openmp.omp_get_thread_num()] = j + i
+            if corr_ > tmp_mpb[threadnum, j]:
+                tmp_mpb[threadnum, j] = corr_
+                tmp_mpib[threadnum, j] = k
 
 
     # BA JOIN
     for i in prange(profile_lenb, num_threads=n_jobs, nogil=True):
+        threadnum = openmp.omp_get_thread_num()
         mx = (profile_lenb - i) if (profile_lenb - i) < profile_len else profile_len
 
         cov_ = 0
@@ -219,65 +224,61 @@ cpdef mpx_ab_parallel(double[::1] ts, double[::1] query, int w, bint cross_corre
             cov_ = cov_ + ((query[j] - mub[i]) * (ts[j-i] - mua[0]))
 
         for j in range(mx):
-            cov_ = cov_ + diff_fb[j + i] * diff_ga[j] + diff_gb[j + i] * diff_fa[j]
-            corr_ = cov_ * sigb[j + i] * siga[j]
+            k = j + i
+            cov_ = cov_ + diff_fb[k] * diff_ga[j] + diff_gb[k] * diff_fa[j]
+            corr_ = cov_ * sigb[k] * siga[j]
 
-            if corr_ > tmp_mpb[j + i, openmp.omp_get_thread_num()]:
-                tmp_mpb[j + i, openmp.omp_get_thread_num()] = corr_
-                tmp_mpib[j + i, openmp.omp_get_thread_num()] = j
+            if corr_ > tmp_mpb[threadnum, k]:
+                tmp_mpb[threadnum, k] = corr_
+                tmp_mpib[threadnum, k] = j
 
-            if corr_ > tmp_mp[j, openmp.omp_get_thread_num()]:
-                tmp_mp[j, openmp.omp_get_thread_num()] = corr_
-                tmp_mpi[j, openmp.omp_get_thread_num()] = j + i
+            if corr_ > tmp_mp[threadnum, j]:
+                tmp_mp[threadnum, j] = corr_
+                tmp_mpi[threadnum, j] = k
                                 
     # reduce results
     for i in range(tmp_mp.shape[0]):
         for j in range(tmp_mp.shape[1]):
-            if tmp_mp[i,j] > mp[i]:
-                if tmp_mp[i, j] > 1:
-                    mp[i] = 1
+            if tmp_mp[i,j] > mp[j]:
+                if tmp_mp[i, j] > 1.0:
+                    mp[j] = 1.0
                 else:
-                    mp[i] = tmp_mp[i, j]
+                    mp[j] = tmp_mp[i, j]
                 
-                mpi[i] = tmp_mpi[i, j]
+                mpi[j] = tmp_mpi[i, j]
     
     for i in range(tmp_mpb.shape[0]):
         for j in range(tmp_mpb.shape[1]):
-            if tmp_mpb[i,j] > mpb[i]:
-                if tmp_mpb[i, j] > 1:
-                    mpb[i] = 1
+            if tmp_mpb[i,j] > mpb[j]:
+                if tmp_mpb[i, j] > 1.0:
+                    mpb[j] = 1.0
                 else:
-                    mpb[i] = tmp_mpb[i, j]
+                    mpb[j] = tmp_mpb[i, j]
                 
-                mpib[i] = tmp_mpib[i, j]
+                mpib[j] = tmp_mpib[i, j]
 
     # convert normalized cross correlation to euclidean distance
-    mxdist = 2 * sqrt(w)
+    mxdist = 2.0 * sqrt(w)
     if cross_correlation == 0:
         for i in range(profile_len):
-            eucdist = sqrt(2 * w * (1 - mp[i]))
-            if eucdist < 0:
-                eucdist = 0
-
-            if eucdist == mxdist:
-                eucdist = INFINITY
-            mp[i] = eucdist
+            if mp[i] == -1.0:
+                mp[i] = INFINITY
+            else:
+                mp[i] = sqrt(2.0 * w * (1.0 - mp[i]))
 
         for i in range(profile_lenb):
-            eucdist = sqrt(2 * w * (1 - mpb[i]))
-            if eucdist < 0:
-                eucdist = 0
-
-            if eucdist == mxdist:
-                eucdist = INFINITY
-            mpb[i] = eucdist
+            if mpb[i] == -1.0:
+                mpb[i] = INFINITY
+            else:
+                mpb[i] = sqrt(2.0 * w * (1.0 - mpb[i]))
+            eucdist = sqrt(2.0 * w * (1.0 - mpb[i]))
     else:
         for i in range(profile_len):
-            if mp[i] > 1:
-                mp[i] = 1
+            if mp[i] > 1.0:
+                mp[i] = 1.0
 
         for i in range(profile_lenb):
-            if mpb[i] > 1:
-                mpb[i] = 1
+            if mpb[i] > 1.0:
+                mpb[i] = 1.0
     
     return (mp, mpi, mpb, mpib)
