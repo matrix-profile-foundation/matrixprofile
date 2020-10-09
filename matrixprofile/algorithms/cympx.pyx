@@ -27,7 +27,7 @@ from matrixprofile.cycore import muinvn
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
+cpdef mpx_parallel(double[:] ts, int w, bint cross_correlation=0, int n_jobs=1):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
     now it only supports single dimension self joins.
@@ -38,7 +38,7 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
         The time series to compute the matrix profile for.
     w : int
         The window size.
-    cross_correlation : int
+    cross_correlation : bint
         Flag (0, 1) to determine if cross_correlation distance should be
         returned. It defaults to Euclidean Distance (0).
     n_jobs : int, Default = 1
@@ -120,7 +120,7 @@ cpdef mpx_parallel(double[:] ts, int w, int cross_correlation, int n_jobs):
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, int cross_correlation, int n_jobs):
+cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, bint cross_correlation=0, int n_jobs=1):
     """
     The MPX algorithm computes the matrix profile without using the FFT. This
     specific implementation includes similarity join (AB join).
@@ -133,7 +133,7 @@ cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, int cross_correlatio
         The query o compute the matrix profile for.
     w : int
         The window size.
-    cross_correlation : int
+    cross_correlation : bint
         Flag (0, 1) to determine if cross_correlation distance should be
         returned. It defaults to Euclidean Distance (0).
     n_jobs : int, Default = 1
@@ -271,7 +271,7 @@ cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, int cross_correlatio
             if eucdist == mxdist:
                 eucdist = INFINITY
             mpb[i] = eucdist
-    elif cross_correlation == 1:
+    else:
         for i in range(profile_len):
             if mp[i] > 1:
                 mp[i] = 1
