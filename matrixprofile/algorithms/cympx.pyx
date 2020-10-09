@@ -27,7 +27,7 @@ from matrixprofile.cycore import muinvn
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-cpdef mpx_parallel(double[:] ts, int w, bint cross_correlation=0, int n_jobs=1):
+cpdef mpx_parallel(double[::1] ts, int w, bint cross_correlation=0, int n_jobs=1):
     """
     The MPX algorithm computes the matrix profile without using the FFT. Right
     now it only supports single dimension self joins.
@@ -61,16 +61,16 @@ cpdef mpx_parallel(double[:] ts, int w, bint cross_correlation=0, int n_jobs=1):
     cdef double c, c_cmp
 
     stats = muinvn(ts, w)
-    cdef double[:] mu = stats[0]
-    cdef double[:] sig = stats[1]
+    cdef double[::1] mu = stats[0]
+    cdef double[::1] sig = stats[1]
     
-    cdef double[:] df = np.empty(profile_len, dtype='d')
-    cdef double[:] dg = np.empty(profile_len, dtype='d')
-    cdef np.ndarray[np.double_t, ndim=1] mp = np.full(profile_len, -1, dtype='d')
-    cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, np.nan, dtype='int')
+    cdef double[::1] df = np.empty(profile_len, dtype='d')
+    cdef double[::1] dg = np.empty(profile_len, dtype='d')
+    cdef np.ndarray[np.double_t, ndim=1] mp = np.full(profile_len, -1.0, dtype='d')
+    cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, -1, dtype='int')
     
-    cdef double[:,:] tmp_mp = np.full((profile_len, n_jobs), -1, dtype='d')
-    cdef np.int_t[:,:] tmp_mpi = np.full((profile_len, n_jobs), np.nan, dtype='int')
+    cdef double[:,::1] tmp_mp = np.full((profile_len, n_jobs), -1.0, dtype='d')
+    cdef np.int_t[:,::1] tmp_mpi = np.full((profile_len, n_jobs), -1, dtype='int')
     
     # this is where we compute the diagonals and later the matrix profile
     df[0] = 0
@@ -120,7 +120,7 @@ cpdef mpx_parallel(double[:] ts, int w, bint cross_correlation=0, int n_jobs=1):
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, bint cross_correlation=0, int n_jobs=1):
+cpdef mpx_ab_parallel(double[::1] ts, double[::1] query, int w, bint cross_correlation=0, int n_jobs=1):
     """
     The MPX algorithm computes the matrix profile without using the FFT. This
     specific implementation includes similarity join (AB join).
@@ -154,27 +154,27 @@ cpdef mpx_ab_parallel(double[:] ts, double[:] query, int w, bint cross_correlati
     cdef int profile_lenb = qn - w + 1
 
     stats_a = muinvn(ts, w)
-    cdef double[:] mua = stats_a[0]
-    cdef double[:] siga = stats_a[1]
+    cdef double[::1] mua = stats_a[0]
+    cdef double[::1] siga = stats_a[1]
 
     stats_b = muinvn(query, w)
-    cdef double[:] mub = stats_b[0]
-    cdef double[:] sigb = stats_b[1]
+    cdef double[::1] mub = stats_b[0]
+    cdef double[::1] sigb = stats_b[1]
     
-    cdef double[:] diff_fa = np.empty(profile_len, dtype='d')
-    cdef double[:] diff_ga = np.empty(profile_len, dtype='d')
-    cdef double[:] diff_fb = np.empty(profile_lenb, dtype='d')
-    cdef double[:] diff_gb = np.empty(profile_lenb, dtype='d')
+    cdef double[::1] diff_fa = np.empty(profile_len, dtype='d')
+    cdef double[::1] diff_ga = np.empty(profile_len, dtype='d')
+    cdef double[::1] diff_fb = np.empty(profile_lenb, dtype='d')
+    cdef double[::1] diff_gb = np.empty(profile_lenb, dtype='d')
 
-    cdef np.ndarray[np.double_t, ndim=1] mp = np.full(profile_len, -1, dtype='d')
-    cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, np.nan, dtype='int')
-    cdef np.ndarray[np.double_t, ndim=1] mpb = np.full(profile_lenb, -1, dtype='d')
-    cdef np.ndarray[np.int_t, ndim=1] mpib = np.full(profile_lenb, np.nan, dtype='int')
+    cdef np.ndarray[np.double_t, ndim=1] mp = np.full(profile_len, -1.0, dtype='d')
+    cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, -1, dtype='int')
+    cdef np.ndarray[np.double_t, ndim=1] mpb = np.full(profile_lenb, -1.0, dtype='d')
+    cdef np.ndarray[np.int_t, ndim=1] mpib = np.full(profile_lenb, -1, dtype='int')
     
-    cdef double[:,:] tmp_mp = np.full((profile_len, n_jobs), -1, dtype='d')
-    cdef np.int_t[:,:] tmp_mpi = np.full((profile_len, n_jobs), np.nan, dtype='int')
-    cdef double[:,:] tmp_mpb = np.full((profile_lenb, n_jobs), -1, dtype='d')
-    cdef np.int_t[:,:] tmp_mpib = np.full((profile_lenb, n_jobs), np.nan, dtype='int')
+    cdef double[:,::1] tmp_mp = np.full((profile_len, n_jobs), -1.0, dtype='d')
+    cdef np.int_t[:,::1] tmp_mpi = np.full((profile_len, n_jobs), -1, dtype='int')
+    cdef double[:,::1] tmp_mpb = np.full((profile_lenb, n_jobs), -1.0, dtype='d')
+    cdef np.int_t[:,::1] tmp_mpib = np.full((profile_lenb, n_jobs), -1, dtype='int')
     
     # # this is where we compute the diagonals and later the matrix profile
     diff_fa[0] = 0
