@@ -40,12 +40,23 @@
 
 MatrixProfile
 ----------------
-MatrixProfile is a Python 2 and 3 library, brought to you by the `Matrix Profile Foundation <https://matrixprofile.org>`_, for mining time series data. The Matrix Profile is a novel data structure with corresponding algorithms (stomp, regimes, motifs, etc.) developed by the `Keogh <https://www.cs.ucr.edu/~eamonn/MatrixProfile.html>`_ and `Mueen <https://www.cs.unm.edu/~mueen/>`_ research groups at UC-Riverside and the University of New Mexico. The goal of this library is to make these algorithms accessible to both the novice and expert through standardization of core concepts, a simplistic API, and sensible default parameter values.
+MatrixProfile is a Python 3 library, brought to you by the `Matrix Profile Foundation <https://matrixprofile.org>`_, for mining time series data. The Matrix Profile is a novel data structure with corresponding algorithms (stomp, regimes, motifs, etc.) developed by the `Keogh <https://www.cs.ucr.edu/~eamonn/MatrixProfile.html>`_ and `Mueen <https://www.cs.unm.edu/~mueen/>`_ research groups at UC-Riverside and the University of New Mexico. The goal of this library is to make these algorithms accessible to both the novice and expert through standardization of core concepts, a simplistic API, and sensible default parameter values.
 
 In addition to this Python library, the Matrix Profile Foundation, provides implementations in other languages. These languages have a pretty consistent API allowing you to easily switch between them without a huge learning curve.
 
 * `tsmp <https://github.com/matrix-profile-foundation/tsmp>`_ - an R implementation
 * `go-matrixprofile <https://github.com/matrix-profile-foundation/go-matrixprofile>`_ - a Golang implementation
+
+Python Support
+----------------
+Currently, we support the following versions of Python:
+
+* 3.5
+* 3.6
+* 3.7
+* 3.8
+
+Python 2 is no longer supported. There are earlier versions of this library that support Python 2.
 
 Installation
 ------------
