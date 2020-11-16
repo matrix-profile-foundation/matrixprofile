@@ -18,7 +18,7 @@ cimport numpy as np
 cimport cython
 cimport openmp
 from numpy.math cimport INFINITY
-from .cympx_inner cimport cross_cov, inner_self, inner_ab, diff_equations
+from .cympx_inner cimport cross_cov, self_cmp, ab_cmp, diff_eqns
 
 import numpy as np
 
@@ -78,7 +78,7 @@ cpdef mpx_parallel(double[::1] ts, int w, bint cross_correlation=0, int n_jobs=1
     cross_cov(cov, ts[minlag:], mu[minlag:], first_seq)
     
     # this is where we compute the diagonals and later the matrix profile
-    diff_equations(df, dg, ts, mu, w)
+    diff_eqns(df, dg, ts, mu, w)
 
     diagct = profile_len - minlag
     blockwid = diagct // n_jobs
@@ -91,7 +91,7 @@ cpdef mpx_parallel(double[::1] ts, int w, bint cross_correlation=0, int n_jobs=1
     for diag in prange(minlag, profile_len, blockwid, num_threads=n_jobs, nogil=True):
         cov_begin = diag - minlag
         threadnum = openmp.omp_get_thread_num()
-        inner_self(tmp_mp[threadnum, :], tmp_mpi[threadnum,:], cov[cov_begin:cov_begin+blockwid], df, dg, sig, w, diag, 0)
+        self_cmp(tmp_mp[threadnum, :], tmp_mpi[threadnum,:], cov[cov_begin:cov_begin+blockwid], df, dg, sig, w, diag, 0)
 
     # combine parallel results...
     for i in range(tmp_mp.shape[0]):
@@ -183,8 +183,8 @@ cpdef mpx_ab_parallel(double[::1] ts, double[::1] query, int w, bint cross_corre
     cross_cov(covb, query, mu_b, first_seq)
     
     # # this is where we compute the diagonals and later the matrix profile
-    diff_equations(df_a, dg_a, ts, mu_a, w)
-    diff_equations(df_b, dg_b, query, mu_b, w)
+    diff_eqns(df_a, dg_a, ts, mu_a, w)
+    diff_eqns(df_b, dg_b, query, mu_b, w)
 
     # Todo: a non-uniform partitioning of diagonals would better balance workloads across threads
     #       but this requires sub-routines capable of processing scheduling information
@@ -199,19 +199,19 @@ cpdef mpx_ab_parallel(double[::1] ts, double[::1] query, int w, bint cross_corre
     # AB JOIN
     for i in prange(0, profile_len_a, blockwid, num_threads=n_jobs, nogil=True):
         threadnum = openmp.omp_get_thread_num()
-        inner_ab(tmp_mp_a[threadnum, i:], 
-                     tmp_mp_b[threadnum, :], 
-                     tmp_mpi_a[threadnum, i:], 
-                     tmp_mpi_b[threadnum, :], 
-                     cov[i:i+blockwid], 
-                     df_a[i:], 
-                     df_b, 
-                     dg_a[i:], 
-                     dg_b, 
-                     sig_a[i:], 
-                     sig_b, 
-                     i, 
-                     0)
+        ab_cmp(tmp_mp_a[threadnum, i:], 
+               tmp_mp_b[threadnum, :], 
+               tmp_mpi_a[threadnum, i:], 
+               tmp_mpi_b[threadnum, :], 
+               cov[i:i+blockwid], 
+               df_a[i:], 
+               df_b, 
+               dg_a[i:], 
+               dg_b, 
+               sig_a[i:], 
+               sig_b, 
+               i, 
+               0)
     
     blockwid = profile_len_b // n_jobs
     
@@ -223,19 +223,19 @@ cpdef mpx_ab_parallel(double[::1] ts, double[::1] query, int w, bint cross_corre
     # BA JOIN
     for i in prange(0, profile_len_b, blockwid, num_threads=n_jobs, nogil=True):
         threadnum = openmp.omp_get_thread_num()
-        inner_ab(tmp_mp_b[threadnum, i:], 
-                     tmp_mp_a[threadnum, :], 
-                     tmp_mpi_b[threadnum, i:], 
-                     tmp_mpi_a[threadnum, :], 
-                     covb[i:i+blockwid], 
-                     df_b[i:], 
-                     df_a, 
-                     dg_b[i:], 
-                     dg_a, 
-                     sig_b[i:], 
-                     sig_a, 
-                     i, 
-                     0)
+        ab_cmp(tmp_mp_b[threadnum, i:], 
+               tmp_mp_a[threadnum, :], 
+               tmp_mpi_b[threadnum, i:], 
+               tmp_mpi_a[threadnum, :], 
+               covb[i:i+blockwid], 
+               df_b[i:], 
+               df_a, 
+               dg_b[i:], 
+               dg_a, 
+               sig_b[i:], 
+               sig_a, 
+               i, 
+               0)
                                 
     # reduce results
     for i in range(tmp_mp_a.shape[0]):
