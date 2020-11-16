@@ -162,18 +162,18 @@ def run_ab_compare(ts_a, ts_b, w):
     mp_b_u = np.full(subseqct_b, -1.0, dtype='d')
     mp_b_l = np.full(subseqct_b, -1.0, dtype='d')
     
-    mpi_b_l = np.full(subseqct_b, -1, dtype='q')
-    mpi_b_u = np.full(subseqct_b, -1, dtype='q')
-    mpi_a_u = np.full(subseqct_a, -1, dtype='q')
-    mpi_a_l = np.full(subseqct_a, -1, dtype='q')
+    mpi_b_l = np.full(subseqct_b, -1, dtype=np.int_)
+    mpi_b_u = np.full(subseqct_b, -1, dtype=np.int_)
+    mpi_a_u = np.full(subseqct_a, -1, dtype=np.int_)
+    mpi_a_l = np.full(subseqct_a, -1, dtype=np.int_)
     
     cympx_inner.compute_ab_cmp(mp_a_u, mp_b_u, mpi_a_u, mpi_b_u, cov_u, df_a, df_b, dg_a, dg_b, sig_a, sig_b)
     cympx_inner.compute_ab_cmp(mp_b_l, mp_a_l, mpi_b_l, mpi_a_l, cov_l, df_b, df_a, dg_b, dg_a, sig_b, sig_a)
     
     mp_a = np.empty(mu_a.shape[0], dtype='d')
     mp_b = np.empty(mu_b.shape[0], dtype='d')
-    mpi_a = np.empty(mu_a.shape[0], dtype='q')
-    mpi_b = np.empty(mu_b.shape[0], dtype='q')
+    mpi_a = np.empty(mu_a.shape[0], dtype=np.int_)
+    mpi_b = np.empty(mu_b.shape[0], dtype=np.int_)
 
     for i, (u, v, j, k) in enumerate(zip(mp_a_u, mp_a_l, mpi_a_u, mpi_a_l)):
         if u > v:
