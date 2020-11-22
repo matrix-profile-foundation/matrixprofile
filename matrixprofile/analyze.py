@@ -61,7 +61,7 @@ def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
     # when a threshold is passed, we compute the upper window
     profile = None
     if isinstance(windows, type(None)):
-        profile = maximum_subsequence(ts, threshold, include_pmp=True)
+        profile = maximum_subsequence(ts, threshold, include_pmp=True, n_jobs=n_jobs)
 
         # determine windows to be computed
         # from 8 in steps of 2 until upper w
@@ -70,7 +70,7 @@ def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
 
     # compute the pmp
     profile = skimp(ts, windows=windows, sample_pct=sample_pct,
-                          pmp_obj=profile)
+                          pmp_obj=profile, n_jobs=n_jobs)
 
     # extract top motifs
     profile = motifs(profile)
