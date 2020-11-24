@@ -22,7 +22,7 @@ from matrixprofile.algorithms import scrimp_plus_plus
 from matrixprofile import visualize
 
 
-def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
+def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=1):
     """
     Computes the Pan-MatrixProfile, top 3 motifs and top 3 discords for the
     provided time series and query. Additionally, plots for the PMP, motifs
@@ -84,7 +84,7 @@ def analyze_pmp(ts, query, sample_pct, threshold, windows=None, n_jobs=-1):
     return (profile, figures)
 
 
-def analyze_mp_exact(ts, query, window, n_jobs=-1):
+def analyze_mp_exact(ts, query, window, n_jobs=1):
     """
     Computes the exact MatrixProfile, top 3 motifs and top 3 discords for the
     provided time series and query. Additionally, the MatrixProfile, discords
@@ -125,7 +125,7 @@ def analyze_mp_exact(ts, query, window, n_jobs=-1):
     return (profile, figures)
 
 
-def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=-1):
+def analyze_mp_approximate(ts, query, window, sample_pct, n_jobs=1):
     """
     Computes the exact MatrixProfile, top 3 motifs and top 3 discords for the
     provided time series and query. Additionally, the MatrixProfile, discords
