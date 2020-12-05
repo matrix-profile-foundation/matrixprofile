@@ -3,9 +3,10 @@
 import numpy as np
 cimport numpy as cnp
 
-def compute_diff_eqns(df, dg, ts, mu):
+
+def compute_difference_equations(df, dg, ts, mu):
     """  
-    Function compute_diff_eqns is a python interface meant for testing difference equations used in mpx.
+    Function compute_difference_equations is a python interface meant for testing difference equations used in mpx.
 
     Parameters
     ----------
@@ -30,8 +31,8 @@ def compute_diff_eqns(df, dg, ts, mu):
     subseqct = mu.shape[0]
     w = ts.shape[0] - subseqct + 1
     if w < 2:
-        raise ValueError(f'inferred subsequence length {w} is outside of the supported range')
-    diff_eqns(df, dg, ts, mu, w)
+        raise ValueError(f'Inferred subsequence length {w} is outside of the supported range.')
+    difference_equations(df, dg, ts, mu, w)
 
 
 def compute_cross_cov(cc, ts, mu, cmpseq):
@@ -63,9 +64,9 @@ def compute_cross_cov(cc, ts, mu, cmpseq):
     cross_cov(cc, ts, mu, cmpseq)
 
 
-def compute_self_cmp(mp, mpi, cov, df, dg, sig, w, minlag, index_offset=0):
+def compute_self_compare(mp, mpi, cov, df, dg, sig, w, minlag, index_offset=0):
     """
-    Function compute_inner_self is a python interface meant for internal testing of the C interface inner_self.
+    Function compute_self_compare is a python interface meant for internal testing of the C interface inner_self.
 
     Parameters
     ----------
@@ -103,12 +104,12 @@ def compute_self_cmp(mp, mpi, cov, df, dg, sig, w, minlag, index_offset=0):
 
     subseqct = sig.shape[0]
     assert(df.shape[0] == dg.shape[0] == sig.shape[0] == mp.shape[0] == mpi.shape[0])
-    self_cmp(mp, mpi, cov, df, dg, sig, w, minlag, index_offset)
+    self_compare(mp, mpi, cov, df, dg, sig, w, minlag, index_offset)
 
 
-def compute_ab_cmp(mp_a, mp_b, mpi_a, mpi_b, cov, df_a, df_b, dg_a, dg_b, sig_a, sig_b, offset_a=0, offset_b=0):
+def compute_ab_compare(mp_a, mp_b, mpi_a, mpi_b, cov, df_a, df_b, dg_a, dg_b, sig_a, sig_b, offset_a=0, offset_b=0):
     """
-    Function compute_ab_cmp is a python interface meant for the C interface inner_ab.
+    Function compute_ab_compare is a python interface meant for the C interface inner_ab.
     This is a low level interface, used for internal testing.
 
     Parameters
@@ -172,12 +173,12 @@ def compute_ab_cmp(mp_a, mp_b, mpi_a, mpi_b, cov, df_a, df_b, dg_a, dg_b, sig_a,
     assert(subseqct_a == mp_a.shape[0] == cov.shape[0] == sig_a.shape[0] == df_a.shape[0] == dg_a.shape[0])
     assert(subseqct_b == mp_b.shape[0] == sig_b.shape[0] == df_b.shape[0] == dg_b.shape[0])
   
-    ab_cmp(mp_a, mp_b, mpi_a, mpi_b, cov, df_a, df_b, dg_a, dg_b, sig_a, sig_b, offset_a, offset_b) 
+    ab_compare(mp_a, mp_b, mpi_a, mpi_b, cov, df_a, df_b, dg_a, dg_b, sig_a, sig_b, offset_a, offset_b) 
    
 
-cdef void diff_eqns(double[::1] df, double[::1] dg, double[::1] ts, double[::1] mu, Py_ssize_t w) nogil:
+cdef void difference_equations(double[::1] df, double[::1] dg, double[::1] ts, double[::1] mu, Py_ssize_t w) nogil:
     """
-    Function diff_eqns sets up difference equations for a time series using the original formula.
+    Function difference_equations sets up difference equations for a time series using the original formula.
 
     Parameters
     ----------
@@ -241,14 +242,14 @@ cdef void cross_cov(double[::1] out, double[::1] ts, double[::1] mu, double[::1]
 
     """
     
-    cdef Py_ssize_t sseqct = out.shape[0]
+    cdef Py_ssize_t subseqct = out.shape[0]
     cdef double accum, m_
-    if sseqct != mu.shape[0]:
+    if subseqct != mu.shape[0]:
         raise ValueError
-    elif cmpseq.shape[0] != ts.shape[0] - sseqct + 1:
+    elif cmpseq.shape[0] != ts.shape[0] - subseqct + 1:
         raise ValueError
     cdef Py_ssize_t i, j
-    for i in range(sseqct):
+    for i in range(subseqct):
         accum = 0.0
         m_ = mu[i]
         for j in range(cmpseq.shape[0]):
@@ -256,9 +257,9 @@ cdef void cross_cov(double[::1] out, double[::1] ts, double[::1] mu, double[::1]
         out[i] = accum
 
 
-cdef void self_cmp(double[::1] mp, np.int_t[::1] mpi, double [::1] cov, double[::1] df, double[::1] dg, double[::1] sig, Py_ssize_t subseqlen, Py_ssize_t minlag, Py_ssize_t index_offset) nogil:
+cdef void self_compare(double[::1] mp, np.int_t[::1] mpi, double [::1] cov, double[::1] df, double[::1] dg, double[::1] sig, Py_ssize_t subseqlen, Py_ssize_t minlag, Py_ssize_t index_offset) nogil:
     """
-    Function self_cmp provides a low level interface and reference implementation for block matrix profile calculations involving a single time series. 
+    Function self_compare provides a low level interface and reference implementation for block matrix profile calculations involving a single time series. 
     This is intended for internal use.
 
     Parameters
@@ -298,9 +299,6 @@ cdef void self_cmp(double[::1] mp, np.int_t[::1] mpi, double [::1] cov, double[:
     cdef Py_ssize_t diag, offset, col, i
     cdef double c, c_cmp
 
-    # Since this may be a partition of a larger problem, we iterate over
-    # cov but set boundary conditions using 
-    # Todo: need a test c
     for i in range(cov.shape[0]):
         c = cov[i]
         diag = i + minlag
@@ -308,7 +306,6 @@ cdef void self_cmp(double[::1] mp, np.int_t[::1] mpi, double [::1] cov, double[:
             col = offset + diag
             c = c + df[offset] * dg[col] + df[col] * dg[offset]
             c_cmp = c * sig[offset] * sig[col]
-            # update the distance profile and profile index
             if c_cmp > mp[offset]:
                 mp[offset] = c_cmp
                 mpi[offset] = col + index_offset
@@ -317,9 +314,9 @@ cdef void self_cmp(double[::1] mp, np.int_t[::1] mpi, double [::1] cov, double[:
                     c_cmp = 1.0
                 mp[col] = c_cmp
                 mpi[col] = offset + index_offset
+        cov[i] = c
 
-
-cdef void ab_cmp(double[::1] mp_a, double[::1] mp_b, np.int_t[::1] mpi_a, np.int_t[::1] mpi_b, double [::1] cov, double[::1] df_a, double[::1] df_b, double[::1] dg_a, double[::1] dg_b, double[::1] sig_a, double[::1] sig_b, Py_ssize_t offset_a, Py_ssize_t offset_b) nogil:
+cdef void ab_compare(double[::1] mp_a, double[::1] mp_b, np.int_t[::1] mpi_a, np.int_t[::1] mpi_b, double [::1] cov, double[::1] df_a, double[::1] df_b, double[::1] dg_a, double[::1] dg_b, double[::1] sig_a, double[::1] sig_b, Py_ssize_t offset_a, Py_ssize_t offset_b) nogil:
     """
     Function ab_cmp provides a low level interface and reference implementation for block matrix profile calculations. 
     This is intended for internal use.
@@ -396,3 +393,4 @@ cdef void ab_cmp(double[::1] mp_a, double[::1] mp_b, np.int_t[::1] mpi_a, np.int
             if corr_ > mp_b[j]:
                 mp_b[j] = corr_
                 mpi_b[j] = k + offset_a
+        cov[i] = cov_
