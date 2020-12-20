@@ -125,7 +125,6 @@ def norm_parameters(ts, w):
 
     if (first, last) != (0, windowcount - 1):
         ts = ts[first:last+w]
-        windowcount = ts.shape[0] - w + 1
 
     # For the purpose of computing normalization parameters
     # we need to remove only non-finite elements, not sequences
