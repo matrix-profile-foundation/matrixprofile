@@ -63,8 +63,8 @@ cpdef mpx_parallel(double[::1] ts, int w, bint cross_correlation=0, int n_jobs=1
     cdef double[::1] mu = stats[0]
     cdef double[::1] sig = stats[1]
     
-    cdef double[::1] df = np.empty(profile_len, dtype='d')
-    cdef double[::1] dg = np.empty(profile_len, dtype='d')
+    cdef double[::1] df = np.empty(profile_len-1, dtype='d')
+    cdef double[::1] dg = np.empty(profile_len-1, dtype='d')
     cdef np.ndarray[np.double_t, ndim=1] mp = np.full(profile_len, -1.0, dtype='d')
     cdef np.ndarray[np.int_t, ndim=1] mpi = np.full(profile_len, -1, dtype='int')
     
@@ -153,10 +153,10 @@ cpdef mpx_ab_parallel(double[::1] ts, double[::1] query, int w, bint cross_corre
     cdef double[::1] mu_b = stats_b[0]
     cdef double[::1] sig_b = stats_b[1]
     
-    cdef double[::1] df_a = np.empty(profile_len_a, dtype='d')
-    cdef double[::1] dg_a = np.empty(profile_len_a, dtype='d')
-    cdef double[::1] df_b = np.empty(profile_len_b, dtype='d')
-    cdef double[::1] dg_b = np.empty(profile_len_b, dtype='d')
+    cdef double[::1] df_a = np.empty(profile_len_a-1, dtype='d')
+    cdef double[::1] dg_a = np.empty(profile_len_a-1, dtype='d')
+    cdef double[::1] df_b = np.empty(profile_len_b-1, dtype='d')
+    cdef double[::1] dg_b = np.empty(profile_len_b-1, dtype='d')
 
     cdef np.ndarray[np.double_t, ndim=1] mp_a = np.full(profile_len_a, -1.0, dtype='d')
     cdef np.ndarray[np.int_t, ndim=1] mpi_a = np.full(profile_len_a, -1, dtype='int')

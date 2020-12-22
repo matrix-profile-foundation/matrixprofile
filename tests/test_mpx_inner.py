@@ -129,8 +129,8 @@ def run_ab_compare(cov, df_a, dg_a, df_b, dg_b, invn_a, invn_b, w):
     
     subseqct_a = invn_a.shape[0]
     subseqct_b = invn_b.shape[0]
-    assert(df_a.shape == dg_a.shape == invn_a.shape)
-    assert(df_b.shape == dg_b.shape == invn_b.shape)
+    assert(df_a.shape[0] == dg_a.shape[0] == invn_a.shape[0]-1)
+    assert(df_b.shape[0] == dg_b.shape[0] == invn_b.shape[0]-1)
 
     mp_a = np.full(subseqct_a, -1.0, dtype='d')
     mp_b = np.full(subseqct_b, -1.0, dtype='d')
@@ -166,8 +166,8 @@ def test_mpx_self_stability():
     mu = np.asarray(mu, dtype='d')
     invn = np.asarray(invn, dtype='d')
     
-    df = np.empty(subseqct, dtype='d')
-    dg = np.empty(subseqct, dtype='d')
+    df = np.empty(subseqct-1, dtype='d')
+    dg = np.empty(subseqct-1, dtype='d')
     cympx_inner.compute_difference_equations(df, dg, ts, mu)
     
     cc = np.empty(crosscmpct, dtype='d')
@@ -176,7 +176,6 @@ def test_mpx_self_stability():
     # Check initial co-moments
     cc_chk = get_numpy_crosscov(ts[minsep:], mu[minsep:], ts[:w] - mu[0])
     np.testing.assert_allclose(cc, cc_chk, rtol=1e-8)
-
     mp = np.full(subseqct, -1.0, dtype='d')
     mpi = np.full(subseqct, -1, dtype=np.int_)
     cympx_inner.compute_self_compare(mp, mpi, cc, df, dg, invn, w, minsep)
@@ -214,10 +213,10 @@ def test_mpx_ab_stability():
     subseqct_a = mu_a.shape[0]
     subseqct_b = mu_b.shape[0]
 
-    df_a = np.empty(subseqct_a)
-    dg_a = np.empty(subseqct_a)
-    df_b = np.empty(subseqct_b)
-    dg_b = np.empty(subseqct_b)
+    df_a = np.empty(subseqct_a-1)
+    dg_a = np.empty(subseqct_a-1)
+    df_b = np.empty(subseqct_b-1)
+    dg_b = np.empty(subseqct_b-1)
 
     # Note: These are allocated here, because allocating them on the cython side 
     # has caused reference counting issues in the past under Ubuntu, Python 3.8 Anaconda distribution. 
@@ -282,7 +281,7 @@ def test_mpx_ab_stability():
         else:
             cc_chk[i] = np.dot(last_a, last_b)
     
-    np.testing.assert_allclose(cc, cc_chk, rtol=1e-10)
+    np.testing.assert_allclose(cc, cc_chk, rtol=1e-8)
 
 
 def test_difference_equations():
@@ -314,22 +313,21 @@ def test_difference_equations():
     subseqct = ts.shape[0] - w + 1
     cmtct = subseqct - sep
     mu, _ = cycore.muinvn(ts, w)
-    df = np.empty(subseqct, dtype='d')
-    dg = np.empty(subseqct, dtype='d')
+    df = np.empty(subseqct-1, dtype='d')
+    dg = np.empty(subseqct-1, dtype='d')
     cympx_inner.compute_difference_equations(df, dg, ts, mu)
 
     desired = get_numpy_covdiff(ts, mu, w, sep)
     actual = np.empty(cmtct-1, dtype='d')
 
     for i in range(cmtct - 1):
-        actual[i] = df[i+1] * dg[i+sep+1] + df[i+sep+1] * dg[i+1]
+        actual[i] = df[i] * dg[i+sep] + df[i+sep] * dg[i]
     
     np.testing.assert_allclose(actual, desired, rtol=1e-8)
 
     for i in range(cmtct-1):
-        j = i + 1
-        k = i + sep + 1
-        actual[i] = df[j] * dg[k] + df[k] * dg[j]
+        k = i + sep
+        actual[i] = df[i] * dg[k] + df[k] * dg[i]
     
     np.testing.assert_allclose(actual, desired, rtol=1e-8)    
     cmtct = subseqct - sep
@@ -342,7 +340,7 @@ def test_difference_equations():
     actual = np.empty(cmtct-1, dtype='d')
 
     for i in range(cmtct - 1):
-        actual[i] = df[i+1] * dg[i+sep+1] + df[i+sep+1] * dg[i+1]
+        actual[i] = df[i] * dg[i+sep] + df[i+sep] * dg[i]
         
     np.testing.assert_allclose(actual, desired, rtol=1e-8)
 
@@ -353,6 +351,6 @@ def test_difference_equations():
     actual = np.empty(cmtct - 1, dtype='d')
     
     for i in range(cmtct-1):
-        actual[i] = df[i+1] * dg[i+sep+1] + df[i+sep+1] * dg[i+1]
+        actual[i] = df[i] * dg[i+sep] + df[i+sep] * dg[i]
 
     np.testing.assert_allclose(actual, desired, rtol=1e-8)
