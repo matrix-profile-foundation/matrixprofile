@@ -103,7 +103,7 @@ def compute_self_compare(mp, mpi, cov, df, dg, sig, w, minlag, index_offset=0):
     """
 
     subseqct = sig.shape[0]
-    assert(df.shape[0] == dg.shape[0] == sig.shape[0] == mp.shape[0] == mpi.shape[0])
+    assert(df.shape[0] == dg.shape[0] == sig.shape[0] - 1 == mp.shape[0] - 1 == mpi.shape[0] - 1)
     self_compare(mp, mpi, cov, df, dg, sig, w, minlag, index_offset)
 
 
@@ -170,8 +170,8 @@ def compute_ab_compare(mp_a, mp_b, mpi_a, mpi_b, cov, df_a, df_b, dg_a, dg_b, si
     subseqct_a = sig_a.shape[0]
     subseqct_b = sig_b.shape[0]
 
-    assert(subseqct_a == mp_a.shape[0] == cov.shape[0] == sig_a.shape[0] == df_a.shape[0] == dg_a.shape[0])
-    assert(subseqct_b == mp_b.shape[0] == sig_b.shape[0] == df_b.shape[0] == dg_b.shape[0])
+    assert(subseqct_a == mp_a.shape[0] == cov.shape[0] == sig_a.shape[0] == df_a.shape[0] + 1 == dg_a.shape[0] + 1)
+    assert(subseqct_b == mp_b.shape[0] == sig_b.shape[0] == df_b.shape[0] + 1 == dg_b.shape[0] + 1)
   
     ab_compare(mp_a, mp_b, mpi_a, mpi_b, cov, df_a, df_b, dg_a, dg_b, sig_a, sig_b, offset_a, offset_b) 
    
@@ -206,15 +206,13 @@ cdef void difference_equations(double[::1] df, double[::1] dg, double[::1] ts, d
     cdef Py_ssize_t i,j
     cdef Py_ssize_t subseqct = ts.shape[0] - w + 1
     # Cython appears to have an issue with allocating arrays via a call to Numpy in a Python interface which extends a pyx file.
-    if not (subseqct == df.shape[0] == dg.shape[0]):
+    if not (subseqct - 1 == df.shape[0] == dg.shape[0]):
         raise ValueError(f'Mismatched dimensions between df or dg and subsequence count, expected {subseqct} got df: {df.shape[0]} dg: {dg.shape[0]}')
 
-    df[0] = 0
-    dg[0] = 0
     for i in range(w, ts.shape[0]):
         j = i - w
-        df[j + 1] = (0.5 * (ts[i] - ts[i - w]))
-        dg[j + 1] = (ts[i] - mu[j+ 1]) + (ts[j] - mu[j])
+        df[j] = (0.5 * (ts[i] - ts[i - w]))
+        dg[j] = (ts[i] - mu[j + 1]) + (ts[j] - mu[j])
 
 
 cdef void cross_cov(double[::1] out, double[::1] ts, double[::1] mu, double[::1] cmpseq) nogil:
@@ -304,7 +302,8 @@ cdef void self_compare(double[::1] mp, np.int_t[::1] mpi, double [::1] cov, doub
         diag = i + minlag
         for offset in range(profile_len - diag):
             col = offset + diag
-            c = c + df[offset] * dg[col] + df[col] * dg[offset]
+            if offset > 0:
+                c = c + df[offset-1] * dg[col-1] + df[col-1] * dg[offset-1]
             c_cmp = c * sig[offset] * sig[col]
             if c_cmp > mp[offset]:
                 mp[offset] = c_cmp
@@ -385,7 +384,8 @@ cdef void ab_compare(double[::1] mp_a, double[::1] mp_b, np.int_t[::1] mpi_a, np
         cov_ = cov[i]
         for j in range(mx):
             k = j + i
-            cov_ = cov_ + df_a[k] * dg_b[j] + dg_a[k] * df_b[j]
+            if j > 0:
+                cov_ = cov_ + df_a[k-1] * dg_b[j-1] + dg_a[k-1] * df_b[j-1]
             corr_ = cov_ * sig_a[k] * sig_b[j]
             if corr_ > mp_a[k]:
                 mp_a[k] = corr_
