@@ -34,3 +34,4 @@
 - Improved default arguments thanks to [@Bruno-Hanzen](https://github.com/Bruno-Hanzen)
 - Python 3.9 support thanks to [@Immentel](https://github.com/Immentel)
 - Source distribution thanks to [@Immentel](https://github.com/Immentel)
+- Improved algorithm stability thanks to [@kavj](https://github.com/kavj)
