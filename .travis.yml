@@ -79,8 +79,8 @@ jobs:
       script:
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*.whl --verbose
-        - python setup.py sdist --formats=gztar,zip
-        - twine upload dist/* --verbose
+        - python setup.py sdist --formats=gztar
+        - twine upload dist/*.tar.gz --verbose
       after_success:
         - ls wheelhouse/*.whl
     # Deploy on mac
