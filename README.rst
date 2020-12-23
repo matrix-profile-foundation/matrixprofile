@@ -55,6 +55,7 @@ Currently, we support the following versions of Python:
 * 3.6
 * 3.7
 * 3.8
+* 3.9
 
 Python 2 is no longer supported. There are earlier versions of this library that support Python 2.
 
