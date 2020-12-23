@@ -26,3 +26,11 @@
 - Enhanced snippets support and visualization thanks to [@Yue Lue](https://github.com/LuYueee)
 - Updated exclusion zone calculation thanks to [@Llewellyn Strydom](https://github.com/LlewellynS96)
 - Better handling of subsequence lower bounds thanks to [Kaminwar Sai Rahul](https://github.com/KSaiRahul21)
+
+# 1.1.6 (2020-12-23)
+- Added data preprocessing module thanks to [@Yue Lue](https://github.com/LuYueee)
+- Snippet visualizations thanks to [@Yue Lue](https://github.com/LuYueee)
+- Improved API Docs thanks to [@earthgecko](https://github.com/earthgecko) and [@Ninimama](https://github.com/Ninimama)
+- Improved default arguments thanks to [@Bruno-Hanzen](https://github.com/Bruno-Hanzen)
+- Python 3.9 support thanks to [@Immentel](https://github.com/Immentel)
+- Source distribution thanks to [@Immentel](https://github.com/Immentel)
