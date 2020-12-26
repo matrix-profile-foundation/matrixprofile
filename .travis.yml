@@ -17,7 +17,7 @@ python:
 before_install:
   - |
     if [[ "$TRAVIS_OS_NAME" = windows ]]; then
-        choco install python --version 3.8.0
+        choco install python --version 3.8.6
         export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
     fi
   - |
@@ -106,6 +106,9 @@ jobs:
         - pip install twine
         - pip install cython
         - pip install cibuildwheel==1.1.0
+        - pip install certifi
+        - export SSL_CERT_FILE=`python3 -c "import certifi;print(certifi.where())"`
+        - echo $SSL_CERT_FILE
       script:
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*.whl --verbose
