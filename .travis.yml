@@ -75,7 +75,7 @@ jobs:
       install:
         - pip install twine
         - pip install cython
-        - pip install cibuildwheel==1.7.2
+        - pip install cibuildwheel==1.1.0
       script:
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*.whl --verbose
