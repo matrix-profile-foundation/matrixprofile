@@ -30,6 +30,10 @@ before_install:
         brew install libomp
         ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
         export CC="/usr/local/bin/gcc"
+
+        brew install python@3.8
+        brew upgrade python@3.8
+        brew link --force python@3.8
     fi
 
 install:
@@ -72,10 +76,11 @@ jobs:
     - stage: deploy
       name: Build and deploy Linux wheels
       services: docker
+      python: 3.8
       install:
         - pip install twine
         - pip install cython
-        - pip install cibuildwheel==1.1.0
+        - pip install cibuildwheel==1.7.2
       script:
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*.whl --verbose
@@ -91,7 +96,7 @@ jobs:
       install:
         - pip install twine
         - pip install cython
-        - pip install cibuildwheel==1.1.0
+        - pip install cibuildwheel==1.7.2
       script:
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*.whl --verbose
