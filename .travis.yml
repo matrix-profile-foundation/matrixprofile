@@ -75,7 +75,7 @@ jobs:
       install:
         - pip install twine
         - pip install cython
-        - pip install cibuildwheel==1.1.6
+        - pip install cibuildwheel==1.7.2
       script:
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*.whl --verbose
@@ -91,7 +91,7 @@ jobs:
       install:
         - pip install twine
         - pip install cython
-        - pip install cibuildwheel==1.1.6
+        - pip install cibuildwheel==1.7.2
       script:
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*.whl --verbose
@@ -105,10 +105,7 @@ jobs:
       install:
         - pip install twine
         - pip install cython
-        - pip install cibuildwheel==1.1.6
-        - pip install certifi
-        - export SSL_CERT_FILE=`python3 -c "import certifi;print(certifi.where())"`
-        - echo $SSL_CERT_FILE
+        - pip install cibuildwheel==1.7.2
       script:
         - cibuildwheel --output-dir wheelhouse
         - twine upload wheelhouse/*.whl --verbose
