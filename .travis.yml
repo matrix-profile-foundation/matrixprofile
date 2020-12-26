@@ -83,9 +83,9 @@ jobs:
         - pip install cibuildwheel==1.7.2
       script:
         - cibuildwheel --output-dir wheelhouse
-        - twine upload wheelhouse/*.whl --verbose
+        - twine upload wheelhouse/*.whl --verbose --skip-existing
         - python setup.py sdist --formats=gztar
-        - twine upload dist/*.tar.gz --verbose
+        - twine upload dist/*.tar.gz --verbose --skip-existing
       after_success:
         - ls wheelhouse/*.whl
     # Deploy on mac
@@ -99,7 +99,7 @@ jobs:
         - pip install cibuildwheel==1.7.2
       script:
         - cibuildwheel --output-dir wheelhouse
-        - twine upload wheelhouse/*.whl --verbose
+        - twine upload wheelhouse/*.whl --verbose --skip-existing
       after_success:
         - ls wheelhouse/*.whl
     # Deploy on windows
@@ -113,7 +113,7 @@ jobs:
         - pip install cibuildwheel==1.7.2
       script:
         - cibuildwheel --output-dir wheelhouse
-        - twine upload wheelhouse/*.whl --verbose
+        - twine upload wheelhouse/*.whl --verbose --skip-existing
       after_success:
         - ls wheelhouse/*.whl
 
