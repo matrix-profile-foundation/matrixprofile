@@ -34,6 +34,11 @@ before_install:
         brew install python@3.8
         brew upgrade python@3.8
         brew link --overwrite python@3.8
+
+        which python
+        ls /usr/local/bin
+
+        exit 125
     fi
 
 install:
