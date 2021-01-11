@@ -34,11 +34,6 @@ before_install:
         brew install python@3.8
         brew upgrade python@3.8
         brew link --overwrite python@3.8
-
-        which python
-        ls /usr/local/bin
-
-        exit 125
     fi
 
 install:
@@ -131,3 +126,4 @@ env:
 
       # skip 32 bit binaries and pypy builds
     - CIBW_SKIP="*-win32 *-manylinux_i686 cp27-manylinux_* pp* cp27-macosx_*"
+    - MACOSX_DEPLOYMENT_TARGET="10.12"
