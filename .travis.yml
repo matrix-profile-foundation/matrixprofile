@@ -30,10 +30,6 @@ before_install:
         brew install libomp
         ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
         export CC="/usr/local/bin/gcc"
-
-        brew install python@3.8
-        brew upgrade python@3.8
-        brew link --overwrite python@3.8
     fi
 
 install:
@@ -92,15 +88,14 @@ jobs:
     - stage: deploy
       name: Build and deploy macOS wheels
       os: osx
-      osx_image: xcode12.2
       language: shell
       install:
-        - pip install twine
-        - pip install cython
-        - pip install cibuildwheel==1.7.2
+        - python3 -m pip install twine
+        - python3 -m pip install cython
+        - python3 -m pip install cibuildwheel==1.7.2
       script:
-        - cibuildwheel --output-dir wheelhouse
-        - twine upload wheelhouse/*.whl --verbose --skip-existing
+        - python3 -m cibuildwheel --output-dir wheelhouse
+        - python3 -m twine upload wheelhouse/*.whl --verbose --skip-existing
       after_success:
         - ls wheelhouse/*.whl
     # Deploy on windows
