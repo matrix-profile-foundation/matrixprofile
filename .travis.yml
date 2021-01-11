@@ -31,9 +31,9 @@ before_install:
         ln -s /usr/local/bin/gcc-9 /usr/local/bin/gcc
         export CC="/usr/local/bin/gcc"
 
-        brew install python@3.8
-        brew upgrade python@3.8
-        brew link --force python@3.8
+        brew install python@3.6
+        brew upgrade python@3.6
+        brew link --overwrite python@3.6
     fi
 
 install:
