@@ -23,7 +23,7 @@ import numpy as np
 
 from matrixprofile import core
 from matrixprofile.algorithms.mpx import mpx
-from matrixprofle.exceptions import NoSolutionPossible
+from matrixprofile.exceptions import NoSolutionPossible
 
 
 def split(lower_bound, upper_bound, middle):
