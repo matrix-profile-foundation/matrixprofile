@@ -23,6 +23,7 @@ import numpy as np
 
 from matrixprofile import core
 from matrixprofile.algorithms.mpx import mpx
+from matrixprofle.exceptions import NoSolutionPossible
 
 
 def split(lower_bound, upper_bound, middle):
@@ -250,7 +251,9 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
     underyling time series in question.
 
     The subsequence length starts at 8 and iteratively doubles until the
-    maximum correlation coefficient is no longer met.
+    maximum correlation coefficient is no longer met. When no solution is
+    possible given the threshold, a matrixprofile.exceptions.NoSolutionPossible
+    exception is raised.
 
     Parameters
     ----------
@@ -305,7 +308,7 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
         nans = np.full(n - mp.shape[0], np.nan)
         mp = np.append(mp, infs)
         pi = np.append(profile['pi'], nans)
-        
+
         return (mp, pi)
 
     # first perform a wide search by increasing window by 2 in
@@ -317,8 +320,8 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
 
         windows = np.append(windows, window_size)
         pearson = np.append(pearson, correlation_max)
-        
-        if include_pmp:            
+
+        if include_pmp:
             mp, pi = resize(profile['mp'], profile['pi'], n)
             pmp.append(mp)
             pmpi.append(pi)
@@ -335,12 +338,12 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
     windows = windows[mask]
 
     if len(windows) < 1:
-        warnings.warn('No windows found with given threshold, try to'\
-            ' set a lower threshold', RuntimeWarning)
-        return np.nan
+        raise NoSolutionPossible('Given the threshold {:.2f}, no window was ' \
+                                 'found. Please try increasing your ' \
+                                 'threshold.')
 
     window_size = windows[-1]
-    
+
     if include_pmp:
         pmp = np.vstack(pmp)[mask]
         pmpi = np.vstack(pmpi)[mask]
@@ -353,7 +356,7 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
     # keep windows divisible by 2
     mask = test_windows % 2 == 1
     test_windows[mask] = test_windows[mask] + 1
-    
+
     for window_size in test_windows:
         profile = mpx(ts, window_size, cross_correlation=True)
         mask = ~np.isinf(profile['mp'])
@@ -361,7 +364,7 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
 
         windows = np.append(windows, window_size)
         pearson = np.append(pearson, correlation_max)
-        
+
         if include_pmp:
             mp, pi = resize(profile['mp'], profile['pi'], n)
             pmp = np.append(pmp, [mp,], axis=0)
@@ -369,7 +372,7 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
 
         if correlation_max < threshold:
             break
-    
+
     if include_pmp:
         return {
             'upper_window': window_size,
@@ -377,5 +380,5 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
             'pmp': pmp,
             'pmpi': pmpi
         }
-    
+
     return window_size

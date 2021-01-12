@@ -66,8 +66,7 @@ def test_maximum_subsequence_no_windows():
     ts[0:w] = subq
     ts[w+100:w+100+w] = subq
 
-    with pytest.warns(RuntimeWarning) as record:
+    with pytest.raises(ValueError) as excinfo:
         upper = maximum_subsequence(ts, 1.0)
+        assert 'no windows' in str(excinfo.value)
 
-    assert(np.isnan(upper))
-    assert('No windows found with given threshold' in record[0].message.args[0])
