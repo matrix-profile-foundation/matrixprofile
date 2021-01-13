@@ -17,6 +17,7 @@ import numpy as np
 from matrixprofile.algorithms import skimp
 from matrixprofile.algorithms.skimp import binary_split
 from matrixprofile.algorithms.skimp import maximum_subsequence
+from matrixprofile.exceptions import NoSolutionPossible
 
 
 def test_binary_split_1():
@@ -66,8 +67,7 @@ def test_maximum_subsequence_no_windows():
     ts[0:w] = subq
     ts[w+100:w+100+w] = subq
 
-    with pytest.warns(RuntimeWarning) as record:
+    with pytest.raises(NoSolutionPossible) as excinfo:
         upper = maximum_subsequence(ts, 1.0)
+        assert 'no windows' in str(excinfo.value)
 
-    assert(np.isnan(upper))
-    assert('No windows found with given threshold' in record[0].message.args[0])
