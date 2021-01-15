@@ -35,3 +35,7 @@
 - Python 3.9 support thanks to [@Immentel](https://github.com/Immentel)
 - Source distribution thanks to [@Immentel](https://github.com/Immentel)
 - Improved algorithm stability thanks to [@kavj](https://github.com/kavj)
+
+# 1.1.7 (2021-01-14)
+- Minor updates to deployment process
+- Switched the no window found warning to an explicit exception
