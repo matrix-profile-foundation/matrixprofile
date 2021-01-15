@@ -11,15 +11,19 @@ import numpy
 import os, sys
 from glob import glob
 
+DIR_PATH = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(DIR_PATH)
+
 import version
 
 SOURCE_URL = 'https://github.com/matrix-profile-foundation/matrixprofile'
+README = os.path.join(DIR_PATH, 'README.rst')
 
 # manual list of files to be compiled
 extensions = []
 extensions.append(Extension(
     'matrixprofile.algorithms.cympx',
-    ['matrixprofile/algorithms/cympx.pyx'],
+    [os.path.join(DIR_PATH, 'matrixprofile', 'algorithms', 'cympx.pyx')],
     extra_compile_args = ["-O2", "-fopenmp" ],
     extra_link_args = ['-fopenmp'],
     include_dirs=[numpy.get_include()],
@@ -27,7 +31,7 @@ extensions.append(Extension(
 
 extensions.append(Extension(
     'matrixprofile.cycore',
-    ['matrixprofile/cycore.pyx'],
+    [os.path.join(DIR_PATH, 'matrixprofile', 'cycore.pyx')],
     extra_compile_args = ["-O2",],
     include_dirs=[numpy.get_include()],
 ))
@@ -35,18 +39,17 @@ extensions.append(Extension(
 matplot = 'matplotlib>=3.0.3'
 scipy = 'scipy>=1.3.2,<2.0.0'
 if sys.version_info.major == 3:
-    with open('README.rst', 'r', encoding='utf-8') as fh:
+    with open(README, 'r', encoding='utf-8') as fh:
         long_description = fh.read()
 elif sys.version_info.major == 2:
     matplot = 'matplotlib'
     scipy = 'scipy<2.0.0'
-    with open('README.rst', 'r') as fh:
+    with open(README, 'r') as fh:
         long_description = fh.read()
 
 # copy version file over
-src_path = os.path.dirname(os.path.abspath(__file__))
-with open(os.path.join(src_path, 'version.py')) as fh:
-    with open(os.path.join(src_path, 'matrixprofile', 'version.py'), 'w') as out:
+with open(os.path.join(DIR_PATH, 'version.py')) as fh:
+    with open(os.path.join(DIR_PATH, 'matrixprofile', 'version.py'), 'w') as out:
         out.write(fh.read())
 
 setuptools.setup(
