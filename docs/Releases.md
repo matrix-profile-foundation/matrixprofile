@@ -39,3 +39,6 @@
 # 1.1.7 (2021-01-14)
 - Minor updates to deployment process
 - Switched the no window found warning to an explicit exception
+
+# 1.1.8 (2021-01-15)
+- Minor updates to deployment process
