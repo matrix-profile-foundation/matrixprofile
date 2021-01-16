@@ -42,3 +42,6 @@
 
 # 1.1.8 (2021-01-15)
 - Minor updates to deployment process
+
+# 1.1.9 (2021-01-16)
+- Fix the source distribution release to include all necessary files
