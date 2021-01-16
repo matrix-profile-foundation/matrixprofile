@@ -1,0 +1,2 @@
+include version.py
+recursive-include . *.pyx *.proto *.txt *.csv *.json

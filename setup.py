@@ -65,6 +65,7 @@ setuptools.setup(
         'Matrix Profile Foundation': 'https://matrixprofile.org',
         'Source Code': SOURCE_URL,
     },
+    include_package_data=True,
     packages = setuptools.find_packages(),
     setup_requires=['cython>=0.x', 'wheel'],
     install_requires=['numpy>=1.16.2', matplot, 'protobuf==3.11.2', scipy],
