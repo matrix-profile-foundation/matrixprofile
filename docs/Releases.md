@@ -45,3 +45,6 @@
 
 # 1.1.9 (2021-01-16)
 - Fix the source distribution release to include all necessary files
+
+# 1.1.10 (2021-01-16)
+- Adjust absolute paths to relative - deveops building wheels
