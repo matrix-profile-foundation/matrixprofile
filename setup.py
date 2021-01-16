@@ -23,7 +23,7 @@ README = os.path.join(DIR_PATH, 'README.rst')
 extensions = []
 extensions.append(Extension(
     'matrixprofile.algorithms.cympx',
-    [os.path.join(DIR_PATH, 'matrixprofile', 'algorithms', 'cympx.pyx')],
+    ['matrixprofile/algorithms/cympx.pyx'],
     extra_compile_args = ["-O2", "-fopenmp" ],
     extra_link_args = ['-fopenmp'],
     include_dirs=[numpy.get_include()],
@@ -31,7 +31,7 @@ extensions.append(Extension(
 
 extensions.append(Extension(
     'matrixprofile.cycore',
-    [os.path.join(DIR_PATH, 'matrixprofile', 'cycore.pyx')],
+    ['matrixprofile/cycore.pyx'],
     extra_compile_args = ["-O2",],
     include_dirs=[numpy.get_include()],
 ))
