@@ -1,6 +1,12 @@
 ===============================
  MatrixProfile Documentation
 ===============================
+.. image:: https://matrixprofile.org/static/img/mpf-logo.png
+    :target: https://matrixprofile.org
+    :height: 300px
+    :scale: 50%
+    :alt: MPF Logo
+
 
 .. image:: https://img.shields.io/pypi/v/matrixprofile.svg
     :target: https://pypi.org/project/matrixprofile/
@@ -35,13 +41,6 @@
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3789780.svg
    :target: https://doi.org/10.5281/zenodo.3789780
    :alt: ZenodoDOI
-
-
-.. image:: https://matrixprofile.org/static/img/mpf-logo.png
-    :target: https://matrixprofile.org
-    :height: 300px
-    :scale: 50%
-    :alt: MPF Logo
 
 MatrixProfile
 ----------------
