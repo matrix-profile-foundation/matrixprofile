@@ -8,6 +8,12 @@
 .. image:: https://pepy.tech/badge/matrixprofile
     :target: https://pepy.tech/project/matrixprofile
     :alt: PyPI Downloads
+.. image:: https://img.shields.io/conda/vn/conda-forge/matrixprofile.svg
+    :target: https://anaconda.org/conda-forge/matrixprofile
+    :alt: Conda Version
+.. image:: https://img.shields.io/conda/dn/conda-forge/matrixprofile.svg
+    :target: https://anaconda.org/conda-forge/matrixprofile
+    :alt: Conda Downloads
 .. image:: https://codecov.io/gh/matrix-profile-foundation/matrixprofile/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/matrix-profile-foundation/matrixprofile
     :alt: Code Coverage
@@ -30,7 +36,6 @@
    :target: https://doi.org/10.5281/zenodo.3789780
    :alt: ZenodoDOI
 
-|
 
 .. image:: https://matrixprofile.org/static/img/mpf-logo.png
     :target: https://matrixprofile.org
@@ -61,11 +66,20 @@ Python 2 is no longer supported. There are earlier versions of this library that
 
 Installation
 ------------
-The easiest way to install this library is using pip. If you would like to install it from source, please review the `installation documentation <http://matrixprofile.docs.matrixprofile.org/install.html>`_ for your platform.
+The easiest way to install this library is using pip or conda. If you would like to install it from source, please review the `installation documentation <http://matrixprofile.docs.matrixprofile.org/install.html>`_ for your platform.
+
+Installation with pip
 
 .. code-block:: bash
 
    pip install matrixprofile
+
+Installation with conda
+
+.. code-block:: bash
+
+   conda config --add channels conda-forge
+   conda install matrixprofile
 
 Getting Started
 ---------------
