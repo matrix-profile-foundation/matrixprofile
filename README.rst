@@ -20,9 +20,15 @@
 .. image:: https://codecov.io/gh/matrix-profile-foundation/matrixprofile/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/matrix-profile-foundation/matrixprofile
     :alt: Code Coverage
+.. image:: https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/matrixprofile-feedstock?branchName=master
+    :target: https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=11637&branchName=master
+    :alt: Azure Pipelines
 .. image:: https://api.travis-ci.com/matrix-profile-foundation/matrixprofile.svg?branch=master
     :target: https://travis-ci.com/matrix-profile-foundation/matrixprofile
     :alt: Build Status
+.. image:: https://img.shields.io/conda/pn/conda-forge/matrixprofile.svg
+    :target: https://anaconda.org/conda-forge/matrixprofile
+    :alt: Platforms
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
     :target: https://opensource.org/licenses/Apache-2.0
     :alt: License
