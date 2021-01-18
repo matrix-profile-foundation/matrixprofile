@@ -1,6 +1,3 @@
-===============================
- MatrixProfile Documentation
-===============================
 .. image:: https://matrixprofile.org/static/img/mpf-logo.png
     :target: https://matrixprofile.org
     :height: 300px
