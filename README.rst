@@ -6,8 +6,8 @@
     :height: 300px
     :scale: 50%
     :alt: MPF Logo
-
-
+|
+|
 .. image:: https://img.shields.io/pypi/v/matrixprofile.svg
     :target: https://pypi.org/project/matrixprofile/
     :alt: PyPI Version
