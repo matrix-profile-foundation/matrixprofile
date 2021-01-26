@@ -224,10 +224,16 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
             if int_pct % 5 == 0 and int_pct not in pct_shown:
                 print('{}% complete'.format(int_pct))
                 pct_shown[int_pct] = 1
-
-    metric = 'euclidean'
-    if cross_correlation:
-        metric = 'pearson'
+    
+    if np.issubdtype(ts.dtype, 'U'):
+        metric = 'hamming'
+    else:
+        metric = 'euclidean'
+        if cross_correlation:
+            metric = 'pearson'
+    # metric = 'euclidean'
+    # if cross_correlation:
+    #     metric = 'pearson'
 
     return {
         'pmp': pmp,
@@ -244,13 +250,13 @@ def skimp(ts, windows=None, show_progress=False, cross_correlation=False,
     
 
 def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
-    include_pmp=False, lower_window=8):
+    include_pmp=False, lower_window=4):
     """
     Finds the maximum subsequence length based on the threshold provided. Note
     that this threshold is domain specific requiring some knowledge about the
     underyling time series in question.
 
-    The subsequence length starts at 8 and iteratively doubles until the
+    The subsequence length starts at 4 and iteratively doubles until the
     maximum correlation coefficient is no longer met. When no solution is
     possible given the threshold, a matrixprofile.exceptions.NoSolutionPossible
     exception is raised.
@@ -303,7 +309,9 @@ def maximum_subsequence(ts, threshold=0.95, refine_stepsize=0.05, n_jobs=1,
     def resize(mp, pi, n):
         """Helper function to resize mp and pi to be aligned with the
         PMP. Also convert pearson to euclidean."""
-        mp = core.pearson_to_euclidean(profile['mp'], window_size)
+        # Only convert pearson to euclidean if not string data type
+        if not np.issubdtype(ts.dtype, 'U'):
+            mp = core.pearson_to_euclidean(profile['mp'], window_size)
         infs = np.full(n - mp.shape[0], np.inf)
         nans = np.full(n - mp.shape[0], np.nan)
         mp = np.append(mp, infs)

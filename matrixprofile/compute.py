@@ -118,7 +118,8 @@ def compute(ts, windows=None, query=None, sample_pct=1, threshold=0.98,
 
         # determine windows to be computed
         # from 8 in steps of 2 until upper w
-        start = 8
+        start = 4
+        #start = 8
         windows = range(start, profile['upper_window'] + 1)
 
         # compute the pmp
