@@ -1,19 +1,34 @@
-===============================
- MatrixProfile Documentation
-===============================
-
+.. image:: https://matrixprofile.org/static/img/mpf-logo.png
+    :target: https://matrixprofile.org
+    :height: 300px
+    :scale: 50%
+    :alt: MPF Logo
+|
+|
 .. image:: https://img.shields.io/pypi/v/matrixprofile.svg
     :target: https://pypi.org/project/matrixprofile/
     :alt: PyPI Version
 .. image:: https://pepy.tech/badge/matrixprofile
     :target: https://pepy.tech/project/matrixprofile
     :alt: PyPI Downloads
+.. image:: https://img.shields.io/conda/vn/conda-forge/matrixprofile.svg
+    :target: https://anaconda.org/conda-forge/matrixprofile
+    :alt: Conda Version
+.. image:: https://img.shields.io/conda/dn/conda-forge/matrixprofile.svg
+    :target: https://anaconda.org/conda-forge/matrixprofile
+    :alt: Conda Downloads
 .. image:: https://codecov.io/gh/matrix-profile-foundation/matrixprofile/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/matrix-profile-foundation/matrixprofile
     :alt: Code Coverage
+.. image:: https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/matrixprofile-feedstock?branchName=master
+    :target: https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=11637&branchName=master
+    :alt: Azure Pipelines
 .. image:: https://api.travis-ci.com/matrix-profile-foundation/matrixprofile.svg?branch=master
     :target: https://travis-ci.com/matrix-profile-foundation/matrixprofile
     :alt: Build Status
+.. image:: https://img.shields.io/conda/pn/conda-forge/matrixprofile.svg
+    :target: https://anaconda.org/conda-forge/matrixprofile
+    :alt: Platforms
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
     :target: https://opensource.org/licenses/Apache-2.0
     :alt: License
@@ -29,14 +44,6 @@
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3789780.svg
    :target: https://doi.org/10.5281/zenodo.3789780
    :alt: ZenodoDOI
-
-|
-
-.. image:: https://matrixprofile.org/static/img/mpf-logo.png
-    :target: https://matrixprofile.org
-    :height: 300px
-    :scale: 50%
-    :alt: MPF Logo
 
 MatrixProfile
 ----------------
@@ -61,11 +68,20 @@ Python 2 is no longer supported. There are earlier versions of this library that
 
 Installation
 ------------
-The easiest way to install this library is using pip. If you would like to install it from source, please review the `installation documentation <http://matrixprofile.docs.matrixprofile.org/install.html>`_ for your platform.
+The easiest way to install this library is using pip or conda. If you would like to install it from source, please review the `installation documentation <http://matrixprofile.docs.matrixprofile.org/install.html>`_ for your platform.
+
+Installation with pip
 
 .. code-block:: bash
 
    pip install matrixprofile
+
+Installation with conda
+
+.. code-block:: bash
+
+   conda config --add channels conda-forge
+   conda install matrixprofile
 
 Getting Started
 ---------------

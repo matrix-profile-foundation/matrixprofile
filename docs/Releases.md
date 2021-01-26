@@ -35,3 +35,16 @@
 - Python 3.9 support thanks to [@Immentel](https://github.com/Immentel)
 - Source distribution thanks to [@Immentel](https://github.com/Immentel)
 - Improved algorithm stability thanks to [@kavj](https://github.com/kavj)
+
+# 1.1.7 (2021-01-14)
+- Minor updates to deployment process
+- Switched the no window found warning to an explicit exception
+
+# 1.1.8 (2021-01-15)
+- Minor updates to deployment process
+
+# 1.1.9 (2021-01-16)
+- Fix the source distribution release to include all necessary files
+
+# 1.1.10 (2021-01-16)
+- Adjust absolute paths to relative - deveops building wheels
