@@ -81,7 +81,7 @@ def mpx(ts, w, query=None, cross_correlation=False, n_jobs=1):
         # --- More changes... ---
         if np.issubdtype(dtype, 'U'):
             #ts = np.array([ord(x) for x in ts], dtype = 'd')
-            mp, mpi = mpx_single_char(ts, w, int(cross_correlation), n_jobs)
+            mp, mpi = mpx_single_char(ts, w)
         else:
             mp, mpi = cympx_parallel(ts, w, int(cross_correlation), n_jobs)
         # --- That's it for now... ---

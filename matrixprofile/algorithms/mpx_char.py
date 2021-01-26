@@ -15,10 +15,9 @@ from numba import jit, prange
 
 
 #@jit
-def mpx_single_char(ts, w, cross_correlation = 0, n_jobs = 1):
+def mpx_single_char(ts, w):
     """
-    The MPX algorithm computes the matrix profile without using the FFT. Right
-    now it only supports single dimension self joins.
+    The MPX algorithm computes the matrix profile using Hamming distance.
 
     Parameters
     ----------
@@ -26,11 +25,6 @@ def mpx_single_char(ts, w, cross_correlation = 0, n_jobs = 1):
         The time series to compute the matrix profile for.
     w : int
         The window size.
-    cross_correlation : bint
-        Flag (0, 1) to determine if cross_correlation distance should be
-        returned. It defaults to Euclidean Distance (0).
-    n_jobs : int, Default = 1
-        Number of cpu cores to use.
     
     Returns
     -------
@@ -38,26 +32,12 @@ def mpx_single_char(ts, w, cross_correlation = 0, n_jobs = 1):
         The matrix profile (distance profile, profile index).
 
     """
-    #cdef int i, j, diag, offset, threadnum, col
     n = ts.shape[0]
 
-    # the original implementation allows the minlag to be manually set
-    # here it is always w / 4 similar to SCRIMP++
-    #minlag = int(np.ceil(w / 4.0))
     profile_len = n - w + 1
     
-    #df = np.empty(profile_len, dtype = 'd')
-    #dg = np.empty(profile_len, dtype = 'd')
     mp = np.full(profile_len, -1.0, dtype = 'd')
     mpi = np.full(profile_len, -1, dtype = 'int')
-    
-    #tmp_mp = np.full((n_jobs, profile_len), -1.0, dtype = 'd')
-    #tmp_mpi = np.full((n_jobs, profile_len), -1, dtype = 'int')
-    
-    # this is where we compute the diagonals and later the matrix profile
-    #df[0] = 0
-    #dg[0] = 0
-    
     # Iterate over every starting location
     for i in range(w, n + 1):
         # Select the next 'w' indices starting at ts[i - w]
@@ -80,48 +60,6 @@ def mpx_single_char(ts, w, cross_correlation = 0, n_jobs = 1):
                 # Add an early stopping criteria
                 if dist == 0:
                     break
-    
-    
-    # for i in prange(w, n, num_threads=n_jobs, nogil=True):
-    #     df[i - w + 1] = (0.5 * (ts[i] - ts[i - w]))
-    #     dg[i - w + 1] = (ts[i] - mu[i - w + 1]) + (ts[i - w] - mu[i - w])    
-
-    # for diag in prange(minlag + 1, profile_len, num_threads=n_jobs, nogil=True):
-    #     c = 0
-    #     threadnum = openmp.omp_get_thread_num()
-    #     for i in range(diag, diag + w):
-    #         c = c + ((ts[i] - mu[diag]) * (ts[i-diag] - mu[0]))
-
-    #     for offset in range(n - w - diag + 1):
-    #         col = offset + diag
-    #         c = c + df[offset] * dg[col] + df[col] * dg[offset]
-    #         c_cmp = c * sig[offset] * sig[col]
-            
-    #         # update the distance profile and profile index
-    #         if c_cmp > tmp_mp[threadnum, offset]:
-    #             tmp_mp[threadnum, offset] = c_cmp
-    #             tmp_mpi[threadnum, offset] = col
-            
-    #         if c_cmp > tmp_mp[threadnum, col]:
-    #             if c_cmp > 1.0:
-    #                 c_cmp = 1.0
-    #             tmp_mp[threadnum, col] = c_cmp
-    #             tmp_mpi[threadnum, col] = offset
-    
-    # # combine parallel results...
-    # for i in range(tmp_mp.shape[0]):
-    #     for j in range(tmp_mp.shape[1]):
-    #         if tmp_mp[i,j] > mp[j]:
-    #             if tmp_mp[i, j] > 1.0:
-    #                 mp[j] = 1.0
-    #             else:
-    #                 mp[j] = tmp_mp[i, j]
-    #             mpi[j] = tmp_mpi[i, j]
-    
-    # # convert normalized cross correlation to euclidean distance
-    # if cross_correlation == 0:
-    #     for i in range(profile_len):
-    #         mp[i] = sqrt(2.0 * w * (1.0 - mp[i]))
     
     return (mp, mpi)
 
