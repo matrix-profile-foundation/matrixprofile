@@ -97,7 +97,7 @@ def _batch_compute(args):
     # however with other batch windows, we need the previous iterations sliding
     # dot product
     last_product = None
-    if batch_start is 0:
+    if batch_start == 0:
         first_window = query[batch_start:batch_start + window_size]
         last_product = np.copy(first_product)
     else:
@@ -111,7 +111,7 @@ def _batch_compute(args):
     drop_value = first_window[0]
 
     # only compute the distance profile for index 0 and update
-    if batch_start is 0:
+    if batch_start == 0:
         distance_profile = core.distance_profile(last_product, window_size,
          data_mu, data_sig, query_mu, query_sig)
 
