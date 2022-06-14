@@ -127,7 +127,7 @@ Please cite this work using the `Journal of Open Source Software article <https:
 
 .. code:: bibtex
 
-    @article{Van Benschoten2020,
+    @article{Van_Benschoten2020,
         doi = {10.21105/joss.02179},
         url = {https://doi.org/10.21105/joss.02179},
         year = {2020},
