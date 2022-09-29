@@ -3,7 +3,7 @@ matplotlib
 pytest>=3.5.1
 setuptools>=39.1.0
 cython>=0.x
-protobuf>=3.11.2,<4.0.0
+protobuf>=3.18.3,<4.0.0
 scipy<2.0.0
 sphinx
 nbsphinx
