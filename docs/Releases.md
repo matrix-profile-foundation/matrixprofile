@@ -48,3 +48,6 @@
 
 # 1.1.10 (2021-01-16)
 - Adjust absolute paths to relative - deveops building wheels
+
+# 1.1.11 (2022-10-03)
+- Bump Numpy to 1.22.0 to resolve [CVE-2021-34141](https://vuln.whitesourcesoftware.com/vulnerability/CVE-2021-34141)
