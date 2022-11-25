@@ -47,7 +47,7 @@
 
 MatrixProfile
 ----------------
-NOTE: THIS LIBRARY IS NOT ACTIVELY SUPPORTED
+NOTE: THIS LIBRARY IS NOT ACTIVELY SUPPORTED. PLEASE CHECK OUT THE TD AMERITRADE STUMPY LIBRARY INSTEAD: https://github.com/TDAmeritrade/stumpyhttps://github.com/TDAmeritrade/stumpy
 
 MatrixProfile is a Python 3 library, brought to you by the `Matrix Profile Foundation <https://matrixprofile.org>`_, for mining time series data. The Matrix Profile is a novel data structure with corresponding algorithms (stomp, regimes, motifs, etc.) developed by the `Keogh <https://www.cs.ucr.edu/~eamonn/MatrixProfile.html>`_ and `Mueen <https://www.cs.unm.edu/~mueen/>`_ research groups at UC-Riverside and the University of New Mexico. The goal of this library is to make these algorithms accessible to both the novice and expert through standardization of core concepts, a simplistic API, and sensible default parameter values.
 
