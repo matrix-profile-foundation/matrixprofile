@@ -48,3 +48,6 @@
 
 # 1.1.10 (2021-01-16)
 - Adjust absolute paths to relative - deveops building wheels
+
+# 1.1.11 (2022-09-29)
+- Update protobuf dependancy to 3.18.3 in order to resolve [CVE-2021-22570](https://nvd.nist.gov/vuln/detail/cve-2021-22570) and [CVE-2022-1941](https://github.com/matrix-profile-foundation/matrixprofile/issues/98)
