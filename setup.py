@@ -1,7 +1,7 @@
 import setuptools
 
 from setuptools import dist
-dist.Distribution().fetch_build_eggs(['cython>=0.x', 'numpy>=1.16.2', 'wheel'])
+dist.Distribution().fetch_build_eggs(['cython', 'numpy>=1.16.2', 'wheel'])
 
 from distutils.extension import Extension
 
