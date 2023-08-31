@@ -2,7 +2,7 @@ numpy>=1.16.2
 matplotlib
 pytest>=3.5.1
 setuptools>=39.1.0
-cython>=0.x
+cython
 protobuf>=3.11.2,<4.0.0
 scipy<2.0.0
 sphinx
